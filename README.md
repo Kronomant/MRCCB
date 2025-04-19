@@ -32,3 +32,14 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+
+Renderer
+Assets
+Components
+Contexts
+hooks
+pages
+routes
+services
+types
+utils
