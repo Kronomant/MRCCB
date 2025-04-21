@@ -1,5 +1,6 @@
 import { Box, Flex } from '@chakra-ui/react'
 import { Sidebar } from './components'
+import { Outlet } from 'react-router-dom'
 
 function App(): JSX.Element {
   // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
@@ -8,7 +9,7 @@ function App(): JSX.Element {
     <Flex>
       <Sidebar />
       <Box ml="240px" p="4" flex="1">
-        batata
+        <Outlet />
       </Box>
     </Flex>
   )
