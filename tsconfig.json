@@ -7,6 +7,8 @@
       "dom",
       "dom.iterable"
     ],
+    "typeRoots": ["./node_modules/@types", "./src/renderer/src/types"],
+    "types": ["node"],
     "jsx": "react-jsx",
     "importHelpers": true,
     "moduleResolution": "node",
@@ -30,6 +32,7 @@
   "include": [
     "src",
     "src/preload/index.d.ts",
+    "src/renderer/src/types/global.d.ts",
     "electron.vite.config.*"
   ],
   "exclude": [
