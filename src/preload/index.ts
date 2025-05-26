@@ -1,5 +1,12 @@
 import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { electronAPI, ElectronAPI } from '@electron-toolkit/preload'
+
+declare global {
+  export interface Window {
+    electron: ElectronAPI
+    api: unknown
+  }
+}
 
 // Custom APIs for renderer
 const api = {}

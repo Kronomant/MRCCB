@@ -20,9 +20,9 @@ Aplicação desktop criada com **Electron + React + TypeScript**, para facilitar
 
 ```
 src/
-├── main/              # Código principal do Electron
+├── main/              # Código principal do Electron (server side)
 ├── preload/           # Comunicação segura entre Electron e Renderer
-├── renderer/          # Interface com React
+├── renderer/          # Interface com React (client side)
 │   ├── src/
 │   │   ├── assets/         # Imagens, ícones e recursos visuais
 │   │   ├── components/     # Componentes reutilizáveis

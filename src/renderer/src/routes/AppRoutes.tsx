@@ -1,5 +1,6 @@
 import { RouteObject } from 'react-router-dom'
 import App from '../App'
+import { Reunion } from '../pages'
 
 const AppRoutes: RouteObject[] = [
   {
@@ -8,7 +9,7 @@ const AppRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <div>initial page</div>
+        element: <Reunion />
       },
       {
         path: 'reunioes',

@@ -1,6 +1,10 @@
-import { Box, Flex, Icon, Text, VStack, Link as ChakraLink } from '@chakra-ui/react'
-import { FiHome, FiSettings, FiUser } from 'react-icons/fi'
+import { Box, Flex, Icon, Image, Text, VStack } from '@chakra-ui/react'
 import { ReactNode } from 'react'
+import { ColorModeButton, useColorMode } from '../ui/color-mode'
+import { Link } from 'react-router-dom'
+import { menuItems } from './Sidebar.data'
+import logo from '../../assets/logo.svg'
+import whiteLogo from '../../assets/white-logo.svg'
 
 interface NavItemProps {
   icon: ReactNode
@@ -10,41 +14,33 @@ interface NavItemProps {
 
 const NavItem = ({ icon, children, href }: NavItemProps) => {
   return (
-    <ChakraLink
-      href={href}
-      w="100%"
-      style={{ textDecoration: 'none', borderRadius: '4px' }}
-      _hover={{ textDecoration: 'none', bg: 'gray.200', color: 'gray.700' }}
-    >
-      <Flex align="center" p="3" mx="2" borderRadius="md" role="group" cursor="pointer">
-        <Icon mr="3" fontSize="20" color="gray.700">
+    <Link to={href}>
+      <Flex align="center" justify="center" p="3" borderRadius="md" role="group" cursor="pointer">
+        <Icon mr="3" size="md" color="gray.solid">
           {icon}
         </Icon>
-        <Text fontSize="sm" color={'blue.900'}>
+        <Text fontSize="md" color="fg">
           {children}
         </Text>
       </Flex>
-    </ChakraLink>
+    </Link>
   )
 }
 
 export const Sidebar = () => {
+  const { colorMode } = useColorMode()
   return (
-    <Box bg="gray.50" w="240px" h="100vh" p="4" boxShadow="md" position="fixed" top="0" left="0">
-      <Text fontSize="xl" fontWeight="bold" mb="6" color="gray.700">
-        MyApp
-      </Text>
-
-      <VStack align="start" gap={'16px'}>
-        <NavItem icon={<FiHome />} href="#">
-          Início
-        </NavItem>
-        <NavItem icon={<FiUser />} href="#">
-          Perfil
-        </NavItem>
-        <NavItem icon={<FiSettings />} href="#">
-          Configurações
-        </NavItem>
+    <Box bg="bg.muted" w="240px" h="100vh" p="4" boxShadow="md">
+      <Image src={colorMode === 'dark' ? whiteLogo : logo} />
+      <VStack align="start" gap="16px">
+        <Flex w="100%" align="center" justify="center" p="3" borderRadius="md">
+          <ColorModeButton />
+        </Flex>
+        {menuItems.map((item) => (
+          <NavItem icon={item.icon} href={item.path}>
+            {item.title}
+          </NavItem>
+        ))}
       </VStack>
     </Box>
   )

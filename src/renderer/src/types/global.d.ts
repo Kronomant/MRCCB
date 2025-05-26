@@ -1,7 +1,7 @@
 declare global {
   interface Reunion {
     id: number
-    name: string  
+    name: string
     value: number
     treatmentQuantity: number
     foodBasketQuantity: number
@@ -48,4 +48,4 @@ declare global {
   }
 }
 
-export {};
+export {}
