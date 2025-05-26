@@ -17,9 +17,17 @@ function createWindow(): void {
     }
   })
 
+  mainWindow.webContents.on('context-menu', (_, params) => {
+    mainWindow.webContents.inspectElement(params.x, params.y)
+  })
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
+
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools()
+  }
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)

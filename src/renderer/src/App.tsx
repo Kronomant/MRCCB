@@ -1,16 +1,16 @@
-import { Box, Flex } from '@chakra-ui/react'
+import { Box, Button, Flex } from '@chakra-ui/react'
 import { Sidebar } from './components'
 import { Outlet } from 'react-router-dom'
 
 function App(): JSX.Element {
-  // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
   return (
-    <Flex>
+    <Flex w="100vw">
       <Sidebar />
-      <Box ml="240px" p="4" flex="1">
+      <Flex w="100%" padding="12px" bg="bg.muted">
         <Outlet />
-      </Box>
+      </Flex>
     </Flex>
   )
 }
