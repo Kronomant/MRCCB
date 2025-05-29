@@ -1,11 +1,11 @@
 /// <reference path="../types/global.d.ts" />
-const { faker } = require('@faker-js/faker');
+import { faker } from "@faker-js/faker";
 
 const lenghts = {
   unities: 2,
-  reunions: 1,
-  enchiridions: 1,
-  treatments: 10,
+  reunions: 15,
+  enchiridions: 5,
+  treatments: 25,
   foodBasket: 1,
   dropboxBackup: 1
 }
@@ -151,3 +151,5 @@ const mockDataService = {
     return dropboxBackups.filter( dropboxBackup => dropboxBackup.id === id );
   },
 }
+
+export default mockDataService
