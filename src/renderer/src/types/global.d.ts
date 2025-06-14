@@ -46,6 +46,12 @@ declare global {
     dropboxAccount: string
     backupPath: string
   }
+
+  type Column<T> = {
+    header: string;
+    accessor?: keyof T;
+    customRender?: (row: T) => React.ReactNode;
+  }
 }
 
 export {}
