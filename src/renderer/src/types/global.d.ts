@@ -1,3 +1,5 @@
+import type { ReunionStatus } from './reunion-status'
+
 declare global {
   interface Reunion {
     id: number
@@ -5,7 +7,8 @@ declare global {
     value: number
     treatmentQuantity: number
     foodBasketQuantity: number
-    date: String
+    date: string
+    status: ReunionStatus
   }
 
   interface Unity {
@@ -48,10 +51,16 @@ declare global {
   }
 
   type Column<T> = {
-    header: string;
-    accessor?: keyof T;
-    customRender?: (row: T) => React.ReactNode;
+    header: string
+    accessor?: keyof T
+    customRender?: (row: T) => React.ReactNode
   }
+}
+
+export enum ReunionStatus {
+  NEW = 'new',
+  IN_PROGRESS = 'in_progress',
+  FINISHED = 'finished'
 }
 
 export {}
