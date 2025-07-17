@@ -21,7 +21,7 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.19.1",
+    "@chakra-ui/react": "^3.21.0",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@emotion/react": "^11.14.0",

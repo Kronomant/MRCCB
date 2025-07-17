@@ -1,1 +1,1 @@
-export * from '../Reunion'
+export * from './Reunion'
