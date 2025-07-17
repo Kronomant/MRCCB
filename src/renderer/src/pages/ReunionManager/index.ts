@@ -1,2 +1,1 @@
 export * from './ReunionManager'
-export * from './Reunion'

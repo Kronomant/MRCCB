@@ -4,7 +4,7 @@ import { ReunionStatus } from '../types/reunion-status'
 
 const lenghts = {
   unities: 2,
-  reunions: 10,
+  reunions: 2,
   enchiridions: 5,
   treatments: 25,
   foodBasket: 1,
