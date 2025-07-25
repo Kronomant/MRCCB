@@ -1,156 +1,353 @@
-import { Button, Flex, InputGroup, Tag, Stack, Text, Box } from '@chakra-ui/react'
-import { PageHeader } from '../../components'
-import { FiSearch } from 'react-icons/fi'
-import { BaseTable } from '../../components/Table/BaseTable'
-import mockDataService from '../../services/mockData'
-import { DrawerForm } from '../../components/DrawerForm'
 import { useState } from 'react'
-import { ReunionStatus } from '../../types/reunion-status'
-import { RenderDrawerContent } from './Reunion.helper'
+import {
+  Button,
+  Flex,
+  InputGroup,
+  Box,
+  Stack,
+  Text,
+  Tag as ChakraTag,
+  Checkbox,
+  SimpleGrid,
+  Tag,
+  ListCollection
+} from '@chakra-ui/react'
+import { PageHeader, Select } from '../../components'
+import { FiSearch, FiFilter, FiPlus, FiTrash2, FiEdit2, FiEye } from 'react-icons/fi'
+import { BaseTable } from '../../components/Table/BaseTable'
+import { DrawerForm } from '../../components/DrawerForm'
 import { Input } from '../../components/Input'
+import { useNavigate } from 'react-router-dom'
 
-const statusMap = {
-  [ReunionStatus.NEW]: { label: 'Prevista', colorScheme: 'green' },
-  [ReunionStatus.IN_PROGRESS]: { label: 'Em Andamento', colorScheme: 'blue' },
-  [ReunionStatus.FINISHED]: { label: 'Encerrada', colorScheme: 'orange' }
+// Tipagem para registro
+interface RecordType {
+  id: number
+  prontuario: number
+  ministerio: boolean
+  valor: number
+  cestas: number
+  unidade: string
+  labels: string[]
+  representacao: boolean
+  somenteRoupas: boolean
+  valorTotalAprovado: boolean
 }
 
-const InfoSection: React.FC<{ reunion: Reunion }> = ({ reunion }) => (
-  <Stack color="fg" gap={2} mb={6}>
-    <Text>
-      <b>Status:</b>{' '}
-      <Tag.Root colorPalette={statusMap[reunion.status]?.colorScheme || 'gray'}>
-        {statusMap[reunion.status]?.label || reunion.status}
-      </Tag.Root>
-    </Text>
-    <Text>
-      <b>Qtd. Atendimentos:</b> {reunion.treatmentQuantity}
-    </Text>
-    <Text>
-      <b>Qtd. Cestas:</b> {reunion.foodBasketQuantity}
-    </Text>
-    <Text>
-      <b>Valor total:</b> R$ {reunion.value}
-    </Text>
-  </Stack>
-)
+// Mock data para exemplo
+const mockSummary = {
+  totalAtribuido: 12000,
+  atendimentos: 23,
+  cestas: 12,
+  totalGasto: 8000,
+  data: '01/02/2025'
+}
 
-const columns: Column<Reunion>[] = [
-  { header: 'Reunião', accessor: 'id' },
-  { header: 'Reunião', accessor: 'name' },
+const mockRecords: RecordType[] = [
   {
-    header: 'Status',
-    accessor: 'status',
-    customRender: (row) => {
-      const status = statusMap[row.status] || { label: row.status, colorScheme: 'gray' }
-      return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
-    }
+    id: 1,
+    prontuario: 123,
+    valor: 500,
+    cestas: 1,
+    labels: ['Valor total aprovado', 'Emergencial'],
+    unidade: 'Santa cecilia',
+    ministerio: true,
+    representacao: false,
+    somenteRoupas: false,
+    valorTotalAprovado: true
   },
-  { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
-  { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
-  { header: 'Total', accessor: 'value' },
-  { header: 'Data Reunião', accessor: 'date' }
+  {
+    id: 2,
+    prontuario: 225,
+    valor: 0,
+    cestas: 1,
+    labels: ['Somente roupas', 'Emergencial'],
+    unidade: 'Veneza',
+    ministerio: false,
+    representacao: false,
+    somenteRoupas: true,
+    valorTotalAprovado: false
+  }
+  // ... outros registros
 ]
 
-const defaultReunion: Reunion = {
+const LABEL_COLORS: Record<string, string> = {
+  Emergencial: 'red',
+  'Somente roupas': 'blue',
+  'Valor total aprovado': 'green',
+  Representação: 'purple'
+}
+
+const unidades = ['Santa cecilia', 'Veneza', 'Alterosa', 'San Genaro', 'Florença', 'Vereda']
+
+const defaultRecord: RecordType = {
   id: 0,
-  name: '',
-  value: 0,
-  treatmentQuantity: 0,
-  foodBasketQuantity: 0,
-  date: '',
-  status: ReunionStatus.NEW
+  prontuario: 0,
+  ministerio: false,
+  valor: 0,
+  cestas: 0,
+  unidade: '',
+  labels: [],
+  representacao: false,
+  somenteRoupas: false,
+  valorTotalAprovado: false
 }
 
 export const Reunion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedReunion, setSelectedReunion] = useState<Reunion>(defaultReunion)
+  const [selectedRecord, setSelectedRecord] = useState<RecordType>(defaultRecord)
+  const [records, setRecords] = useState<RecordType[]>(mockRecords)
+  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
 
-  const reunions = mockDataService.getReunions()
-
-  const handleRowClick = (reunion: any) => {
-    setSelectedReunion(reunion)
+  // Handlers
+  const handleAdd = () => {
+    setSelectedRecord(defaultRecord)
     setDrawerOpen(true)
   }
-
-  const handleAddNew = () => {
-    setSelectedReunion(defaultReunion)
+  const handleEdit = (record: RecordType) => {
+    setSelectedRecord(record)
     setDrawerOpen(true)
   }
-
-  // Funções de ação (padrão funcional)
-  const handleStart = () => {
-    setSelectedReunion((prev) => ({ ...prev, status: ReunionStatus.IN_PROGRESS }))
+  const handleView = (record: RecordType) => {
+    setSelectedRecord(record)
+    setDrawerOpen(true)
   }
-  const handleFinish = () => {
-    setSelectedReunion((prev) => ({ ...prev, status: ReunionStatus.FINISHED }))
+  const handleDelete = (id: number) => {
+    setRecords(records.filter((r) => r.id !== id))
+  }
+  const handleSave = () => {
+    if (selectedRecord.id === 0) {
+      setRecords([...records, { ...selectedRecord, id: records.length + 1 }])
+    } else {
+      setRecords(records?.map((r) => (r.id === selectedRecord.id ? selectedRecord : r)))
+    }
+    setDrawerOpen(false)
   }
 
-  const renderDrawerContent = () => (
-    <>
-      <InfoSection reunion={selectedReunion} />
-      {(selectedReunion.status === ReunionStatus.NEW ||
-        selectedReunion.status === ReunionStatus.IN_PROGRESS) && (
-        <>
-          <Box as="hr" borderWidth="1px" borderColor="gray.200" my={4} />
+  // Table columns
+  const columns = [
+    { header: 'Prontuário', accessor: 'prontuario' },
+    {
+      header: 'Valor (R$)',
+      accessor: 'valor',
+      customRender: (row: RecordType) =>
+        row.valor > 0 ? `R$ ${row.valor}` : <Text color="gray.400">R$ 0</Text>
+    },
+    { header: 'Cestas', accessor: 'cestas' },
+    {
+      header: 'Labels',
+      accessor: 'labels',
+      customRender: (row: RecordType) => (
+        <Flex gap={1} wrap="wrap">
+          {row.labels.map((label: string) => (
+            <Tag.Root colorPalette={LABEL_COLORS[label] || 'gray'} key={label}>
+              {label}
+            </Tag.Root>
+          ))}
+        </Flex>
+      )
+    },
+    { header: 'Unidade', accessor: 'unidade' },
+    {
+      header: 'Ações',
+      accessor: 'actions',
+      customRender: (row: RecordType) => (
+        <Flex gap={2}>
           <Button
-            colorPalette={selectedReunion.status === ReunionStatus.NEW ? 'green' : 'blue'}
-            w="100%"
-            variant="surface"
-            onClick={handleStart}
+            size="xs"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete(row.id)
+            }}
           >
-            {selectedReunion.status === ReunionStatus.NEW ? 'Iniciar Reunião' : 'Acessar Reunião'}
+            <FiTrash2 />
           </Button>
-        </>
-      )}
-    </>
-  )
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEdit(row)
+            }}
+          >
+            <FiEdit2 />
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleView(row)
+            }}
+          >
+            <FiEye />
+          </Button>
+        </Flex>
+      )
+    }
+  ]
 
-  const { title, primaryLabel, secondaryLabel } = RenderDrawerContent(selectedReunion.status)
+  // DrawerForm content
+  const drawerContent = (
+    <Stack gap={3}>
+      <Input
+        label="Prontuário"
+        type="number"
+        value={selectedRecord.prontuario}
+        onChange={(e) =>
+          setSelectedRecord({ ...selectedRecord, prontuario: Number(e.target.value) })
+        }
+      />
+
+      <Checkbox.Root>
+        <Checkbox.HiddenInput />
+        <Checkbox.Control />
+        <Checkbox.Label>Ministério</Checkbox.Label>
+      </Checkbox.Root>
+      <Input
+        label="Valor"
+        type="number"
+        value={selectedRecord.valor}
+        onChange={(e) => setSelectedRecord({ ...selectedRecord, valor: Number(e.target.value) })}
+      />
+      <Input
+        label="Quantidade de Cestas"
+        type="number"
+        value={selectedRecord.cestas}
+        onChange={(e) => setSelectedRecord({ ...selectedRecord, cestas: Number(e.target.value) })}
+      />
+
+      <Select
+        options={unidades.map((unidade) => ({ label: unidade, value: unidade }))}
+        placeholder="Selecione a unidade"
+        value={selectedRecord.unidade}
+        onChange={(value: any) => setSelectedRecord({ ...selectedRecord, unidade: value })}
+      />
+
+      <Text fontWeight="bold" mt={2}>
+        Flags
+      </Text>
+      <Flex gap={3} wrap="wrap">
+        {Object.keys(LABEL_COLORS)?.map((flag) => (
+          <Checkbox.Root checked={selectedRecord.labels.includes(flag)} key={flag}>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control
+              onChange={(e: any) => {
+                setSelectedRecord({
+                  ...selectedRecord,
+                  labels: e.target.checked
+                    ? [...selectedRecord.labels, flag]
+                    : selectedRecord.labels.filter((l) => l !== flag)
+                })
+              }}
+            />
+            {flag}
+          </Checkbox.Root>
+        ))}
+      </Flex>
+    </Stack>
+  )
 
   return (
     <Flex
       p="24px"
       flexDir="column"
-      gap="48px"
+      gap="32px"
       w="100%"
       h="100%"
       backgroundColor="bg"
       borderRadius="8px"
     >
-      <PageHeader title="Reuniões">
-        <Button colorPalette="gray" onClick={handleAddNew}>
-          Adicionar reunião
+      {/* Header */}
+      <PageHeader title="Records" onBack={() => navigate('/reunioes')}>
+        <Text color="fg.muted" fontSize="md" ml={4}>
+          {mockSummary.data}
+        </Text>
+        <Button colorScheme="gray" ml={4}>
+          Encerrar Reunião
         </Button>
       </PageHeader>
-      <Flex w="60%">
-        <InputGroup endElement={<FiSearch />}>
-          <Input borderRadius="3xl" label="Buscar" />
-        </InputGroup>
-      </Flex>
-      <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" gap={16} position="relative">
-          <BaseTable
-            drawerOpen={drawerOpen}
-            data={reunions}
-            columns={columns}
-            isLoading={false}
-            onRowClick={handleRowClick}
-          />
-          <DrawerForm
-            isOpen={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            title={title}
-            primaryLabel={primaryLabel}
-            secondaryLabel={secondaryLabel}
-          >
-            <Input label="Nome da reunião" value={selectedReunion.name} mb={3} />
-            <Input label="Data" value={selectedReunion.date} mb={3} />
-            <Input label="Valor da reunião" value={selectedReunion.value} mb={3} />
-            {renderDrawerContent()}
-          </DrawerForm>
+
+      {/* Cards de resumo */}
+      <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
+        <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+          <Text color="fg.muted" fontSize="sm">
+            Total Atribuído
+          </Text>
+          <Text fontWeight="bold" fontSize="2xl">
+            R$ {mockSummary.totalAtribuido.toLocaleString('pt-BR')}
+          </Text>
+        </Box>
+        <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+          <Text color="fg.muted" fontSize="sm">
+            Atendimentos Realizados
+          </Text>
+          <Text fontWeight="bold" fontSize="2xl">
+            {mockSummary.atendimentos}
+          </Text>
+        </Box>
+        <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+          <Text color="fg.muted" fontSize="sm">
+            Cestas Entregues
+          </Text>
+          <Text fontWeight="bold" fontSize="2xl">
+            {mockSummary.cestas}
+          </Text>
+        </Box>
+        <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+          <Text color="fg.muted" fontSize="sm">
+            Total Gasto
+          </Text>
+          <Text fontWeight="bold" fontSize="2xl">
+            R$ {mockSummary.totalGasto.toLocaleString('pt-BR')}
+          </Text>
+        </Box>
+      </SimpleGrid>
+
+      {/* Seção de atendimentos */}
+      <Box>
+        <Flex mb={4} gap={3} align="center">
+          <InputGroup endElement={<FiSearch />} w="300px">
+            <Input
+              borderRadius="3xl"
+              label="Pesquisar"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </InputGroup>
+          <Button variant="outline">
+            <FiFilter />
+            Filtros
+          </Button>
+          <Button colorScheme="blue" onClick={handleAdd}>
+            <FiPlus />
+            Adicionar
+          </Button>
         </Flex>
-      </Flex>
+
+        <Flex w="100%" h="70vh">
+          <Flex w="100%" h="100%" gap={16} position="relative">
+            <BaseTable
+              drawerOpen={drawerOpen}
+              data={records.filter((r) => String(r.prontuario).includes(search))}
+              columns={columns as Column<RecordType>[]}
+              isLoading={false}
+              onRowClick={handleView}
+            />
+            <DrawerForm
+              isOpen={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              title={selectedRecord.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
+              primaryLabel="Salvar"
+              secondaryLabel="Cancelar"
+              onPrimaryAction={handleSave}
+            >
+              {drawerContent}
+            </DrawerForm>
+          </Flex>
+        </Flex>
+      </Box>
     </Flex>
   )
 }
