@@ -2,13 +2,16 @@ import { Button, Flex, InputGroup, Tag, Stack, Text, Box } from '@chakra-ui/reac
 import { PageHeader } from '../../components'
 import { FiSearch } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
-import mockDataService from '../../services/mockData'
 import { DrawerForm } from '../../components/DrawerForm'
 import { useState } from 'react'
 import { ReunionStatus } from '../../types/reunion-status'
 import { RenderDrawerContent } from './ReunionManager.helper'
 import { Input } from '../../components/Input'
 import { useNavigate } from 'react-router-dom'
+import { useReunions } from '../../hooks/reunion/useReunions'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { reunionFormSchema, ReunionFormData } from '../../schemas/reunionSchema'
 
 const statusMap = {
   [ReunionStatus.NEW]: { label: 'Prevista', colorScheme: 'green' },
@@ -63,20 +66,55 @@ const defaultReunion: Reunion = {
   status: ReunionStatus.NEW
 }
 
+const defaultFormValues: ReunionFormData = {
+  id: 0,
+  name: '',
+  value: 0,
+  treatmentQuantity: 0,
+  foodBasketQuantity: 0,
+  date: '',
+  status: ReunionStatus.NEW
+}
+
 export const ReunionManager = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedReunion, setSelectedReunion] = useState<Reunion>(defaultReunion)
   const navigate = useNavigate()
 
-  const reunions = mockDataService.getReunions()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<ReunionFormData>({
+    resolver: zodResolver(reunionFormSchema),
+    defaultValues: defaultFormValues
+  })
 
-  const handleRowClick = (reunion: any) => {
+  const fields = watch()
+
+  console.log(fields)
+
+  const { reunions, createReunion, updateReunion } = useReunions()
+
+  const handleRowClick = (reunion: Reunion) => {
     setSelectedReunion(reunion)
+    reset({
+      id: reunion.id,
+      name: reunion.name,
+      value: reunion.value,
+      treatmentQuantity: reunion.treatmentQuantity,
+      foodBasketQuantity: reunion.foodBasketQuantity,
+      date: reunion.date,
+      status: reunion.status
+    })
     setDrawerOpen(true)
   }
 
   const handleAddNew = () => {
     setSelectedReunion(defaultReunion)
+    reset(defaultFormValues)
     setDrawerOpen(true)
   }
 
@@ -85,6 +123,41 @@ export const ReunionManager = () => {
       setSelectedReunion((prev) => ({ ...prev, status: ReunionStatus.IN_PROGRESS }))
     } else if (selectedReunion.status === ReunionStatus.IN_PROGRESS) {
       navigate(`/reunioes/${selectedReunion.id}`)
+    }
+  }
+
+  const onSubmit = async (data: ReunionFormData) => {
+    try {
+      if (selectedReunion.id === 0) {
+        // Criando nova reunião
+        await createReunion.mutateAsync({
+          name: data.name,
+          date: data.date,
+          value: data.value,
+          treatmentQuantity: data.treatmentQuantity,
+          foodBasketQuantity: data.foodBasketQuantity,
+          status: data.status
+        })
+      } else {
+        // Atualizando reunião existente
+        await updateReunion.mutateAsync({
+          id: selectedReunion.id || 0,
+          name: data.name,
+          date: data.date,
+          value: data.value,
+          treatmentQuantity: data.treatmentQuantity,
+          foodBasketQuantity: data.foodBasketQuantity,
+          status: data.status
+        })
+      }
+
+      // Fechar drawer após sucesso
+      setDrawerOpen(false)
+      reset(defaultFormValues)
+      setSelectedReunion(defaultReunion)
+    } catch (error) {
+      console.error('Erro ao salvar reunião:', error)
+      // Aqui você pode adicionar uma notificação de erro para o usuário
     }
   }
 
@@ -125,30 +198,67 @@ export const ReunionManager = () => {
           Adicionar reunião
         </Button>
       </PageHeader>
+
       <Flex w="60%">
         <InputGroup endElement={<FiSearch />}>
           <Input borderRadius="3xl" label="Buscar" />
         </InputGroup>
       </Flex>
+
       <Flex w="100%" h="70vh">
         <Flex w="100%" h="100%" gap={16} position="relative">
           <BaseTable
             drawerOpen={drawerOpen}
-            data={reunions}
+            data={reunions.data || []}
             columns={columns}
             isLoading={false}
             onRowClick={handleRowClick}
           />
+
           <DrawerForm
             isOpen={drawerOpen}
             onClose={() => setDrawerOpen(false)}
             title={title}
             primaryLabel={primaryLabel}
             secondaryLabel={secondaryLabel}
+            onPrimaryAction={handleSubmit(onSubmit)}
+            isLoading={isSubmitting}
           >
-            <Input label="Nome da reunião" value={selectedReunion.name} mb={3} />
-            <Input label="Data" value={selectedReunion.date} mb={3} />
-            <Input label="Valor da reunião" value={selectedReunion.value} mb={3} />
+            <Input
+              label="Nome da reunião"
+              mb={3}
+              {...register('name')}
+              error={errors.name?.message}
+            />
+            <Input
+              label="Data"
+              type="date"
+              mb={3}
+              {...register('date')}
+              error={errors.date?.message}
+            />
+            <Input
+              label="Valor da reunião"
+              type="number"
+              step="0.01"
+              mb={3}
+              {...register('value', { valueAsNumber: true })}
+              error={errors.value?.message}
+            />
+            <Input
+              label="Quantidade de Atendimentos"
+              type="number"
+              mb={3}
+              {...register('treatmentQuantity', { valueAsNumber: true })}
+              error={errors.treatmentQuantity?.message}
+            />
+            <Input
+              label="Quantidade de Cestas"
+              type="number"
+              mb={3}
+              {...register('foodBasketQuantity', { valueAsNumber: true })}
+              error={errors.foodBasketQuantity?.message}
+            />
             {renderDrawerContent()}
           </DrawerForm>
         </Flex>

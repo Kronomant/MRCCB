@@ -31,15 +31,31 @@ const floatingStyles = defineStyle({
 
 export interface CustomInputProps extends ChakraInputProps {
   label?: string
+  error?: string
 }
 
-export const Input: React.FC<CustomInputProps> = ({ label, ...props }) => {
-  return (
-    <Field.Root>
-      <Box pos="relative" w="full">
-        <ChakraInput className="peer" color="fg" placeholder={props.placeholder || ''} {...props} />
-        <Field.Label {...floatingStyles}>{label}</Field.Label>
-      </Box>
-    </Field.Root>
-  )
-}
+export const Input = React.forwardRef<HTMLInputElement, CustomInputProps>(
+  ({ label, error, ...props }, ref) => {
+    return (
+      <Field.Root invalid={!!error}>
+        <Box pos="relative" w="full">
+          <ChakraInput 
+            ref={ref}
+            className="peer" 
+            color="fg" 
+            placeholder={props.placeholder || ''} 
+            {...props} 
+          />
+          <Field.Label {...floatingStyles}>{label}</Field.Label>
+        </Box>
+        {error && (
+          <Field.ErrorText color="red.500" fontSize="sm" mt={1}>
+            {error}
+          </Field.ErrorText>
+        )}
+      </Field.Root>
+    )
+  }
+)
+
+Input.displayName = 'Input'

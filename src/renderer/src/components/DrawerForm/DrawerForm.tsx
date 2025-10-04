@@ -11,6 +11,7 @@ interface DrawerFormProps {
   primaryLabel?: string
   onSecondaryAction?: () => void
   secondaryLabel?: string
+  isLoading?: boolean
 }
 
 const drawerWidth = 400
@@ -23,7 +24,8 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
   onPrimaryAction,
   primaryLabel = 'Salvar',
   onSecondaryAction,
-  secondaryLabel = 'Cancelar'
+  secondaryLabel = 'Cancelar',
+  isLoading = false
 }) => (
   <Box
     position="absolute"
@@ -75,10 +77,19 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       justify="flex-end"
       gap={3}
     >
-      <Button variant="outline" onClick={onSecondaryAction || onClose}>
+      <Button 
+        variant="outline" 
+        onClick={onSecondaryAction || onClose}
+        disabled={isLoading}
+      >
         {secondaryLabel}
       </Button>
-      <Button colorScheme="blue" onClick={onPrimaryAction}>
+      <Button 
+        colorScheme="blue" 
+        onClick={onPrimaryAction}
+        loading={isLoading}
+        disabled={isLoading}
+      >
         {primaryLabel}
       </Button>
     </Flex>
