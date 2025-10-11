@@ -1,6 +1,10 @@
 // src/renderer/src/services/treatmentService.ts
 import { CreateTreatment, UpdateTreatment } from '../schemas/treatmentSchema'
 
+export async function getAllTreatments(): Promise<Treatment[]> {
+  return await window.electron.ipcRenderer.invoke('treatment:getAll')
+}
+
 export async function getTreatmentsByReunion(reunionId: number): Promise<Treatment[]> {
   return await window.electron.ipcRenderer.invoke('treatment:byReunion', reunionId)
 }

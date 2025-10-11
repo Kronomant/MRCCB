@@ -39,6 +39,20 @@ export function createTreatment(data: Omit<TreatmentData, 'id'>): TreatmentData 
   return { id: result.lastInsertRowid as number, ...data }
 }
 
+export function getAllTreatments(): TreatmentData[] {
+  const db = getDb()
+  const stmt = db.prepare('SELECT * FROM treatments ORDER BY date DESC')
+  const rows = stmt.all() as any[]
+  return rows.map((r) => ({
+    ...r,
+    aprovedValue: !!r.aprovedValue,
+    onlyClothes: !!r.onlyClothes,
+    emergency: !!r.emergency,
+    returned: !!r.returned,
+    repeat: !!r.repeat
+  }))
+}
+
 export function getAllTreatmentsByReunion(reunionId: number): TreatmentData[] {
   const db = getDb()
   const stmt = db.prepare('SELECT * FROM treatments WHERE reunionId = ?')

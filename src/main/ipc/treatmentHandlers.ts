@@ -3,6 +3,7 @@ import { ipcMain } from 'electron'
 import {
   createTreatment,
   deleteTreatment,
+  getAllTreatments,
   getAllTreatmentsByReunion,
   getTreatmentById,
   updateTreatment,
@@ -11,7 +12,14 @@ import {
 
 export function registerTreatmentHandlers() {
   ipcMain.handle('treatment:create', async (_event, payload: Omit<TreatmentData, 'id'>) => {
-    return createTreatment(payload)
+    console.log('Backend - Recebendo dados para criar prontuário:', payload)
+    const result = createTreatment(payload)
+    console.log('Backend - Resultado da criação:', result)
+    return result
+  })
+
+  ipcMain.handle('treatment:getAll', async () => {
+    return getAllTreatments()
   })
 
   ipcMain.handle('treatment:byReunion', async (_event, reunionId: number) => {
