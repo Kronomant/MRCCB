@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { createWindow } from './windows/mainWindows'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerReunionHandlers } from './ipc/reunionHandlers'
+import { registerTreatmentHandlers } from './ipc/treatmentHandlers'
 import { initDb } from './database/db'
 
 app.whenReady().then(() => {
@@ -16,6 +17,7 @@ app.whenReady().then(() => {
   })
   initDb() // Inicializa e migra o banco de dados
   registerReunionHandlers()
+  registerTreatmentHandlers()
   createWindow()
 
   app.on('activate', function () {

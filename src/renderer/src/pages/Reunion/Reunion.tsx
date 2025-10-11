@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Button,
   Flex,
@@ -17,7 +17,8 @@ import { FiSearch, FiFilter, FiPlus, FiTrash2, FiEdit2, FiEye } from 'react-icon
 import { BaseTable } from '../../components/Table/BaseTable'
 import { DrawerForm } from '../../components/DrawerForm'
 import { Input } from '../../components/Input'
-import { useNavigate } from 'react-router-dom'
+import { useRecords } from '../../hooks'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // Tipagem para registro
 interface RecordType {
@@ -34,13 +35,7 @@ interface RecordType {
 }
 
 // Mock data para exemplo
-const mockSummary = {
-  totalAtribuido: 12000,
-  atendimentos: 23,
-  cestas: 12,
-  totalGasto: 8000,
-  data: '01/02/2025'
-}
+// Removido mockSummary em favor de dados reais
 
 const mockRecords: RecordType[] = [
   {
@@ -95,9 +90,12 @@ const defaultRecord: RecordType = {
 export const Reunion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<RecordType>(defaultRecord)
-  const [records, setRecords] = useState<RecordType[]>(mockRecords)
+  const [records, setRecords] = useState<RecordType[]>([])
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
+  const { id } = useParams()
+  const reunionId = Number(id)
+  const { records: hookRecords, summary, isLoading, createTreatment, updateTreatment, deleteTreatment, reunions } = useRecords(reunionId)
 
   // Handlers
   const handleAdd = () => {
@@ -113,13 +111,40 @@ export const Reunion = () => {
     setDrawerOpen(true)
   }
   const handleDelete = (id: number) => {
-    setRecords(records.filter((r) => r.id !== id))
+    deleteTreatment.mutate(id)
   }
   const handleSave = () => {
     if (selectedRecord.id === 0) {
-      setRecords([...records, { ...selectedRecord, id: records.length + 1 }])
+      const payload = {
+        enchiridionId: selectedRecord.prontuario,
+        reunionId,
+        unityId: Number(selectedRecord.unidade) || 0,
+        date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
+        aprovedValue: selectedRecord.valorTotalAprovado,
+        value: selectedRecord.valor,
+        foodBasketQuantity: selectedRecord.cestas,
+        onlyClothes: selectedRecord.somenteRoupas,
+        emergency: selectedRecord.labels.includes('Emergencial'),
+        returned: selectedRecord.representacao,
+        repeat: false
+      }
+      createTreatment.mutate(payload)
     } else {
-      setRecords(records?.map((r) => (r.id === selectedRecord.id ? selectedRecord : r)))
+      const payload = {
+        id: selectedRecord.id,
+        enchiridionId: selectedRecord.prontuario,
+        reunionId,
+        unityId: Number(selectedRecord.unidade) || 0,
+        date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
+        aprovedValue: selectedRecord.valorTotalAprovado,
+        value: selectedRecord.valor,
+        foodBasketQuantity: selectedRecord.cestas,
+        onlyClothes: selectedRecord.somenteRoupas,
+        emergency: selectedRecord.labels.includes('Emergencial'),
+        returned: selectedRecord.representacao,
+        repeat: false
+      }
+      updateTreatment.mutate(payload)
     }
     setDrawerOpen(false)
   }
@@ -187,6 +212,8 @@ export const Reunion = () => {
       )
     }
   ]
+
+  // Dados e resumo agora vêm do hook useRecords
 
   // DrawerForm content
   const drawerContent = (
@@ -262,7 +289,7 @@ export const Reunion = () => {
       {/* Header */}
       <PageHeader title="Records" onBack={() => navigate('/reunioes')}>
         <Text color="fg.muted" fontSize="md" ml={4}>
-          {mockSummary.data}
+          {summary.data || ''}
         </Text>
         <Button colorScheme="gray" ml={4}>
           Encerrar Reunião
@@ -276,7 +303,7 @@ export const Reunion = () => {
             Total Atribuído
           </Text>
           <Text fontWeight="bold" fontSize="2xl">
-            R$ {mockSummary.totalAtribuido.toLocaleString('pt-BR')}
+            R$ {summary.totalAtribuido.toLocaleString('pt-BR')}
           </Text>
         </Box>
         <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
@@ -284,7 +311,7 @@ export const Reunion = () => {
             Atendimentos Realizados
           </Text>
           <Text fontWeight="bold" fontSize="2xl">
-            {mockSummary.atendimentos}
+            {summary.atendimentos}
           </Text>
         </Box>
         <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
@@ -292,7 +319,7 @@ export const Reunion = () => {
             Cestas Entregues
           </Text>
           <Text fontWeight="bold" fontSize="2xl">
-            {mockSummary.cestas}
+            {summary.cestas}
           </Text>
         </Box>
         <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
@@ -300,7 +327,7 @@ export const Reunion = () => {
             Total Gasto
           </Text>
           <Text fontWeight="bold" fontSize="2xl">
-            R$ {mockSummary.totalGasto.toLocaleString('pt-BR')}
+            R$ {summary.totalGasto.toLocaleString('pt-BR')}
           </Text>
         </Box>
       </SimpleGrid>
@@ -330,9 +357,9 @@ export const Reunion = () => {
           <Flex w="100%" h="100%" gap={16} position="relative">
             <BaseTable
               drawerOpen={drawerOpen}
-              data={records.filter((r) => String(r.prontuario).includes(search))}
+              data={hookRecords.filter((r) => String(r.prontuario).includes(search))}
               columns={columns as Column<RecordType>[]}
-              isLoading={false}
+              isLoading={isLoading}
               onRowClick={handleView}
             />
             <DrawerForm

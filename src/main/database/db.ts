@@ -21,6 +21,24 @@ export function initDb(): void {
       status TEXT
     )
   `)
+
+  // Tabela de tratamentos (prontuários)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS treatments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      enchiridionId INTEGER,
+      reunionId INTEGER,
+      unityId INTEGER,
+      date TEXT,
+      aprovedValue INTEGER,
+      value REAL,
+      foodBasketQuantity INTEGER,
+      onlyClothes INTEGER,
+      emergency INTEGER,
+      returned INTEGER,
+      repeat INTEGER
+    )
+  `)
 }
 
 export function getDb(): Database.Database {
