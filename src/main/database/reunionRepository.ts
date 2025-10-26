@@ -2,7 +2,7 @@
 import { getDb } from './db'
 
 // Usando o tipo Reunion global definido em types/global.d.ts
-type ReunionData = {
+export type ReunionData = {
   id?: number
   name: string
   value: number

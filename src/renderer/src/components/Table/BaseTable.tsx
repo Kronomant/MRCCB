@@ -1,18 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import {
-  ActionBar,
-  Box,
-  Button,
-  Checkbox,
-  Kbd,
-  Portal,
-  Table,
-  Text,
-  Spinner,
-  Flex
-} from '@chakra-ui/react'
+import { ActionBar, Box, Checkbox, Portal, Table, Text, Spinner, Flex } from '@chakra-ui/react'
 
 type Props<T> = {
   data: T[]
@@ -54,7 +43,7 @@ export const BaseTable = <T extends { id: number }>({
             top="0.5"
             aria-label="Select row"
             checked={selection.includes(item.id)}
-            onCheckedChange={(changes: { checked: any }) => {
+            onCheckedChange={(changes: { checked: boolean | 'indeterminate' }) => {
               setSelection((prev) =>
                 changes.checked ? [...prev, item.id] : selection.filter((id) => id !== item.id)
               )
@@ -107,7 +96,7 @@ export const BaseTable = <T extends { id: number }>({
                         top="0.5"
                         aria-label="Select all rows"
                         checked={indeterminate ? 'indeterminate' : selection.length > 0}
-                        onCheckedChange={(changes: { checked: any }) => {
+                        onCheckedChange={(changes: { checked: boolean | 'indeterminate' }) => {
                           setSelection(changes.checked ? data.map((item) => item.id) : [])
                         }}
                       >
@@ -117,8 +106,8 @@ export const BaseTable = <T extends { id: number }>({
                     </Table.ColumnHeader>
                   )}
 
-                  {columns.map((column) => {
-                    return <Table.ColumnHeader>{column.header}</Table.ColumnHeader>
+                  {columns.map((column, colIndex) => {
+                    return <Table.ColumnHeader key={colIndex}>{column.header}</Table.ColumnHeader>
                   })}
                 </Table.Row>
               </Table.Header>

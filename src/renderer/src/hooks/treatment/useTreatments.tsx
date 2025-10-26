@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTreatmentsByReunion, createTreatment, updateTreatment, deleteTreatment } from '../../services/treatmentService'
 import { CreateTreatment, UpdateTreatment } from '../../schemas/treatmentSchema'
 
+// Importar o tipo Treatment do global.d.ts
+type Treatment = globalThis.Treatment
+
 export const useTreatments = (reunionId: number) => {
   const queryClient = useQueryClient()
 

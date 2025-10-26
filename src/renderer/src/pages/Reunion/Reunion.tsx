@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import {
   Button,
   Flex,
@@ -6,28 +6,39 @@ import {
   Box,
   Stack,
   Text,
-  Tag as ChakraTag,
   Checkbox,
   SimpleGrid,
   Tag,
-  ListCollection
+  SelectRoot,
+  SelectLabel,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+  SelectItemText
 } from '@chakra-ui/react'
-import { PageHeader, Select } from '../../components'
+
+import { createListCollection } from '@ark-ui/react/collection'
+import { PageHeader } from '../../components'
 import { FiSearch, FiFilter, FiPlus, FiTrash2, FiEdit2, FiEye } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
 import { DrawerForm } from '../../components/DrawerForm'
 import { Input } from '../../components/Input'
 import { useRecords } from '../../hooks'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useProntuarios } from '../../hooks/prontuario'
 
-// Tipagem para registro
+// Importar o tipo Prontuario do global.d.ts
+type Prontuario = globalThis.Prontuario
+
+// Tipagem para registro (atendimento)
 interface RecordType {
   id: number
-  prontuario: number
+  prontuarioId: number
+  prontuarioNumber: number
   ministerio: boolean
   valor: number
   cestas: number
-  unidade: string
   labels: string[]
   representacao: boolean
   somenteRoupas: boolean
@@ -40,11 +51,11 @@ interface RecordType {
 const mockRecords: RecordType[] = [
   {
     id: 1,
-    prontuario: 123,
+    prontuarioId: 1,
+    prontuarioNumber: 123,
     valor: 500,
     cestas: 1,
     labels: ['Valor total aprovado', 'Emergencial'],
-    unidade: 'Santa cecilia',
     ministerio: true,
     representacao: false,
     somenteRoupas: false,
@@ -52,11 +63,11 @@ const mockRecords: RecordType[] = [
   },
   {
     id: 2,
-    prontuario: 225,
+    prontuarioId: 2,
+    prontuarioNumber: 225,
     valor: 0,
     cestas: 1,
     labels: ['Somente roupas', 'Emergencial'],
-    unidade: 'Veneza',
     ministerio: false,
     representacao: false,
     somenteRoupas: true,
@@ -76,11 +87,11 @@ const unidades = ['Santa cecilia', 'Veneza', 'Alterosa', 'San Genaro', 'Florenç
 
 const defaultRecord: RecordType = {
   id: 0,
-  prontuario: 0,
+  prontuarioId: 0,
+  prontuarioNumber: 0,
   ministerio: false,
   valor: 0,
   cestas: 0,
-  unidade: '',
   labels: [],
   representacao: false,
   somenteRoupas: false,
@@ -95,11 +106,26 @@ export const Reunion = () => {
   const navigate = useNavigate()
   const { id } = useParams()
   const reunionId = Number(id)
-  const { records: hookRecords, summary, isLoading, createTreatment, updateTreatment, deleteTreatment, reunions } = useRecords(reunionId)
+  const {
+    records: hookRecords,
+    summary,
+    isLoading,
+    createAtendimento,
+    updateAtendimento,
+    deleteAtendimento,
+    reunions
+  } = useRecords(reunionId)
+  const { activeProntuarios } = useProntuarios()
 
   // Handlers
   const handleAdd = () => {
-    setSelectedRecord(defaultRecord)
+    const reunionData = reunions.data
+    const recordWithDefaults = {
+      ...defaultRecord,
+      valor: reunionData?.value || 0,
+      cestas: reunionData?.foodBasketQuantity || 0
+    }
+    setSelectedRecord(recordWithDefaults)
     setDrawerOpen(true)
   }
   const handleEdit = (record: RecordType) => {
@@ -111,14 +137,13 @@ export const Reunion = () => {
     setDrawerOpen(true)
   }
   const handleDelete = (id: number) => {
-    deleteTreatment.mutate(id)
+    deleteAtendimento.mutate(id)
   }
   const handleSave = () => {
     if (selectedRecord.id === 0) {
       const payload = {
-        enchiridionId: selectedRecord.prontuario,
+        prontuarioId: selectedRecord.prontuarioId,
         reunionId,
-        unityId: Number(selectedRecord.unidade) || 0,
         date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
         aprovedValue: selectedRecord.valorTotalAprovado,
         value: selectedRecord.valor,
@@ -128,13 +153,12 @@ export const Reunion = () => {
         returned: selectedRecord.representacao,
         repeat: false
       }
-      createTreatment.mutate(payload)
+      createAtendimento.mutate(payload)
     } else {
       const payload = {
         id: selectedRecord.id,
-        enchiridionId: selectedRecord.prontuario,
+        prontuarioId: selectedRecord.prontuarioId,
         reunionId,
-        unityId: Number(selectedRecord.unidade) || 0,
         date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
         aprovedValue: selectedRecord.valorTotalAprovado,
         value: selectedRecord.valor,
@@ -144,7 +168,7 @@ export const Reunion = () => {
         returned: selectedRecord.representacao,
         repeat: false
       }
-      updateTreatment.mutate(payload)
+      updateAtendimento.mutate(payload)
     }
     setDrawerOpen(false)
   }
@@ -172,7 +196,6 @@ export const Reunion = () => {
         </Flex>
       )
     },
-    { header: 'Unidade', accessor: 'unidade' },
     {
       header: 'Ações',
       accessor: 'actions',
@@ -218,14 +241,63 @@ export const Reunion = () => {
   // DrawerForm content
   const drawerContent = (
     <Stack gap={3}>
-      <Input
-        label="Prontuário"
-        type="number"
-        value={selectedRecord.prontuario}
-        onChange={(e) =>
-          setSelectedRecord({ ...selectedRecord, prontuario: Number(e.target.value) })
-        }
-      />
+      <SelectRoot
+        collection={createListCollection<{ label: string; value: string }>({
+          items:
+            activeProntuarios?.map((p) => ({ label: String(p.number), value: String(p.id) })) || []
+        })}
+        value={[String(selectedRecord.prontuarioId || '')]}
+        onValueChange={(details: { value: string[] }) => {
+          const selectedProntuario = activeProntuarios?.find(
+            (p) => p.id === Number(details.value[0])
+          )
+          if (selectedProntuario) {
+            setSelectedRecord({
+              ...selectedRecord,
+              prontuarioId: selectedProntuario.id,
+              prontuarioNumber: selectedProntuario.number
+            })
+          }
+        }}
+      >
+        <SelectLabel>Prontuário</SelectLabel>
+        <SelectTrigger>
+          <SelectValueText placeholder="Selecione um prontuário" />
+        </SelectTrigger>
+        <SelectContent>
+          {activeProntuarios?.map((prontuario) => (
+            <SelectItem key={prontuario.id} item={String(prontuario.id)}>
+              <SelectItemText>{prontuario.number}</SelectItemText>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
+
+      {/* Valores padrão da reunião */}
+      {reunions.data && (
+        <Box p={3} bg="bg.subtle" rounded="md">
+          <Text fontWeight="bold" mb={2}>
+            Valores Padrão da Reunião
+          </Text>
+          <Flex gap={4} align="center">
+            <Text fontSize="sm">Valor: R$ {reunions.data.value.toLocaleString('pt-BR')}</Text>
+            <Text fontSize="sm">Cestas: {reunions.data.foodBasketQuantity}</Text>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSelectedRecord({
+                  ...selectedRecord,
+                  valor: reunions.data?.value || 0,
+                  cestas: reunions.data?.foodBasketQuantity || 0
+                })
+              }}
+            >
+              Usar Padrão
+            </Button>
+          </Flex>
+        </Box>
+      )}
 
       <Checkbox.Root>
         <Checkbox.HiddenInput />
@@ -245,13 +317,6 @@ export const Reunion = () => {
         onChange={(e) => setSelectedRecord({ ...selectedRecord, cestas: Number(e.target.value) })}
       />
 
-      <Select
-        options={unidades.map((unidade) => ({ label: unidade, value: unidade }))}
-        placeholder="Selecione a unidade"
-        value={selectedRecord.unidade}
-        onChange={(value: any) => setSelectedRecord({ ...selectedRecord, unidade: value })}
-      />
-
       <Text fontWeight="bold" mt={2}>
         Flags
       </Text>
@@ -260,7 +325,7 @@ export const Reunion = () => {
           <Checkbox.Root checked={selectedRecord.labels.includes(flag)} key={flag}>
             <Checkbox.HiddenInput />
             <Checkbox.Control
-              onChange={(e: any) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setSelectedRecord({
                   ...selectedRecord,
                   labels: e.target.checked
@@ -357,7 +422,7 @@ export const Reunion = () => {
           <Flex w="100%" h="100%" gap={16} position="relative">
             <BaseTable
               drawerOpen={drawerOpen}
-              data={hookRecords.filter((r) => String(r.prontuario).includes(search))}
+              data={hookRecords.filter((r) => String(r.prontuarioId).includes(search))}
               columns={columns as Column<RecordType>[]}
               isLoading={isLoading}
               onRowClick={handleView}

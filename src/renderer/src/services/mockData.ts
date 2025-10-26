@@ -2,6 +2,10 @@
 import { faker } from '@faker-js/faker'
 import { ReunionStatus } from '../types/reunion-status'
 
+// Importar os tipos do global.d.ts
+type Treatment = globalThis.Treatment
+type Enchiridion = globalThis.Enchiridion
+
 const lenghts = {
   unities: 2,
   reunions: 2,

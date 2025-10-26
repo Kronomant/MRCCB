@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
 import { useReunion } from '../reunion/useReunion'
-import { useTreatments } from '../treatment/useTreatments'
+import { useAtendimentos } from '../atendimento/useAtendimentos'
 
 export interface RecordType {
   id: number
-  prontuario: number
+  prontuarioId: number
+  prontuarioNumber: number
   ministerio: boolean
   valor: number
   cestas: number
-  unidade: string
   labels: string[]
   representacao: boolean
   somenteRoupas: boolean
@@ -17,31 +17,32 @@ export interface RecordType {
 
 export const useRecords = (reunionId: number) => {
   const { reunions } = useReunion(reunionId)
-  const { treatments, createTreatment, updateTreatment, deleteTreatment } = useTreatments(reunionId)
+  const { atendimentos, createAtendimento, updateAtendimento, deleteAtendimento } = useAtendimentos(reunionId)
 
-  const mapTreatmentToRecord = (treatment: Treatment): RecordType => {
+  const mapAtendimentoToRecord = (atendimento: Atendimento): RecordType => {
     const labels: string[] = []
-    if (treatment.aprovedValue) labels.push('Valor total aprovado')
-    if (treatment.emergency) labels.push('Emergencial')
-    if (treatment.onlyClothes) labels.push('Somente roupas')
-    if (treatment.returned) labels.push('Representação')
+    if (atendimento.aprovedValue) labels.push('Valor total aprovado')
+    if (atendimento.emergency) labels.push('Emergencial')
+    if (atendimento.onlyClothes) labels.push('Somente roupas')
+    if (atendimento.returned) labels.push('Representação')
+    if (atendimento.repeat) labels.push('Repetição')
     return {
-      id: treatment.id!,
-      prontuario: treatment.enchiridionId,
+      id: atendimento.id!,
+      prontuarioId: atendimento.prontuarioId,
+      prontuarioNumber: atendimento.prontuarioId, // Será atualizado quando tivermos acesso aos dados do prontuário
       ministerio: false,
-      valor: treatment.value,
-      cestas: treatment.foodBasketQuantity,
-      unidade: String(treatment.unityId ?? ''),
+      valor: atendimento.value,
+      cestas: atendimento.foodBasketQuantity,
       labels,
-      representacao: treatment.returned,
-      somenteRoupas: treatment.onlyClothes,
-      valorTotalAprovado: treatment.aprovedValue
+      representacao: atendimento.returned,
+      somenteRoupas: atendimento.onlyClothes,
+      valorTotalAprovado: atendimento.aprovedValue
     }
   }
 
   const records = useMemo<RecordType[]>(() => {
-    return treatments?.data ? treatments.data.map(mapTreatmentToRecord) : []
-  }, [treatments?.data])
+    return atendimentos?.data ? atendimentos.data.map(mapAtendimentoToRecord) : []
+  }, [atendimentos?.data])
 
   const summary = useMemo(() => {
     return {
@@ -56,10 +57,10 @@ export const useRecords = (reunionId: number) => {
   return {
     records,
     summary,
-    isLoading: (treatments.isLoading || reunions.isLoading) as boolean,
-    createTreatment,
-    updateTreatment,
-    deleteTreatment,
+    isLoading: (atendimentos.isLoading || reunions.isLoading) as boolean,
+    createAtendimento,
+    updateAtendimento,
+    deleteAtendimento,
     reunions
   }
 }

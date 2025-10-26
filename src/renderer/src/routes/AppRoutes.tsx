@@ -1,6 +1,6 @@
 import { RouteObject } from 'react-router-dom'
 import App from '../App'
-import { ReunionManager, Reunion, TreatmentManager } from '../pages'
+import { ReunionManager, Reunion, ProntuarioManager } from '../pages'
 
 const AppRoutes: RouteObject[] = [
   {
@@ -18,7 +18,7 @@ const AppRoutes: RouteObject[] = [
       },
       {
         path: 'prontuarios',
-        element: <TreatmentManager />
+        element: <ProntuarioManager />
       },
       {
         path: '*',

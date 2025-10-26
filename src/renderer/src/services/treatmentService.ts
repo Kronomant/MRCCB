@@ -1,6 +1,9 @@
 // src/renderer/src/services/treatmentService.ts
 import { CreateTreatment, UpdateTreatment } from '../schemas/treatmentSchema'
 
+// Importar o tipo Treatment do global.d.ts
+type Treatment = globalThis.Treatment
+
 export async function getAllTreatments(): Promise<Treatment[]> {
   return await window.electron.ipcRenderer.invoke('treatment:getAll')
 }

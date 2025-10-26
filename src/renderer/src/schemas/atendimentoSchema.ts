@@ -1,11 +1,10 @@
-// src/renderer/src/schemas/treatmentSchema.ts
+// src/renderer/src/schemas/atendimentoSchema.ts
 import { z } from 'zod'
 
-export const treatmentSchema = z.object({
+export const atendimentoSchema = z.object({
   id: z.number().optional(),
-  enchiridionId: z.number({ message: 'Enchiridion é obrigatório' }).int().positive(),
+  prontuarioId: z.number({ message: 'Prontuário é obrigatório' }).int().positive(),
   reunionId: z.number({ message: 'Reunião é obrigatória' }).int().positive(),
-  unityId: z.number({ message: 'Unidade é obrigatória' }).int().positive(),
   date: z
     .string({ message: 'Data é obrigatória' })
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD'),
@@ -20,16 +19,16 @@ export const treatmentSchema = z.object({
   updatedAt: z.string().optional()
 })
 
-export const createTreatmentSchema = treatmentSchema.omit({ 
+export const createAtendimentoSchema = atendimentoSchema.omit({ 
   id: true, 
   createdAt: true, 
   updatedAt: true 
 })
-export type CreateTreatment = z.infer<typeof createTreatmentSchema>
+export type CreateAtendimento = z.infer<typeof createAtendimentoSchema>
 
-export const updateTreatmentSchema = treatmentSchema.partial().required({ id: true })
-export type UpdateTreatment = z.infer<typeof updateTreatmentSchema>
+export const updateAtendimentoSchema = atendimentoSchema.partial().required({ id: true })
+export type UpdateAtendimento = z.infer<typeof updateAtendimentoSchema>
 
 // Schema para validação de formulários (sem id)
-export const treatmentFormSchema = createTreatmentSchema
-export type TreatmentFormData = z.infer<typeof treatmentFormSchema>
+export const atendimentoFormSchema = createAtendimentoSchema
+export type AtendimentoFormData = z.infer<typeof atendimentoFormSchema>

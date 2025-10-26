@@ -22,7 +22,41 @@ export function initDb(): void {
     )
   `)
 
-  // Tabela de tratamentos (prontuários)
+  // Tabela de prontuários
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS prontuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      number INTEGER NOT NULL UNIQUE,
+      unityId INTEGER NOT NULL,
+      ministry INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Tabela de atendimentos (relaciona prontuários com reuniões)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS atendimentos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prontuarioId INTEGER NOT NULL,
+      reunionId INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      aprovedValue INTEGER NOT NULL DEFAULT 0,
+      value REAL NOT NULL DEFAULT 0,
+      foodBasketQuantity INTEGER NOT NULL DEFAULT 0,
+      onlyClothes INTEGER NOT NULL DEFAULT 0,
+      emergency INTEGER NOT NULL DEFAULT 0,
+      returned INTEGER NOT NULL DEFAULT 0,
+      repeat INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (prontuarioId) REFERENCES prontuarios (id),
+      FOREIGN KEY (reunionId) REFERENCES reunions (id)
+    )
+  `)
+
+  // Manter tabela treatments para compatibilidade temporária
   db.exec(`
     CREATE TABLE IF NOT EXISTS treatments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

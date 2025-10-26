@@ -1,10 +1,10 @@
 import { app, shell, BrowserWindow } from 'electron'
-import icon from '../../../resources/icon.png'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 
 export function createWindow(): void {
   // Create the browser window.
+  const iconPath = join(process.cwd(), 'resources', 'icon.png')
   const mainWindow = new BrowserWindow({
     width: 1300,
     height: 800,
@@ -12,7 +12,7 @@ export function createWindow(): void {
     minHeight: 800,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

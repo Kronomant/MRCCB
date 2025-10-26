@@ -16,19 +16,21 @@ declare global {
     name: string
   }
 
-  interface Enchiridion {
+  interface Prontuario {
     id: number
     number: number
     unityId: number
     ministry: boolean
+    createdAt: string
+    updatedAt: string
+    status: 'active' | 'inactive'
   }
 
-  interface Treatment {
+  interface Atendimento {
     id: number
-    enchiridionId: number
+    prontuarioId: number
     reunionId: number
-    unityId: number
-    date: String
+    date: string
     aprovedValue: boolean
     value: number
     foodBasketQuantity: number
@@ -36,6 +38,8 @@ declare global {
     emergency: boolean
     returned: boolean
     repeat: boolean
+    createdAt: string
+    updatedAt: string
   }
 
   interface FoodBasket {
@@ -50,11 +54,43 @@ declare global {
     backupPath: string
   }
 
+  interface Treatment {
+    id: number
+    enchiridionId: number
+    reunionId: number
+    unityId: number
+    date: string
+    aprovedValue: boolean
+    value: number
+    foodBasketQuantity: number
+    onlyClothes: boolean
+    emergency: boolean
+    returned: boolean
+    repeat: boolean
+    createdAt?: string
+    updatedAt?: string
+  }
+
+  interface Enchiridion {
+    id: number
+    number: number
+    unityId: number
+    ministry: boolean
+  }
+
   type Column<T> = {
     header: string
     accessor?: keyof T
     customRender?: (row: T) => React.ReactNode
   }
+
+  // Tipos auxiliares para Prontuario
+  type CreateProntuario = Omit<Prontuario, 'id' | 'createdAt' | 'updatedAt'>
+  type UpdateProntuario = Partial<CreateProntuario>
+
+  // Tipos auxiliares para Atendimento
+  type CreateAtendimento = Omit<Atendimento, 'id' | 'createdAt' | 'updatedAt'>
+  type UpdateAtendimento = Partial<CreateAtendimento>
 }
 
 export enum ReunionStatus {

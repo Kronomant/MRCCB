@@ -1,17 +1,27 @@
-import { 
-  Box, 
-  Flex, 
-  Stack, 
-  Text, 
-  Tag, 
-  Button, 
+import {
+  Box,
+  Flex,
+  Stack,
+  Text,
+  Tag,
+  Button,
   Heading,
   Card,
   Badge,
   Separator
 } from '@chakra-ui/react'
-import { FiCalendar, FiDollarSign, FiPackage, FiAlertTriangle, FiCheck, FiRepeat } from 'react-icons/fi'
+import {
+  FiCalendar,
+  FiDollarSign,
+  FiPackage,
+  FiAlertTriangle,
+  FiCheck,
+  FiRepeat
+} from 'react-icons/fi'
 import { useState, useEffect } from 'react'
+
+// Importar o tipo Treatment do global.d.ts
+type Treatment = globalThis.Treatment
 
 interface TreatmentDetailProps {
   treatmentId: number
@@ -50,24 +60,30 @@ const getStatusInfo = (treatment: Treatment) => {
   return { label: 'Pendente', color: 'orange', icon: <FiCalendar /> }
 }
 
-const AssistanceItem: React.FC<{ icon: React.ReactNode; label: string; value: string | number; highlight?: boolean }> = ({ 
-  icon, 
-  label, 
-  value, 
-  highlight = false 
-}) => (
+const AssistanceItem: React.FC<{
+  icon: React.ReactNode
+  label: string
+  value: string | number
+  highlight?: boolean
+}> = ({ icon, label, value, highlight = false }) => (
   <Flex align="center" gap={3} p={3} bg={highlight ? 'blue.50' : 'gray.50'} borderRadius="md">
-    <Box color={highlight ? 'blue.500' : 'gray.500'}>
-      {icon}
-    </Box>
+    <Box color={highlight ? 'blue.500' : 'gray.500'}>{icon}</Box>
     <Box flex={1}>
-      <Text fontSize="sm" color="gray.600">{label}</Text>
-      <Text fontWeight="medium" color={highlight ? 'blue.700' : 'gray.900'}>{value}</Text>
+      <Text fontSize="sm" color="gray.600">
+        {label}
+      </Text>
+      <Text fontWeight="medium" color={highlight ? 'blue.700' : 'gray.900'}>
+        {value}
+      </Text>
     </Box>
   </Flex>
 )
 
-export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, onClose, onEdit }) => {
+export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({
+  treatmentId,
+  onClose,
+  onEdit
+}) => {
   const [treatment, setTreatment] = useState<Treatment | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -75,7 +91,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
     const fetchTreatment = async () => {
       try {
         const data = await window.electron.ipcRenderer.invoke('treatment:getById', treatmentId)
-        setTreatment(data)
+        setTreatment(data ?? null)
       } catch (error) {
         console.error('Erro ao buscar prontuário:', error)
       } finally {
@@ -98,7 +114,9 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
     return (
       <Box p={6}>
         <Text>Prontuário não encontrado</Text>
-        <Button mt={4} onClick={onClose}>Voltar</Button>
+        <Button mt={4} onClick={onClose}>
+          Voltar
+        </Button>
       </Box>
     )
   }
@@ -112,8 +130,12 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
         <Card.Body>
           <Flex justify="space-between" align="center">
             <Box>
-              <Heading size="xl" color="blue.600">Prontuário #{treatment.enchiridionId}</Heading>
-              <Text color="gray.600" fontSize="lg">Atendimento #{treatment.id}</Text>
+              <Heading size="xl" color="blue.600">
+                Prontuário #{treatment.enchiridionId}
+              </Heading>
+              <Text color="gray.600" fontSize="lg">
+                Atendimento #{treatment.id}
+              </Text>
             </Box>
             <Flex gap={3}>
               <Button variant="outline" colorPalette="blue" onClick={() => onEdit(treatment)}>
@@ -132,7 +154,9 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
         <Card.Body>
           <Stack gap={4}>
             <Flex justify="space-between" align="center">
-              <Text fontSize="lg" fontWeight="medium">Status do Atendimento</Text>
+              <Text fontSize="lg" fontWeight="medium">
+                Status do Atendimento
+              </Text>
               <Tag.Root colorPalette={statusInfo.color}>
                 <Flex align="center" gap={2}>
                   {statusInfo.icon}
@@ -140,22 +164,28 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                 </Flex>
               </Tag.Root>
             </Flex>
-            
+
             <Separator />
-            
+
             <Stack gap={3}>
               <Text fontWeight="medium">Informações Básicas</Text>
               <Flex gap={4} wrap="wrap">
                 <Box>
-                  <Text fontSize="sm" color="gray.600">Data do Atendimento</Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Data do Atendimento
+                  </Text>
                   <Text fontWeight="medium">{formatDate(treatment.date)}</Text>
                 </Box>
                 <Box>
-                  <Text fontSize="sm" color="gray.600">Reunião</Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Reunião
+                  </Text>
                   <Text fontWeight="medium">#{treatment.reunionId}</Text>
                 </Box>
                 <Box>
-                  <Text fontSize="sm" color="gray.600">Unidade</Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Unidade
+                  </Text>
                   <Text fontWeight="medium">Unidade {treatment.unityId}</Text>
                 </Box>
               </Flex>
@@ -168,8 +198,10 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
       <Card.Root mb={6}>
         <Card.Body>
           <Stack gap={4}>
-            <Text fontSize="lg" fontWeight="medium">Benefícios Concedidos</Text>
-            
+            <Text fontSize="lg" fontWeight="medium">
+              Benefícios Concedidos
+            </Text>
+
             <Stack gap={3}>
               {treatment.value > 0 && (
                 <AssistanceItem
@@ -179,7 +211,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   highlight={treatment.aprovedValue}
                 />
               )}
-              
+
               {treatment.foodBasketQuantity > 0 && (
                 <AssistanceItem
                   icon={<FiPackage />}
@@ -187,17 +219,15 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   value={`${treatment.foodBasketQuantity} unidade(s)`}
                 />
               )}
-              
+
               {treatment.onlyClothes && (
-                <AssistanceItem
-                  icon={<FiPackage />}
-                  label="Roupas"
-                  value="Fornecidas"
-                />
+                <AssistanceItem icon={<FiPackage />} label="Roupas" value="Fornecidas" />
               )}
-              
+
               {!treatment.value && !treatment.foodBasketQuantity && !treatment.onlyClothes && (
-                <Text color="gray.500" fontStyle="italic">Nenhum benefício específico registrado</Text>
+                <Text color="gray.500" fontStyle="italic">
+                  Nenhum benefício específico registrado
+                </Text>
               )}
             </Stack>
           </Stack>
@@ -208,8 +238,10 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
       <Card.Root mb={6}>
         <Card.Body>
           <Stack gap={4}>
-            <Text fontSize="lg" fontWeight="medium">Características do Atendimento</Text>
-            
+            <Text fontSize="lg" fontWeight="medium">
+              Características do Atendimento
+            </Text>
+
             <Flex gap={3} wrap="wrap">
               {treatment.emergency && (
                 <Badge colorPalette="red" variant="solid">
@@ -219,7 +251,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   </Flex>
                 </Badge>
               )}
-              
+
               {treatment.aprovedValue && (
                 <Badge colorPalette="green" variant="solid">
                   <Flex align="center" gap={1}>
@@ -228,7 +260,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   </Flex>
                 </Badge>
               )}
-              
+
               {treatment.returned && (
                 <Badge colorPalette="blue" variant="solid">
                   <Flex align="center" gap={1}>
@@ -237,7 +269,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   </Flex>
                 </Badge>
               )}
-              
+
               {treatment.repeat && (
                 <Badge colorPalette="orange" variant="solid">
                   <Flex align="center" gap={1}>
@@ -246,7 +278,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                   </Flex>
                 </Badge>
               )}
-              
+
               {treatment.onlyClothes && (
                 <Badge colorPalette="purple" variant="solid">
                   <Flex align="center" gap={1}>
@@ -256,10 +288,16 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
                 </Badge>
               )}
             </Flex>
-            
-            {!treatment.emergency && !treatment.aprovedValue && !treatment.returned && !treatment.repeat && !treatment.onlyClothes && (
-              <Text color="gray.500" fontStyle="italic">Nenhuma característica especial</Text>
-            )}
+
+            {!treatment.emergency &&
+              !treatment.aprovedValue &&
+              !treatment.returned &&
+              !treatment.repeat &&
+              !treatment.onlyClothes && (
+                <Text color="gray.500" fontStyle="italic">
+                  Nenhuma característica especial
+                </Text>
+              )}
           </Stack>
         </Card.Body>
       </Card.Root>
@@ -269,15 +307,17 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({ treatmentId, o
         <Card.Root>
           <Card.Body>
             <Stack gap={4}>
-              <Text fontSize="lg" fontWeight="medium">Resumo Financeiro</Text>
-              
+              <Text fontSize="lg" fontWeight="medium">
+                Resumo Financeiro
+              </Text>
+
               <Flex justify="space-between" align="center" p={4} bg="green.50" borderRadius="md">
                 <Text fontWeight="medium">Total do Atendimento</Text>
                 <Text fontSize="xl" fontWeight="bold" color="green.700">
                   {formatCurrency(treatment.value)}
                 </Text>
               </Flex>
-              
+
               <Text fontSize="sm" color="gray.600">
                 Status: {treatment.aprovedValue ? 'Aprovado' : 'Pendente de aprovação'}
               </Text>

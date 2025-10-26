@@ -3,6 +3,8 @@ import { createWindow } from './windows/mainWindows'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerReunionHandlers } from './ipc/reunionHandlers'
 import { registerTreatmentHandlers } from './ipc/treatmentHandlers'
+import { registerProntuarioHandlers } from './ipc/prontuarioHandlers'
+import { registerAtendimentoHandlers } from './ipc/atendimentoHandlers'
 import { initDb } from './database/db'
 
 app.whenReady().then(() => {
@@ -18,6 +20,8 @@ app.whenReady().then(() => {
   initDb() // Inicializa e migra o banco de dados
   registerReunionHandlers()
   registerTreatmentHandlers()
+  registerProntuarioHandlers()
+  registerAtendimentoHandlers()
   createWindow()
 
   app.on('activate', function () {
