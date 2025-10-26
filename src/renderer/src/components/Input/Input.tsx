@@ -6,6 +6,7 @@ import {
   type InputProps as ChakraInputProps
 } from '@chakra-ui/react'
 import React from 'react'
+import style from './input.module.scss'
 
 const floatingStyles = defineStyle({
   pos: 'absolute',
@@ -38,21 +39,21 @@ export const Input = React.forwardRef<HTMLInputElement, CustomInputProps>(
   ({ label, error, ...props }, ref) => {
     return (
       <Field.Root invalid={!!error}>
-        <Box pos="relative" w="full">
-          <ChakraInput 
+        <Box className={style['chakra-input-container']} pos="relative" w="full">
+          <ChakraInput
             ref={ref}
-            className="peer" 
-            color="fg" 
-            placeholder={props.placeholder || ''} 
-            {...props} 
+            className={style['chakra-input']}
+            color="fg"
+            placeholder={props.placeholder || ''}
+            {...props}
           />
           <Field.Label {...floatingStyles}>{label}</Field.Label>
+          {error && (
+            <Field.ErrorText color="red.500" fontSize="sm" mt={1}>
+              {error}
+            </Field.ErrorText>
+          )}
         </Box>
-        {error && (
-          <Field.ErrorText color="red.500" fontSize="sm" mt={1}>
-            {error}
-          </Field.ErrorText>
-        )}
       </Field.Root>
     )
   }

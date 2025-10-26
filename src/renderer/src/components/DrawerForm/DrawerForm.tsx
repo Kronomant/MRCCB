@@ -12,6 +12,7 @@ interface DrawerFormProps {
   onSecondaryAction?: () => void
   secondaryLabel?: string
   isLoading?: boolean
+  headerActions?: React.ReactNode
 }
 
 const drawerWidth = 400
@@ -25,7 +26,8 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
   primaryLabel = 'Salvar',
   onSecondaryAction,
   secondaryLabel = 'Cancelar',
-  isLoading = false
+  isLoading = false,
+  headerActions
 }) => (
   <Box
     position="absolute"
@@ -62,9 +64,12 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
           {title}
         </Text>
       )}
-      <Button variant="outline" onClick={onClose} size="sm">
-        <FiX />
-      </Button>
+      <Flex align="center" gap={2}>
+        {headerActions}
+        <Button variant="outline" onClick={onClose} size="sm">
+          <FiX />
+        </Button>
+      </Flex>
     </Flex>
     <Box flex={1} px={6} py={4} overflowY="auto">
       {children}
