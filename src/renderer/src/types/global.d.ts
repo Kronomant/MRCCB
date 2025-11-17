@@ -14,6 +14,8 @@ declare global {
   interface Unity {
     id: number
     name: string
+    createdAt: string
+    updatedAt: string
   }
 
   interface Prontuario {
@@ -29,6 +31,7 @@ declare global {
   interface Atendimento {
     id: number
     prontuarioId: number
+    prontuarioNumber: number
     reunionId: number
     date: string
     aprovedValue: boolean
@@ -42,16 +45,11 @@ declare global {
     updatedAt: string
   }
 
-  interface FoodBasket {
+  interface Enchiridion {
     id: number
-    date: String
-    exit: boolean
-  }
-
-  interface DropboxBackup {
-    id: number
-    dropboxAccount: string
-    backupPath: string
+    number: number
+    unityId: number
+    ministry: boolean
   }
 
   interface Treatment {
@@ -67,15 +65,18 @@ declare global {
     emergency: boolean
     returned: boolean
     repeat: boolean
-    createdAt?: string
-    updatedAt?: string
   }
 
-  interface Enchiridion {
+  interface FoodBasket {
     id: number
-    number: number
-    unityId: number
-    ministry: boolean
+    date: string
+    exit: boolean
+  }
+
+  interface DropboxBackup {
+    id: number
+    dropboxAccount: string
+    backupPath: string
   }
 
   type Column<T> = {
@@ -91,6 +92,10 @@ declare global {
   // Tipos auxiliares para Atendimento
   type CreateAtendimento = Omit<Atendimento, 'id' | 'createdAt' | 'updatedAt'>
   type UpdateAtendimento = Partial<CreateAtendimento>
+
+  // Tipos auxiliares para Unity
+  type CreateUnity = Omit<Unity, 'id' | 'createdAt' | 'updatedAt'>
+  type UpdateUnity = Partial<CreateUnity>
 }
 
 export enum ReunionStatus {

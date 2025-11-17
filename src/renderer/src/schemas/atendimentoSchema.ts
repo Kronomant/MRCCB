@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const atendimentoSchema = z.object({
   id: z.number().optional(),
   prontuarioId: z.number({ message: 'Prontuário é obrigatório' }).int().positive(),
+  prontuarioNumber: z.number({ message: 'Número do prontuário é obrigatório' }).int().positive(),
   reunionId: z.number({ message: 'Reunião é obrigatória' }).int().positive(),
   date: z
     .string({ message: 'Data é obrigatória' })

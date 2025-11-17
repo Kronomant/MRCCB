@@ -18,7 +18,9 @@ const lenghts = {
 const generateUnities = (length: number): Array<Unity> => {
   return Array.from({ length }, () => ({
     id: faker.number.int(1000),
-    name: `Unidade ${faker.location.city()}`
+    name: `Unidade ${faker.location.city()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }))
 }
 

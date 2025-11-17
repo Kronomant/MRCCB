@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fi'
 import { useState, useEffect } from 'react'
 import { useProntuario } from '../../hooks/prontuario'
+import { useUnities } from '../../hooks/unity'
 
 interface ProntuarioDetailProps {
   prontuarioId: number
@@ -98,6 +99,7 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
     prontuario: { data: prontuario },
     isLoading
   } = useProntuario(prontuarioId)
+  const { unities } = useUnities()
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
   const [loadingAtendimentos, setLoadingAtendimentos] = useState(true)
 
@@ -148,8 +150,7 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   const valorTotalRecebido = atendimentos.reduce((total, a) => total + (a.value || 0), 0)
 
   return (
-    <Box p={8} maxW="6xl" mx="auto">
-      {/* Header */}
+    <Flex direction="column" p={6} mx="auto" overflowY="scroll" maxH="90vh">
       <Card.Root mb={6}>
         <Card.Body>
           <Flex justify="space-between" align="center">
@@ -172,177 +173,181 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
           </Flex>
         </Card.Body>
       </Card.Root>
+      <Flex>
+        {/* Status e Informações Básicas */}
+        <Card.Root mb={6}>
+          <Card.Body>
+            <Stack gap={4}>
+              <Flex justify="space-between" align="center">
+                <Text fontSize="lg" fontWeight="medium">
+                  Status do Prontuário
+                </Text>
+                <Tag.Root colorPalette={statusInfo.color}>
+                  <Flex align="center" gap={2}>
+                    {statusInfo.icon}
+                    {statusInfo.label}
+                  </Flex>
+                </Tag.Root>
+              </Flex>
 
-      {/* Status e Informações Básicas */}
-      <Card.Root mb={6}>
-        <Card.Body>
-          <Stack gap={4}>
-            <Flex justify="space-between" align="center">
-              <Text fontSize="lg" fontWeight="medium">
-                Status do Prontuário
-              </Text>
-              <Tag.Root colorPalette={statusInfo.color}>
-                <Flex align="center" gap={2}>
-                  {statusInfo.icon}
-                  {statusInfo.label}
-                </Flex>
-              </Tag.Root>
-            </Flex>
+              <Separator />
 
-            <Separator />
-
-            <Stack gap={3}>
-              <Text fontWeight="medium">Informações Básicas</Text>
               <Stack gap={3}>
-                <InfoItem
-                  icon={<FiUser />}
-                  label="Número do Prontuário"
-                  value={prontuario.number}
-                  highlight
-                />
-                <InfoItem
-                  icon={<FiMapPin />}
-                  label="Unidade"
-                  value={`Unidade ${prontuario.unityId}`}
-                />
-                <InfoItem
-                  icon={prontuario.ministry ? <FiCheck /> : <FiClock />}
-                  label="Ministério"
-                  value={prontuario.ministry ? 'Sim' : 'Não'}
-                />
-                <InfoItem
-                  icon={<FiCalendar />}
-                  label="Criado em"
-                  value={formatDateTime(prontuario.createdAt)}
-                />
-                {prontuario.updatedAt && (
+                <Text fontWeight="medium">Informações Básicas</Text>
+                <Stack gap={3}>
                   <InfoItem
-                    icon={<FiClock />}
-                    label="Última atualização"
-                    value={formatDateTime(prontuario.updatedAt)}
+                    icon={<FiUser />}
+                    label="Número do Prontuário"
+                    value={prontuario.number}
+                    highlight
                   />
-                )}
+                  <InfoItem
+                    icon={<FiMapPin />}
+                    label="Unidade"
+                    value={
+                      unities.find((u) => u.id === prontuario.unityId)?.name ||
+                      `Unidade ${prontuario.unityId}`
+                    }
+                  />
+                  <InfoItem
+                    icon={prontuario.ministry ? <FiCheck /> : <FiClock />}
+                    label="Ministério"
+                    value={prontuario.ministry ? 'Sim' : 'Não'}
+                  />
+                  <InfoItem
+                    icon={<FiCalendar />}
+                    label="Criado em"
+                    value={formatDateTime(prontuario.createdAt)}
+                  />
+                  {prontuario.updatedAt && (
+                    <InfoItem
+                      icon={<FiClock />}
+                      label="Última atualização"
+                      value={formatDateTime(prontuario.updatedAt)}
+                    />
+                  )}
+                </Stack>
               </Stack>
             </Stack>
-          </Stack>
-        </Card.Body>
-      </Card.Root>
+          </Card.Body>
+        </Card.Root>
 
-      {/* Resumo de Atendimentos */}
-      <Card.Root mb={6}>
-        <Card.Body>
-          <Stack gap={4}>
-            <Text fontSize="lg" fontWeight="medium">
-              Resumo de Atendimentos
-            </Text>
-
-            <Flex gap={4} wrap="wrap">
-              <Box p={4} bg="blue.50" borderRadius="md" flex="1" minW="200px">
-                <Text fontSize="sm" color="blue.600">
-                  Total de Atendimentos
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="blue.700">
-                  {totalAtendimentos}
-                </Text>
-              </Box>
-
-              <Box p={4} bg="orange.50" borderRadius="md" flex="1" minW="200px">
-                <Text fontSize="sm" color="orange.600">
-                  Pendentes
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="orange.700">
-                  {atendimentosPendentes}
-                </Text>
-              </Box>
-
-              <Box p={4} bg="green.50" borderRadius="md" flex="1" minW="200px">
-                <Text fontSize="sm" color="green.600">
-                  Valor Total Recebido
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="green.700">
-                  {formatCurrency(valorTotalRecebido)}
-                </Text>
-              </Box>
-            </Flex>
-          </Stack>
-        </Card.Body>
-      </Card.Root>
-
-      {/* Histórico de Atendimentos */}
-      <Card.Root>
-        <Card.Body>
-          <Stack gap={4}>
-            <Text fontSize="lg" fontWeight="medium">
-              Histórico de Atendimentos
-            </Text>
-
-            {loadingAtendimentos ? (
-              <Text>Carregando histórico...</Text>
-            ) : atendimentos.length === 0 ? (
-              <Text color="gray.500" fontStyle="italic">
-                Nenhum atendimento registrado para este prontuário
+        {/* Resumo de Atendimentos */}
+        <Card.Root mb={6}>
+          <Card.Body>
+            <Stack gap={4}>
+              <Text fontSize="lg" fontWeight="medium">
+                Resumo de Atendimentos
               </Text>
-            ) : (
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeader>Data</Table.ColumnHeader>
-                    <Table.ColumnHeader>Reunião</Table.ColumnHeader>
-                    <Table.ColumnHeader>Valor</Table.ColumnHeader>
-                    <Table.ColumnHeader>Cestas</Table.ColumnHeader>
-                    <Table.ColumnHeader>Status</Table.ColumnHeader>
-                    <Table.ColumnHeader>Características</Table.ColumnHeader>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {atendimentos.map((atendimento) => (
-                    <Table.Row key={atendimento.id}>
-                      <Table.Cell>{formatDate(atendimento.date)}</Table.Cell>
-                      <Table.Cell>#{atendimento.reunionId}</Table.Cell>
-                      <Table.Cell>
-                        {atendimento.value ? formatCurrency(atendimento.value) : '-'}
-                      </Table.Cell>
-                      <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
-                      <Table.Cell>
-                        <Badge
-                          colorPalette={atendimento.returned ? 'green' : 'orange'}
-                          variant="solid"
-                        >
-                          {atendimento.returned ? 'Entregue' : 'Pendente'}
-                        </Badge>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Flex gap={1} wrap="wrap">
-                          {atendimento.emergency && (
-                            <Badge colorPalette="red" size="sm">
-                              <FiAlertTriangle size={10} />
-                            </Badge>
-                          )}
-                          {atendimento.aprovedValue && (
-                            <Badge colorPalette="green" size="sm">
-                              <FiCheck size={10} />
-                            </Badge>
-                          )}
-                          {atendimento.repeat && (
-                            <Badge colorPalette="orange" size="sm">
-                              <FiRepeat size={10} />
-                            </Badge>
-                          )}
-                          {atendimento.onlyClothes && (
-                            <Badge colorPalette="purple" size="sm">
-                              <FiPackage size={10} />
-                            </Badge>
-                          )}
-                        </Flex>
-                      </Table.Cell>
+
+              <Flex gap={4} wrap="wrap">
+                <Box p={4} bg="blue.50" borderRadius="md" flex="1" minW="200px">
+                  <Text fontSize="sm" color="blue.600">
+                    Total de Atendimentos
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="blue.700">
+                    {totalAtendimentos}
+                  </Text>
+                </Box>
+
+                <Box p={4} bg="orange.50" borderRadius="md" flex="1" minW="200px">
+                  <Text fontSize="sm" color="orange.600">
+                    Pendentes
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="orange.700">
+                    {atendimentosPendentes}
+                  </Text>
+                </Box>
+
+                <Box p={4} bg="green.50" borderRadius="md" flex="1" minW="200px">
+                  <Text fontSize="sm" color="green.600">
+                    Valor Total Recebido
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="green.700">
+                    {formatCurrency(valorTotalRecebido)}
+                  </Text>
+                </Box>
+              </Flex>
+            </Stack>
+          </Card.Body>
+        </Card.Root>
+
+        {/* Histórico de Atendimentos */}
+        <Card.Root mb={6}>
+          <Card.Body>
+            <Stack gap={4}>
+              <Text fontSize="lg" fontWeight="medium">
+                Histórico de Atendimentos
+              </Text>
+
+              {loadingAtendimentos ? (
+                <Text>Carregando histórico...</Text>
+              ) : atendimentos.length === 0 ? (
+                <Text color="gray.500" fontStyle="italic">
+                  Nenhum atendimento registrado para este prontuário
+                </Text>
+              ) : (
+                <Table.Root>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeader>Data</Table.ColumnHeader>
+                      <Table.ColumnHeader>Reunião</Table.ColumnHeader>
+                      <Table.ColumnHeader>Valor</Table.ColumnHeader>
+                      <Table.ColumnHeader>Cestas</Table.ColumnHeader>
+                      <Table.ColumnHeader>Status</Table.ColumnHeader>
+                      <Table.ColumnHeader>Características</Table.ColumnHeader>
                     </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            )}
-          </Stack>
-        </Card.Body>
-      </Card.Root>
-    </Box>
+                  </Table.Header>
+                  <Table.Body>
+                    {atendimentos.map((atendimento) => (
+                      <Table.Row key={atendimento.id}>
+                        <Table.Cell>{formatDate(atendimento.date)}</Table.Cell>
+                        <Table.Cell>#{atendimento.reunionId}</Table.Cell>
+                        <Table.Cell>
+                          {atendimento.value ? formatCurrency(atendimento.value) : '-'}
+                        </Table.Cell>
+                        <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
+                        <Table.Cell>
+                          <Badge
+                            colorPalette={atendimento.returned ? 'green' : 'orange'}
+                            variant="solid"
+                          >
+                            {atendimento.returned ? 'Entregue' : 'Pendente'}
+                          </Badge>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Flex gap={1} wrap="wrap">
+                            {atendimento.emergency && (
+                              <Badge colorPalette="red" size="sm">
+                                <FiAlertTriangle size={10} />
+                              </Badge>
+                            )}
+                            {atendimento.aprovedValue && (
+                              <Badge colorPalette="green" size="sm">
+                                <FiCheck size={10} />
+                              </Badge>
+                            )}
+                            {atendimento.repeat && (
+                              <Badge colorPalette="orange" size="sm">
+                                <FiRepeat size={10} />
+                              </Badge>
+                            )}
+                            {atendimento.onlyClothes && (
+                              <Badge colorPalette="purple" size="sm">
+                                <FiPackage size={10} />
+                              </Badge>
+                            )}
+                          </Flex>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              )}
+            </Stack>
+          </Card.Body>
+        </Card.Root>
+      </Flex>
+    </Flex>
   )
 }

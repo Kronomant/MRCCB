@@ -17,7 +17,8 @@ export interface RecordType {
 
 export const useRecords = (reunionId: number) => {
   const { reunions } = useReunion(reunionId)
-  const { atendimentos, createAtendimento, updateAtendimento, deleteAtendimento } = useAtendimentos(reunionId)
+  const { atendimentos, createAtendimento, updateAtendimento, deleteAtendimento } =
+    useAtendimentos(reunionId)
 
   const mapAtendimentoToRecord = (atendimento: Atendimento): RecordType => {
     const labels: string[] = []
@@ -26,10 +27,11 @@ export const useRecords = (reunionId: number) => {
     if (atendimento.onlyClothes) labels.push('Somente roupas')
     if (atendimento.returned) labels.push('Representação')
     if (atendimento.repeat) labels.push('Repetição')
+
     return {
       id: atendimento.id!,
       prontuarioId: atendimento.prontuarioId,
-      prontuarioNumber: atendimento.prontuarioId, // Será atualizado quando tivermos acesso aos dados do prontuário
+      prontuarioNumber: atendimento.prontuarioNumber,
       ministerio: false,
       valor: atendimento.value,
       cestas: atendimento.foodBasketQuantity,

@@ -70,6 +70,44 @@ npm run build
 
 ---
 
+## 🗂️ Modelo de Dados: Atendimento
+
+O objeto `Atendimento` agora inclui o campo `prontuarioNumber` para refletir o número real do prontuário (digitado), além do `prontuarioId`.
+
+- `prontuarioId`: `number` — ID do prontuário (chave estrangeira)
+- `prontuarioNumber`: `number` — Número do prontuário (visível ao usuário)
+- `reunionId`: `number`
+- `date`: `string` (YYYY-MM-DD)
+- `aprovedValue`: `boolean`
+- `value`: `number`
+- `foodBasketQuantity`: `number`
+- `onlyClothes`: `boolean`
+- `emergency`: `boolean`
+- `returned`: `boolean`
+- `repeat`: `boolean`
+
+Validação (Zod): todos os campos são validados em `src/renderer/src/schemas/atendimentoSchema.ts`.
+Persistência: o campo `prontuarioNumber` é salvo na tabela `atendimentos`.
+
+---
+
+## 🧪 Testes de Persistência
+
+Um teste simples com `ts-node` valida a persistência do `prontuarioNumber`:
+
+- Arquivo: `src/tests/atendimentoProntuarioNumber.test.ts`
+- Script: `npm run test:atendimento`
+
+Se ocorrer erro de versão do `better-sqlite3`, execute:
+
+```bash
+npm run rebuild:sqlite
+```
+
+Em seguida, rode o teste novamente.
+
+---
+
 ## 🛠️ Funcionalidades (MVP)
 
 - ✅ Cadastro e listagem de **reuniões**

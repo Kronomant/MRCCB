@@ -4,6 +4,7 @@ import { getDb } from './db'
 export type AtendimentoData = {
   id?: number
   prontuarioId: number
+  prontuarioNumber: number
   reunionId: number
   date: string
   aprovedValue: boolean
@@ -23,8 +24,8 @@ export function createAtendimento(
   const db = getDb()
   const stmt = db.prepare(`
     INSERT INTO atendimentos (
-      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, returned, repeat, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, returned, repeat, createdAt, updatedAt, prontuarioNumber
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
   `)
   const result = stmt.run(
     data.prontuarioId,
@@ -36,7 +37,8 @@ export function createAtendimento(
     data.onlyClothes ? 1 : 0,
     data.emergency ? 1 : 0,
     data.returned ? 1 : 0,
-    data.repeat ? 1 : 0
+    data.repeat ? 1 : 0,
+    data.prontuarioNumber
   )
 
   // Buscar o registro criado para retornar com timestamps
@@ -106,7 +108,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
   if (data.id === undefined) throw new Error('ID is required to update atendimento')
   const stmt = db.prepare(`
     UPDATE atendimentos SET
-      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?, onlyClothes = ?, emergency = ?, returned = ?, repeat = ?, updatedAt = CURRENT_TIMESTAMP
+      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?, onlyClothes = ?, emergency = ?, returned = ?, repeat = ?, prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
     WHERE id = ?
   `)
   stmt.run(
@@ -120,6 +122,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
     data.emergency ? 1 : 0,
     data.returned ? 1 : 0,
     data.repeat ? 1 : 0,
+    data.prontuarioNumber,
     data.id
   )
 

@@ -5,6 +5,7 @@ import { registerReunionHandlers } from './ipc/reunionHandlers'
 import { registerTreatmentHandlers } from './ipc/treatmentHandlers'
 import { registerProntuarioHandlers } from './ipc/prontuarioHandlers'
 import { registerAtendimentoHandlers } from './ipc/atendimentoHandlers'
+import { registerUnityHandlers } from './ipc/unityHandlers'
 import { initDb } from './database/db'
 
 app.whenReady().then(() => {
@@ -22,6 +23,7 @@ app.whenReady().then(() => {
   registerTreatmentHandlers()
   registerProntuarioHandlers()
   registerAtendimentoHandlers()
+  registerUnityHandlers()
   createWindow()
 
   app.on('activate', function () {

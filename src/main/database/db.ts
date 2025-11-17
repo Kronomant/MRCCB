@@ -2,6 +2,7 @@
 import Database from 'better-sqlite3'
 import path from 'path'
 import { app } from 'electron'
+import { createUnitiesTable } from './migrations/002_create_unities_table'
 
 let db: Database.Database | null = null
 
@@ -9,6 +10,7 @@ export function initDb(): void {
   const dbPath = path.join(process.cwd(), 'database.sqlite')
   db = new Database(dbPath)
   db.pragma('journal_mode = WAL')
+  createUnitiesTable()
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS reunions (
@@ -56,6 +58,18 @@ export function initDb(): void {
     )
   `)
 
+  // Migrar coluna prontuarioNumber em atendimentos, se não existir
+  const columns = db.prepare("PRAGMA table_info('atendimentos')").all() as Array<{ name: string }>
+  const hasProntuarioNumber = columns.some((c) => c.name === 'prontuarioNumber')
+  if (!hasProntuarioNumber) {
+    db.exec("ALTER TABLE atendimentos ADD COLUMN prontuarioNumber INTEGER")
+    db.exec(`
+      UPDATE atendimentos
+      SET prontuarioNumber = (
+        SELECT number FROM prontuarios WHERE prontuarios.id = atendimentos.prontuarioId
+      )
+    `)
+  }
   // Manter tabela treatments para compatibilidade temporária
   db.exec(`
     CREATE TABLE IF NOT EXISTS treatments (

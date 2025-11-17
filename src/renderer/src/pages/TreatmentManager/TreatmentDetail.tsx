@@ -19,6 +19,7 @@ import {
   FiRepeat
 } from 'react-icons/fi'
 import { useState, useEffect } from 'react'
+import { useUnities } from '../../hooks/unity'
 
 // Importar o tipo Treatment do global.d.ts
 type Treatment = globalThis.Treatment
@@ -86,6 +87,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({
 }) => {
   const [treatment, setTreatment] = useState<Treatment | null>(null)
   const [loading, setLoading] = useState(true)
+  const { unities } = useUnities()
 
   useEffect(() => {
     const fetchTreatment = async () => {
@@ -186,7 +188,10 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({
                   <Text fontSize="sm" color="gray.600">
                     Unidade
                   </Text>
-                  <Text fontWeight="medium">Unidade {treatment.unityId}</Text>
+                  <Text fontWeight="medium">
+                    {unities.find((u) => u.id === treatment.unityId)?.name ||
+                      `Unidade ${treatment.unityId}`}
+                  </Text>
                 </Box>
               </Flex>
             </Stack>

@@ -10,5 +10,10 @@ export const menuItems = [
     title: 'Prontuários',
     path: 'prontuarios',
     icon: <FiFileText />
+  },
+  {
+    title: 'Unidades',
+    path: 'unidades',
+    icon: <FiSettings />
   }
 ]

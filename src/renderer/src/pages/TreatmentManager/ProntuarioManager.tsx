@@ -1,4 +1,4 @@
-import { Button, Flex, InputGroup, Tag, Stack, Text, Box } from '@chakra-ui/react'
+import { Button, Flex, InputGroup, Tag, Stack, Text, Box, SelectRoot, SelectLabel, SelectTrigger, SelectValueText, SelectContent, SelectItem, SelectItemText } from '@chakra-ui/react'
 import { PageHeader } from '../../components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
@@ -6,6 +6,8 @@ import { DrawerForm } from '../../components/DrawerForm'
 import { useState } from 'react'
 import { Input } from '../../components/Input'
 import { useProntuarios } from '../../hooks/prontuario'
+import { useUnities } from '../../hooks/unity'
+import { createListCollection } from '@ark-ui/react/collection'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createProntuarioSchema, CreateProntuario } from '../../schemas/prontuarioSchema'
@@ -47,6 +49,8 @@ const formatDate = (dateString: string) => {
 }
 
 const InfoSection: React.FC<{ prontuario: Prontuario }> = ({ prontuario }) => {
+  const { unities } = useUnities()
+  const unityName = unities.find((u) => u.id === prontuario.unityId)?.name || `Unidade ${prontuario.unityId}`
   const statusInfo = statusMap[prontuario.status] || { label: prontuario.status, colorScheme: 'gray' }
 
   return (
@@ -58,7 +62,7 @@ const InfoSection: React.FC<{ prontuario: Prontuario }> = ({ prontuario }) => {
         <b>Número:</b> {prontuario.number}
       </Text>
       <Text>
-        <b>Unidade:</b> {prontuario.unityId}
+        <b>Unidade:</b> {unityName}
       </Text>
       <Text>
         <b>Ministério:</b> {prontuario.ministry ? 'Sim' : 'Não'}
@@ -104,6 +108,8 @@ export const ProntuarioManager = () => {
     updateProntuario,
     deleteProntuario
   } = useProntuarios()
+
+  const { unities } = useUnities()
 
   const isLoading = false // TODO: Implementar loading state
   const prontuariosData = prontuarios || []
@@ -184,7 +190,8 @@ export const ProntuarioManager = () => {
       header: 'Unidade',
       accessor: 'unityId',
       customRender: (row: Prontuario) => {
-        return `Unidade ${row.unityId}`
+        const unity = unities.find((u) => u.id === row.unityId)
+        return unity ? unity.name : `Unidade ${row.unityId}`
       }
     },
     {
@@ -307,20 +314,39 @@ export const ProntuarioManager = () => {
                 placeholder="Número do prontuário"
               />
 
-              <Input
-                label="Unidade"
-                type="number"
-                {...register('unityId', { valueAsNumber: true })}
-                error={errors.unityId?.message}
-                placeholder="ID da unidade"
-              />
+              <SelectRoot
+                collection={createListCollection<{ label: string; value: string }>(
+                  { items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) })) }
+                )}
+                value={[String(editingProntuario?.unityId ?? defaultFormValues.unityId)]}
+                onValueChange={(details: { value: string[] }) => {
+                  const id = Number(details.value[0])
+                  reset({
+                    number: editingProntuario?.number ?? defaultFormValues.number,
+                    unityId: id,
+                    ministry: editingProntuario?.ministry ?? defaultFormValues.ministry,
+                    status: editingProntuario?.status ?? defaultFormValues.status
+                  })
+                }}
+              >
+                <SelectLabel>Unidade</SelectLabel>
+                <SelectTrigger>
+                  <SelectValueText placeholder="Selecione a unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(unities || []).map((u) => (
+                    <SelectItem key={u.id} item={String(u.id)}>
+                      <SelectItemText>{u.name}</SelectItemText>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
 
               <Stack gap={3}>
                 <Text fontWeight="medium">Status</Text>
                 <select {...register('status')} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                  <option value="ativo">Ativo</option>
-                  <option value="inativo">Inativo</option>
-                  <option value="arquivado">Arquivado</option>
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Inativo</option>
                 </select>
                 {errors.status && <Text color="red.500" fontSize="sm">{errors.status.message}</Text>}
               </Stack>

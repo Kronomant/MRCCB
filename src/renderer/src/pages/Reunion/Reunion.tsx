@@ -19,17 +19,16 @@ import {
 } from '@chakra-ui/react'
 
 import { createListCollection } from '@ark-ui/react/collection'
-import { PageHeader } from '../../components'
+import { PageHeader, DrawerForm, BaseTable, Input } from '../../components'
 import { FiSearch, FiFilter, FiPlus, FiTrash2, FiEdit2, FiEye } from 'react-icons/fi'
-import { BaseTable } from '../../components/Table/BaseTable'
-import { DrawerForm } from '../../components/DrawerForm'
-import { Input } from '../../components/Input'
+
 import { useRecords } from '../../hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProntuarios } from '../../hooks/prontuario'
+import { useUnities } from '../../hooks/unity'
 
-// Importar o tipo Prontuario do global.d.ts
-type Prontuario = globalThis.Prontuario
+// Adiciona serviço para busca direta de prontuário por número
+import { getProntuarioByNumber } from '../../services/prontuarioService'
 
 // Tipagem para registro (atendimento)
 interface RecordType {
@@ -44,37 +43,6 @@ interface RecordType {
   somenteRoupas: boolean
   valorTotalAprovado: boolean
 }
-
-// Mock data para exemplo
-// Removido mockSummary em favor de dados reais
-
-const mockRecords: RecordType[] = [
-  {
-    id: 1,
-    prontuarioId: 1,
-    prontuarioNumber: 123,
-    valor: 500,
-    cestas: 1,
-    labels: ['Valor total aprovado', 'Emergencial'],
-    ministerio: true,
-    representacao: false,
-    somenteRoupas: false,
-    valorTotalAprovado: true
-  },
-  {
-    id: 2,
-    prontuarioId: 2,
-    prontuarioNumber: 225,
-    valor: 0,
-    cestas: 1,
-    labels: ['Somente roupas', 'Emergencial'],
-    ministerio: false,
-    representacao: false,
-    somenteRoupas: true,
-    valorTotalAprovado: false
-  }
-  // ... outros registros
-]
 
 const LABEL_COLORS: Record<string, string> = {
   Emergencial: 'red',
@@ -101,8 +69,12 @@ const defaultRecord: RecordType = {
 export const Reunion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<RecordType>(defaultRecord)
-  const [records, setRecords] = useState<RecordType[]>([])
   const [search, setSearch] = useState('')
+  // Estado para digitação e validação do número do prontuário no Select
+  const [prontuarioSearch, setProntuarioSearch] = useState('')
+  const [prontuarioError, setProntuarioError] = useState<string | null>(null)
+  const [selectedUnityId, setSelectedUnityId] = useState<number | null>(null)
+
   const navigate = useNavigate()
   const { id } = useParams()
   const reunionId = Number(id)
@@ -115,7 +87,10 @@ export const Reunion = () => {
     deleteAtendimento,
     reunions
   } = useRecords(reunionId)
-  const { activeProntuarios } = useProntuarios()
+  const { activeProntuarios, createProntuario } = useProntuarios()
+  const { unities } = useUnities()
+
+  const isValidProntuarioNumber = (value: string) => /^\d+$/.test(value) && Number(value) > 0
 
   // Handlers
   const handleAdd = () => {
@@ -126,23 +101,61 @@ export const Reunion = () => {
       cestas: reunionData?.foodBasketQuantity || 0
     }
     setSelectedRecord(recordWithDefaults)
+    setProntuarioSearch('')
+    setProntuarioError(null)
     setDrawerOpen(true)
   }
   const handleEdit = (record: RecordType) => {
     setSelectedRecord(record)
+    setProntuarioSearch(String(record.prontuarioNumber || ''))
+    setProntuarioError(null)
     setDrawerOpen(true)
   }
   const handleView = (record: RecordType) => {
     setSelectedRecord(record)
+    setProntuarioSearch(String(record.prontuarioNumber || ''))
+    setProntuarioError(null)
     setDrawerOpen(true)
   }
   const handleDelete = (id: number) => {
     deleteAtendimento.mutate(id)
   }
-  const handleSave = () => {
-    if (selectedRecord.id === 0) {
-      const payload = {
-        prontuarioId: selectedRecord.prontuarioId,
+
+  const handleSave = async () => {
+    const typedNumber = Number(prontuarioSearch.trim())
+    try {
+      // Determina prontuário alvo: selecionado ou digitado
+      let targetProntuarioId = selectedRecord.prontuarioId
+
+      if (!targetProntuarioId && prontuarioSearch.trim() !== '') {
+        if (!isValidProntuarioNumber(prontuarioSearch.trim())) {
+          setProntuarioError('Número de prontuário inválido')
+          console.error('Formato inválido do número do prontuário')
+          return
+        }
+
+        const existing = await getProntuarioByNumber(typedNumber)
+        if (existing?.id) {
+          targetProntuarioId = existing.id
+        } else {
+          // Cria prontuário apenas no momento do salvamento
+          const created = await createProntuario.mutateAsync({
+            number: typedNumber,
+            unityId: selectedUnityId ?? 1,
+            ministry: false,
+            status: 'active'
+          })
+          targetProntuarioId = created.id!
+        }
+        setSelectedRecord((prev) => ({
+          ...prev,
+          prontuarioId: targetProntuarioId,
+          prontuarioNumber: typedNumber
+        }))
+      }
+
+      const payloadBase = {
+        prontuarioId: targetProntuarioId,
         reunionId,
         date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
         aprovedValue: selectedRecord.valorTotalAprovado,
@@ -151,31 +164,29 @@ export const Reunion = () => {
         onlyClothes: selectedRecord.somenteRoupas,
         emergency: selectedRecord.labels.includes('Emergencial'),
         returned: selectedRecord.representacao,
-        repeat: false
+        repeat: false,
+        prontuarioNumber: typedNumber
       }
-      createAtendimento.mutate(payload)
-    } else {
-      const payload = {
-        id: selectedRecord.id,
-        prontuarioId: selectedRecord.prontuarioId,
-        reunionId,
-        date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
-        aprovedValue: selectedRecord.valorTotalAprovado,
-        value: selectedRecord.valor,
-        foodBasketQuantity: selectedRecord.cestas,
-        onlyClothes: selectedRecord.somenteRoupas,
-        emergency: selectedRecord.labels.includes('Emergencial'),
-        returned: selectedRecord.representacao,
-        repeat: false
+
+      if (selectedRecord.id === 0) {
+        // Criar novo atendimento
+        createAtendimento.mutate(payloadBase)
+      } else {
+        // Atualizar atendimento existente (mantém comportamento atual)
+        updateAtendimento.mutate({ id: selectedRecord.id, ...payloadBase })
       }
-      updateAtendimento.mutate(payload)
+
+      setDrawerOpen(false)
+    } catch (err) {
+      console.error('Erro no fluxo de salvamento de atendimento/prontuário:', err)
     }
-    setDrawerOpen(false)
   }
+
+  console.log('selectedRecord:', selectedRecord)
 
   // Table columns
   const columns = [
-    { header: 'Prontuário', accessor: 'prontuario' },
+    { header: 'Prontuário', accessor: 'prontuarioNumber' },
     {
       header: 'Valor (R$)',
       accessor: 'valor',
@@ -238,13 +249,18 @@ export const Reunion = () => {
 
   // Dados e resumo agora vêm do hook useRecords
 
+  // Lista filtrada para o Select conforme digitação
+  const filteredProntuarios = (activeProntuarios ?? []).filter((p) =>
+    String(p.number).includes(prontuarioSearch)
+  )
+
   // DrawerForm content
   const drawerContent = (
     <Stack gap={3}>
       <SelectRoot
         collection={createListCollection<{ label: string; value: string }>({
           items:
-            activeProntuarios?.map((p) => ({ label: String(p.number), value: String(p.id) })) || []
+            filteredProntuarios.map((p) => ({ label: String(p.number), value: String(p.id) })) || []
         })}
         value={[String(selectedRecord.prontuarioId || '')]}
         onValueChange={(details: { value: string[] }) => {
@@ -257,15 +273,43 @@ export const Reunion = () => {
               prontuarioId: selectedProntuario.id,
               prontuarioNumber: selectedProntuario.number
             })
+            setProntuarioSearch(String(selectedProntuario.number))
+            setProntuarioError(null)
+            setSelectedUnityId(selectedProntuario.unityId)
           }
         }}
       >
         <SelectLabel>Prontuário</SelectLabel>
         <SelectTrigger>
-          <SelectValueText placeholder="Selecione um prontuário" />
+          <SelectValueText placeholder="Selecione ou digite um prontuário" />
         </SelectTrigger>
         <SelectContent>
-          {activeProntuarios?.map((prontuario) => (
+          {/* Campo de busca dentro do menu do select */}
+          <Box px={3} py={2}>
+            <Input
+              label="Número do prontuário"
+              placeholder="Digite o número"
+              value={prontuarioSearch}
+              onChange={(e) => {
+                const val = e.target.value
+                setProntuarioSearch(val)
+                if (val && !isValidProntuarioNumber(val)) {
+                  setProntuarioError('Número de prontuário inválido')
+                } else {
+                  setProntuarioError(null)
+                }
+              }}
+              error={prontuarioError ?? undefined}
+            />
+          </Box>
+
+          {filteredProntuarios.length === 0 && (
+            <Text color="fg.muted" px={3} py={2}>
+              Prontuário não encontrado
+            </Text>
+          )}
+
+          {filteredProntuarios?.map((prontuario) => (
             <SelectItem key={prontuario.id} item={String(prontuario.id)}>
               <SelectItemText>{prontuario.number}</SelectItemText>
             </SelectItem>
@@ -273,30 +317,35 @@ export const Reunion = () => {
         </SelectContent>
       </SelectRoot>
 
-      {/* Valores padrão da reunião */}
-      {reunions.data && (
-        <Box p={3} bg="bg.subtle" rounded="md">
-          <Text fontWeight="bold" mb={2}>
-            Valores Padrão da Reunião
-          </Text>
-          <Flex gap={4} align="center">
-            <Text fontSize="sm">Valor: R$ {reunions.data.value.toLocaleString('pt-BR')}</Text>
-            <Text fontSize="sm">Cestas: {reunions.data.foodBasketQuantity}</Text>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSelectedRecord({
-                  ...selectedRecord,
-                  valor: reunions.data?.value || 0,
-                  cestas: reunions.data?.foodBasketQuantity || 0
-                })
-              }}
-            >
-              Usar Padrão
-            </Button>
-          </Flex>
-        </Box>
+      {selectedRecord.prontuarioId ? (
+        <Stack gap={2}>
+          <Text fontWeight="medium">Unidade</Text>
+          <Tag.Root colorPalette="gray">
+            {unities.find((u) => u.id === selectedUnityId)?.name || 'Unidade não definida'}
+          </Tag.Root>
+        </Stack>
+      ) : (
+        <SelectRoot
+          collection={createListCollection<{ label: string; value: string }>(
+            { items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) })) }
+          )}
+          value={[selectedUnityId ? String(selectedUnityId) : '']}
+          onValueChange={(details: { value: string[] }) => {
+            setSelectedUnityId(Number(details.value[0]))
+          }}
+        >
+          <SelectLabel>Unidade</SelectLabel>
+          <SelectTrigger>
+            <SelectValueText placeholder="Selecione a unidade" />
+          </SelectTrigger>
+          <SelectContent>
+            {(unities || []).map((u) => (
+              <SelectItem key={u.id} item={String(u.id)}>
+                <SelectItemText>{u.name}</SelectItemText>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </SelectRoot>
       )}
 
       <Checkbox.Root>
