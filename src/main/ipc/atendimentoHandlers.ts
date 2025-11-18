@@ -12,12 +12,13 @@ import {
 } from '../database/atendimentoRepository'
 
 export function registerAtendimentoHandlers() {
-  ipcMain.handle('atendimento:create', async (_event, payload: Omit<AtendimentoData, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log('Backend - Recebendo dados para criar atendimento:', payload)
-    const result = createAtendimento(payload)
-    console.log('Backend - Resultado da criação:', result)
-    return result
-  })
+  ipcMain.handle(
+    'atendimento:create',
+    async (_event, payload: Omit<AtendimentoData, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const result = createAtendimento(payload)
+      return result
+    }
+  )
 
   ipcMain.handle('atendimento:getAll', async () => {
     return getAllAtendimentos()

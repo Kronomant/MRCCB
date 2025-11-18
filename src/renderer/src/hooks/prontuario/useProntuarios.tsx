@@ -51,7 +51,19 @@ export const useProntuarios = () => {
 
   const createProntuarioMutation = useMutation({
     mutationFn: (data: CreateProntuario) => createProntuario(data),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      queryClient.setQueryData<Prontuario[]>(['prontuarios', 'active'], (prev) => {
+        const list = Array.isArray(prev) ? prev : []
+        const exists = list.some((p) => p.id === created.id)
+        const next = exists ? list.map((p) => (p.id === created.id ? created : p)) : [...list, created]
+        return next.sort((a, b) => a.number - b.number)
+      })
+      queryClient.setQueryData<Prontuario[]>(['prontuarios', 'all'], (prev) => {
+        const list = Array.isArray(prev) ? prev : []
+        const exists = list.some((p) => p.id === created.id)
+        const next = exists ? list.map((p) => (p.id === created.id ? created : p)) : [...list, created]
+        return next.sort((a, b) => a.number - b.number)
+      })
       queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     },
     onError: (error) => {

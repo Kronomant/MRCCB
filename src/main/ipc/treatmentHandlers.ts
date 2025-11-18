@@ -12,9 +12,7 @@ import {
 
 export function registerTreatmentHandlers() {
   ipcMain.handle('treatment:create', async (_event, payload: Omit<TreatmentData, 'id'>) => {
-    console.log('Backend - Recebendo dados para criar prontuário:', payload)
     const result = createTreatment(payload)
-    console.log('Backend - Resultado da criação:', result)
     return result
   })
 

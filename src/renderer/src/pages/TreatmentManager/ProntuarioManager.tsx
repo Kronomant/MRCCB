@@ -1,4 +1,19 @@
-import { Button, Flex, InputGroup, Tag, Stack, Text, Box, SelectRoot, SelectLabel, SelectTrigger, SelectValueText, SelectContent, SelectItem, SelectItemText } from '@chakra-ui/react'
+import {
+  Button,
+  Flex,
+  InputGroup,
+  Tag,
+  Stack,
+  Text,
+  Box,
+  SelectRoot,
+  SelectLabel,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+  SelectItemText
+} from '@chakra-ui/react'
 import { PageHeader } from '../../components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
@@ -50,8 +65,12 @@ const formatDate = (dateString: string) => {
 
 const InfoSection: React.FC<{ prontuario: Prontuario }> = ({ prontuario }) => {
   const { unities } = useUnities()
-  const unityName = unities.find((u) => u.id === prontuario.unityId)?.name || `Unidade ${prontuario.unityId}`
-  const statusInfo = statusMap[prontuario.status] || { label: prontuario.status, colorScheme: 'gray' }
+  const unityName =
+    unities.find((u) => u.id === prontuario.unityId)?.name || `Unidade ${prontuario.unityId}`
+  const statusInfo = statusMap[prontuario.status] || {
+    label: prontuario.status,
+    colorScheme: 'gray'
+  }
 
   return (
     <Stack color="fg" gap={2} mb={6}>
@@ -102,12 +121,7 @@ export const ProntuarioManager = () => {
     defaultValues: defaultFormValues
   })
 
-  const {
-    prontuarios,
-    createProntuario,
-    updateProntuario,
-    deleteProntuario
-  } = useProntuarios()
+  const { prontuarios, createProntuario, updateProntuario, deleteProntuario } = useProntuarios()
 
   const { unities } = useUnities()
 
@@ -122,14 +136,10 @@ export const ProntuarioManager = () => {
 
   const onSubmit = async (data: CreateProntuario) => {
     try {
-      console.log('Dados do formulário:', data)
       if (editingProntuario) {
-        console.log('Atualizando prontuário:', editingProntuario.id)
         await updateProntuario.mutateAsync({ id: editingProntuario.id, ...data })
       } else {
-        console.log('Criando novo prontuário')
-        const result = await createProntuario.mutateAsync(data)
-        console.log('Resultado da criação:', result)
+        await createProntuario.mutateAsync(data)
       }
       setIsDrawerOpen(false)
       setEditingProntuario(null)
@@ -197,7 +207,7 @@ export const ProntuarioManager = () => {
     {
       header: 'Ministério',
       accessor: 'ministry',
-      customRender: (row: Prontuario) => row.ministry ? 'Sim' : 'Não'
+      customRender: (row: Prontuario) => (row.ministry ? 'Sim' : 'Não')
     },
     {
       header: 'Criado em',
@@ -315,9 +325,9 @@ export const ProntuarioManager = () => {
               />
 
               <SelectRoot
-                collection={createListCollection<{ label: string; value: string }>(
-                  { items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) })) }
-                )}
+                collection={createListCollection<{ label: string; value: string }>({
+                  items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) }))
+                })}
                 value={[String(editingProntuario?.unityId ?? defaultFormValues.unityId)]}
                 onValueChange={(details: { value: string[] }) => {
                   const id = Number(details.value[0])
@@ -344,11 +354,18 @@ export const ProntuarioManager = () => {
 
               <Stack gap={3}>
                 <Text fontWeight="medium">Status</Text>
-                <select {...register('status')} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                <select
+                  {...register('status')}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                >
                   <option value="active">Ativo</option>
                   <option value="inactive">Inativo</option>
                 </select>
-                {errors.status && <Text color="red.500" fontSize="sm">{errors.status.message}</Text>}
+                {errors.status && (
+                  <Text color="red.500" fontSize="sm">
+                    {errors.status.message}
+                  </Text>
+                )}
               </Stack>
 
               <Stack gap={3}>

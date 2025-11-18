@@ -16,7 +16,6 @@ interface NavItemProps {
 }
 
 const NavItem = ({ icon, children, href, onClick, selected }: NavItemProps) => {
-  console.log(selected, 'está selecionado?')
   return (
     <Link className="sidebar__nav" to={href} onClick={onClick}>
       <Flex

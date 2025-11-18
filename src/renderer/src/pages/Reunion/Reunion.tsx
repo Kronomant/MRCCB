@@ -134,24 +134,28 @@ export const Reunion = () => {
           return
         }
 
+
         const existing = await getProntuarioByNumber(typedNumber)
-        if (existing?.id) {
-          targetProntuarioId = existing.id
-        } else {
-          // Cria prontuário apenas no momento do salvamento
-          const created = await createProntuario.mutateAsync({
+        const prontuarioToSelect =
+          existing ??
+          (await createProntuario.mutateAsync({
             number: typedNumber,
             unityId: selectedUnityId ?? 1,
             ministry: false,
             status: 'active'
-          })
-          targetProntuarioId = created.id!
-        }
+          }))
+
+        targetProntuarioId = prontuarioToSelect.id!
+
+        // Atualiza o estado de forma coesa para refletir a seleção
         setSelectedRecord((prev) => ({
           ...prev,
-          prontuarioId: targetProntuarioId,
-          prontuarioNumber: typedNumber
+          prontuarioId: prontuarioToSelect.id,
+          prontuarioNumber: prontuarioToSelect.number
         }))
+        setProntuarioSearch(String(prontuarioToSelect.number))
+        setSelectedUnityId(prontuarioToSelect.unityId)
+        setProntuarioError(null)
       }
 
       const payloadBase = {
@@ -181,9 +185,6 @@ export const Reunion = () => {
       console.error('Erro no fluxo de salvamento de atendimento/prontuário:', err)
     }
   }
-
-  console.log('selectedRecord:', selectedRecord)
-
   // Table columns
   const columns = [
     { header: 'Prontuário', accessor: 'prontuarioNumber' },
@@ -326,9 +327,9 @@ export const Reunion = () => {
         </Stack>
       ) : (
         <SelectRoot
-          collection={createListCollection<{ label: string; value: string }>(
-            { items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) })) }
-          )}
+          collection={createListCollection<{ label: string; value: string }>({
+            items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) }))
+          })}
           value={[selectedUnityId ? String(selectedUnityId) : '']}
           onValueChange={(details: { value: string[] }) => {
             setSelectedUnityId(Number(details.value[0]))
