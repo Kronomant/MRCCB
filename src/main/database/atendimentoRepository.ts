@@ -14,6 +14,7 @@ export type AtendimentoData = {
   emergency: boolean
   returned: boolean
   repeat: boolean
+  ministerio: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -24,8 +25,8 @@ export function createAtendimento(
   const db = getDb()
   const stmt = db.prepare(`
     INSERT INTO atendimentos (
-      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, returned, repeat, createdAt, updatedAt, prontuarioNumber
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, returned, repeat, ministerio, createdAt, updatedAt, prontuarioNumber
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
   `)
   const result = stmt.run(
     data.prontuarioId,
@@ -38,6 +39,7 @@ export function createAtendimento(
     data.emergency ? 1 : 0,
     data.returned ? 1 : 0,
     data.repeat ? 1 : 0,
+    data.ministerio ? 1 : 0,
     data.prontuarioNumber
   )
 
@@ -52,11 +54,12 @@ export function getAllAtendimentos(): AtendimentoData[] {
   const rows = stmt.all() as AtendimentoData[]
   return rows.map((r) => ({
     ...r,
-    aprovedValue: !!r.aprovedValue,
-    onlyClothes: !!r.onlyClothes,
-    emergency: !!r.emergency,
-    returned: !!r.returned,
-    repeat: !!r.repeat
+    aprovedValue: Boolean(r.aprovedValue),
+    onlyClothes: Boolean(r.onlyClothes),
+    emergency: Boolean(r.emergency),
+    returned: Boolean(r.returned),
+    repeat: Boolean(r.repeat),
+    ministerio: Boolean(r.ministerio)
   }))
 }
 
@@ -66,11 +69,12 @@ export function getAtendimentosByReunion(reunionId: number): AtendimentoData[] {
   const rows = stmt.all(reunionId) as AtendimentoData[]
   return rows.map((r) => ({
     ...r,
-    aprovedValue: !!r.aprovedValue,
-    onlyClothes: !!r.onlyClothes,
-    emergency: !!r.emergency,
-    returned: !!r.returned,
-    repeat: !!r.repeat
+    aprovedValue: Boolean(r.aprovedValue),
+    onlyClothes: Boolean(r.onlyClothes),
+    emergency: Boolean(r.emergency),
+    returned: Boolean(r.returned),
+    repeat: Boolean(r.repeat),
+    ministerio: Boolean(r.ministerio)
   }))
 }
 
@@ -80,11 +84,12 @@ export function getAtendimentosByProntuario(prontuarioId: number): AtendimentoDa
   const rows = stmt.all(prontuarioId) as AtendimentoData[]
   return rows.map((r) => ({
     ...r,
-    aprovedValue: !!r.aprovedValue,
-    onlyClothes: !!r.onlyClothes,
-    emergency: !!r.emergency,
-    returned: !!r.returned,
-    repeat: !!r.repeat
+    aprovedValue: Boolean(r.aprovedValue),
+    onlyClothes: Boolean(r.onlyClothes),
+    emergency: Boolean(r.emergency),
+    returned: Boolean(r.returned),
+    repeat: Boolean(r.repeat),
+    ministerio: Boolean(r.ministerio)
   }))
 }
 
@@ -95,11 +100,12 @@ export function getAtendimentoById(id: number): AtendimentoData | undefined {
   if (!r) return undefined
   return {
     ...r,
-    aprovedValue: !!r.aprovedValue,
-    onlyClothes: !!r.onlyClothes,
-    emergency: !!r.emergency,
-    returned: !!r.returned,
-    repeat: !!r.repeat
+    aprovedValue: Boolean(r.aprovedValue),
+    onlyClothes: Boolean(r.onlyClothes),
+    emergency: Boolean(r.emergency),
+    returned: Boolean(r.returned),
+    repeat: Boolean(r.repeat),
+    ministerio: Boolean(r.ministerio)
   }
 }
 
@@ -108,7 +114,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
   if (data.id === undefined) throw new Error('ID is required to update atendimento')
   const stmt = db.prepare(`
     UPDATE atendimentos SET
-      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?, onlyClothes = ?, emergency = ?, returned = ?, repeat = ?, prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
+      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?, onlyClothes = ?, emergency = ?, returned = ?, repeat = ?, ministerio = ?, prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
     WHERE id = ?
   `)
   stmt.run(
@@ -122,6 +128,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
     data.emergency ? 1 : 0,
     data.returned ? 1 : 0,
     data.repeat ? 1 : 0,
+    data.ministerio ? 1 : 0,
     data.prontuarioNumber,
     data.id
   )

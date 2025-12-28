@@ -110,7 +110,7 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
         const data = await window.electron.ipcRenderer.invoke(
           'atendimento:getByProntuarioId',
           prontuarioId
-        )
+        ) as Atendimento[]
         setAtendimentos(data ?? [])
       } catch (error) {
         console.error('Erro ao buscar atendimentos:', error)

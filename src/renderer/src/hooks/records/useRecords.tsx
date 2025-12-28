@@ -32,7 +32,7 @@ export const useRecords = (reunionId: number) => {
       id: atendimento.id!,
       prontuarioId: atendimento.prontuarioId,
       prontuarioNumber: atendimento.prontuarioNumber,
-      ministerio: false,
+      ministerio: Boolean(atendimento.ministerio),
       valor: atendimento.value,
       cestas: atendimento.foodBasketQuantity,
       labels,

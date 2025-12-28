@@ -26,10 +26,6 @@ const AppRoutes: RouteObject[] = [
       {
         path: 'unidades',
         element: <UnityManager />
-      },
-      {
-        path: '*',
-        element: <div>não encontrado</div>
       }
     ]
   }

@@ -92,7 +92,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({
   useEffect(() => {
     const fetchTreatment = async () => {
       try {
-        const data = await window.electron.ipcRenderer.invoke('treatment:getById', treatmentId)
+        const data = await window.electron.ipcRenderer.invoke('treatment:getById', treatmentId) as Treatment | null
         setTreatment(data ?? null)
       } catch (error) {
         console.error('Erro ao buscar prontuário:', error)

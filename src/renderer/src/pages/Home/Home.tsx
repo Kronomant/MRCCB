@@ -32,7 +32,7 @@ export const Home = (): JSX.Element => {
       <Box position="absolute" inset={0} pointerEvents="none" opacity={0.25}>
         <Image src={wavyLines} alt="" w="120%" maxW="none" transform="translateX(-10%)" />
       </Box>
-      <Stack w="100%" maxW="960px" spacing={{ base: 8, md: 12 }} align="center">
+      <Stack w="100%" maxW="960px" gap={{ base:8, md: 12 }} align="center">
         <Box as="header" textAlign="center">
           <Image
             src={logoSrc}
@@ -50,7 +50,7 @@ export const Home = (): JSX.Element => {
 
         <Stack
           direction={{ base: 'column', md: 'row' }}
-          spacing={{ base: 6, md: 8 }}
+          gap={{ base: 6, md: 8 }}
           w="100%"
           align="stretch"
         >

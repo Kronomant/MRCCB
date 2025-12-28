@@ -31,7 +31,9 @@ export const useAtendimentos = (
   })
 
   const createAtendimentoMutation = useMutation({
-    mutationFn: (data: CreateAtendimento) => createAtendimento(data),
+    mutationFn: (data: CreateAtendimento) => {
+      return createAtendimento(data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atendimentos', reunionId] })
     },

@@ -45,7 +45,7 @@
     "@faker-js/faker": "^9.7.0",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.19.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",

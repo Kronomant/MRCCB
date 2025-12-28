@@ -70,6 +70,11 @@ export function initDb(): void {
       )
     `)
   }
+
+  const hasMinisterio = columns.some((c) => c.name === 'ministerio')
+  if (!hasMinisterio) {
+    db.exec("ALTER TABLE atendimentos ADD COLUMN ministerio INTEGER DEFAULT 0")
+  }
   // Manter tabela treatments para compatibilidade temporária
   db.exec(`
     CREATE TABLE IF NOT EXISTS treatments (

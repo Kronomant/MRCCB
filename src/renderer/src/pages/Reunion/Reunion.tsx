@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react'
+import { type ChangeEvent } from 'react'
 import {
   Button,
   Flex,
@@ -15,179 +15,53 @@ import {
   SelectValueText,
   SelectContent,
   SelectItem,
-  SelectItemText
+  SelectItemText,
+  ComboboxRoot,
+  ComboboxInput,
+  ComboboxTrigger,
+  ComboboxContent,
+  ComboboxItem,
+  ComboboxItemText,
+  ComboboxItemIndicator,
+  ComboboxLabel,
+  ComboboxControl,
+  ComboboxPositioner,
+  ComboboxIndicatorGroup,
+  ComboboxClearTrigger,
+  Portal
 } from '@chakra-ui/react'
 
 import { createListCollection } from '@ark-ui/react/collection'
 import { PageHeader, DrawerForm, BaseTable, Input } from '../../components'
 import { FiSearch, FiFilter, FiPlus, FiTrash2, FiEdit2, FiEye } from 'react-icons/fi'
 
-import { useRecords } from '../../hooks'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useProntuarios } from '../../hooks/prontuario'
-import { useUnities } from '../../hooks/unity'
-
-// Adiciona serviço para busca direta de prontuário por número
-import { getProntuarioByNumber } from '../../services/prontuarioService'
-
-// Tipagem para registro (atendimento)
-interface RecordType {
-  id: number
-  prontuarioId: number
-  prontuarioNumber: number
-  ministerio: boolean
-  valor: number
-  cestas: number
-  labels: string[]
-  representacao: boolean
-  somenteRoupas: boolean
-  valorTotalAprovado: boolean
-}
-
-const LABEL_COLORS: Record<string, string> = {
-  Emergencial: 'red',
-  'Somente roupas': 'blue',
-  'Valor total aprovado': 'green',
-  Representação: 'purple'
-}
-
-const unidades = ['Santa cecilia', 'Veneza', 'Alterosa', 'San Genaro', 'Florença', 'Vereda']
-
-const defaultRecord: RecordType = {
-  id: 0,
-  prontuarioId: 0,
-  prontuarioNumber: 0,
-  ministerio: false,
-  valor: 0,
-  cestas: 0,
-  labels: [],
-  representacao: false,
-  somenteRoupas: false,
-  valorTotalAprovado: false
-}
+import { RecordType } from '../../hooks/records/useRecords'
+import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 
 export const Reunion = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedRecord, setSelectedRecord] = useState<RecordType>(defaultRecord)
-  const [search, setSearch] = useState('')
-  // Estado para digitação e validação do número do prontuário no Select
-  const [prontuarioSearch, setProntuarioSearch] = useState('')
-  const [prontuarioError, setProntuarioError] = useState<string | null>(null)
-  const [selectedUnityId, setSelectedUnityId] = useState<number | null>(null)
-
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const reunionId = Number(id)
   const {
-    records: hookRecords,
-    summary,
+    navigate,
+    drawerOpen,
+    setDrawerOpen,
+    search,
+    setSearch,
+    formState,
     isLoading,
-    createAtendimento,
-    updateAtendimento,
-    deleteAtendimento,
-    reunions
-  } = useRecords(reunionId)
-  const { activeProntuarios, createProntuario } = useProntuarios()
-  const { unities } = useUnities()
+    summary,
+    filteredRecords,
+    filteredProntuarios,
+    unities,
+    handlers
+  } = useReunionBehavior()
 
-  const isValidProntuarioNumber = (value: string) => /^\d+$/.test(value) && Number(value) > 0
-
-  // Handlers
-  const handleAdd = () => {
-    const reunionData = reunions.data
-    const recordWithDefaults = {
-      ...defaultRecord,
-      valor: reunionData?.value || 0,
-      cestas: reunionData?.foodBasketQuantity || 0
-    }
-    setSelectedRecord(recordWithDefaults)
-    setProntuarioSearch('')
-    setProntuarioError(null)
-    setDrawerOpen(true)
-  }
-  const handleEdit = (record: RecordType) => {
-    setSelectedRecord(record)
-    setProntuarioSearch(String(record.prontuarioNumber || ''))
-    setProntuarioError(null)
-    setDrawerOpen(true)
-  }
-  const handleView = (record: RecordType) => {
-    setSelectedRecord(record)
-    setProntuarioSearch(String(record.prontuarioNumber || ''))
-    setProntuarioError(null)
-    setDrawerOpen(true)
-  }
-  const handleDelete = (id: number) => {
-    deleteAtendimento.mutate(id)
-  }
-
-  const handleSave = async () => {
-    const typedNumber = Number(prontuarioSearch.trim())
-    try {
-      // Determina prontuário alvo: selecionado ou digitado
-      let targetProntuarioId = selectedRecord.prontuarioId
-
-      if (!targetProntuarioId && prontuarioSearch.trim() !== '') {
-        if (!isValidProntuarioNumber(prontuarioSearch.trim())) {
-          setProntuarioError('Número de prontuário inválido')
-          console.error('Formato inválido do número do prontuário')
-          return
-        }
-
-
-        const existing = await getProntuarioByNumber(typedNumber)
-        const prontuarioToSelect =
-          existing ??
-          (await createProntuario.mutateAsync({
-            number: typedNumber,
-            unityId: selectedUnityId ?? 1,
-            ministry: false,
-            status: 'active'
-          }))
-
-        targetProntuarioId = prontuarioToSelect.id!
-
-        // Atualiza o estado de forma coesa para refletir a seleção
-        setSelectedRecord((prev) => ({
-          ...prev,
-          prontuarioId: prontuarioToSelect.id,
-          prontuarioNumber: prontuarioToSelect.number
-        }))
-        setProntuarioSearch(String(prontuarioToSelect.number))
-        setSelectedUnityId(prontuarioToSelect.unityId)
-        setProntuarioError(null)
-      }
-
-      const payloadBase = {
-        prontuarioId: targetProntuarioId,
-        reunionId,
-        date: reunions.data?.date ?? new Date().toISOString().split('T')[0],
-        aprovedValue: selectedRecord.valorTotalAprovado,
-        value: selectedRecord.valor,
-        foodBasketQuantity: selectedRecord.cestas,
-        onlyClothes: selectedRecord.somenteRoupas,
-        emergency: selectedRecord.labels.includes('Emergencial'),
-        returned: selectedRecord.representacao,
-        repeat: false,
-        prontuarioNumber: typedNumber
-      }
-
-      if (selectedRecord.id === 0) {
-        // Criar novo atendimento
-        createAtendimento.mutate(payloadBase)
-      } else {
-        // Atualizar atendimento existente (mantém comportamento atual)
-        updateAtendimento.mutate({ id: selectedRecord.id, ...payloadBase })
-      }
-
-      setDrawerOpen(false)
-    } catch (err) {
-      console.error('Erro no fluxo de salvamento de atendimento/prontuário:', err)
-    }
-  }
+  const { record, prontuarioSearch, prontuarioError, selectedUnityId } = formState
   // Table columns
-  const columns = [
-    { header: 'Prontuário', accessor: 'prontuarioNumber' },
+  const columns: Column<RecordType>[] = [
+    { header: 'Prontuário', accessor: 'prontuarioNumber', customRender: (row: RecordType) => 
+    <Flex>
+{row.prontuarioNumber}
+{(row.ministerio === true) ? <Tag.Root colorPalette="blue" ml={2}>A</Tag.Root> : null}
+    </Flex> },
     {
       header: 'Valor (R$)',
       accessor: 'valor',
@@ -210,7 +84,6 @@ export const Reunion = () => {
     },
     {
       header: 'Ações',
-      accessor: 'actions',
       customRender: (row: RecordType) => (
         <Flex gap={2}>
           <Button
@@ -218,7 +91,7 @@ export const Reunion = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation()
-              handleDelete(row.id)
+              handlers.handleDelete(row.id)
             }}
           >
             <FiTrash2 />
@@ -228,7 +101,7 @@ export const Reunion = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation()
-              handleEdit(row)
+              handlers.handleEdit(row)
             }}
           >
             <FiEdit2 />
@@ -238,7 +111,7 @@ export const Reunion = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation()
-              handleView(row)
+              handlers.handleView(row)
             }}
           >
             <FiEye />
@@ -248,92 +121,63 @@ export const Reunion = () => {
     }
   ]
 
-  // Dados e resumo agora vêm do hook useRecords
-
-  // Lista filtrada para o Select conforme digitação
-  const filteredProntuarios = (activeProntuarios ?? []).filter((p) =>
-    String(p.number).includes(prontuarioSearch)
-  )
-
-  // DrawerForm content
   const drawerContent = (
     <Stack gap={3}>
-      <SelectRoot
-        collection={createListCollection<{ label: string; value: string }>({
-          items:
-            filteredProntuarios.map((p) => ({ label: String(p.number), value: String(p.id) })) || []
-        })}
-        value={[String(selectedRecord.prontuarioId || '')]}
-        onValueChange={(details: { value: string[] }) => {
-          const selectedProntuario = activeProntuarios?.find(
-            (p) => p.id === Number(details.value[0])
-          )
-          if (selectedProntuario) {
-            setSelectedRecord({
-              ...selectedRecord,
-              prontuarioId: selectedProntuario.id,
-              prontuarioNumber: selectedProntuario.number
-            })
-            setProntuarioSearch(String(selectedProntuario.number))
-            setProntuarioError(null)
-            setSelectedUnityId(selectedProntuario.unityId)
-          }
+      <ComboboxRoot
+        collection={handlers.collection}
+        value={
+          record.prontuarioId
+            ? [String(record.prontuarioId)]
+            : formState.isNewProntuario && record.prontuarioNumber
+              ? [`new-${record.prontuarioNumber}`]
+              : []
+        }
+        onValueChange={(details) => {
+          const val = details.value[0]
+          handlers.handleProntuarioSelect(val || '')
         }}
+        onInputValueChange={(details) => {
+          handlers.updateProntuarioSearch(details.inputValue)
+        }}
+        inputValue={prontuarioSearch}
+        allowCustomValue
       >
-        <SelectLabel>Prontuário</SelectLabel>
-        <SelectTrigger>
-          <SelectValueText placeholder="Selecione ou digite um prontuário" />
-        </SelectTrigger>
-        <SelectContent>
-          {/* Campo de busca dentro do menu do select */}
-          <Box px={3} py={2}>
-            <Input
-              label="Número do prontuário"
-              placeholder="Digite o número"
-              value={prontuarioSearch}
-              onChange={(e) => {
-                const val = e.target.value
-                setProntuarioSearch(val)
-                if (val && !isValidProntuarioNumber(val)) {
-                  setProntuarioError('Número de prontuário inválido')
-                } else {
-                  setProntuarioError(null)
-                }
-              }}
-              error={prontuarioError ?? undefined}
-            />
-          </Box>
+        <ComboboxLabel>Prontuário</ComboboxLabel>
+        <ComboboxControl>
+          <ComboboxInput placeholder="Selecione ou digite um prontuário" />
+          <ComboboxIndicatorGroup>
+            <ComboboxClearTrigger />
+            <ComboboxTrigger />
+          </ComboboxIndicatorGroup>
+        </ComboboxControl>
+        <Portal>
+          <ComboboxPositioner>
+            <ComboboxContent>
+              {filteredProntuarios.map((item) => (
+                <ComboboxItem
+                  key={item.value}
+                  item={item}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                  }}
+                >
+                  <ComboboxItemText>
+                    {item.value.startsWith('new-') ? `+ Criar "${item.label}"` : item.label}
+                  </ComboboxItemText>
+                  <ComboboxItemIndicator />
+                </ComboboxItem>
+              ))}
+            </ComboboxContent>
+          </ComboboxPositioner>
+        </Portal>
+      </ComboboxRoot>
 
-          {filteredProntuarios.length === 0 && (
-            <Text color="fg.muted" px={3} py={2}>
-              Prontuário não encontrado
-            </Text>
-          )}
-
-          {filteredProntuarios?.map((prontuario) => (
-            <SelectItem key={prontuario.id} item={String(prontuario.id)}>
-              <SelectItemText>{prontuario.number}</SelectItemText>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-
-      {selectedRecord.prontuarioId ? (
-        <Stack gap={2}>
-          <Text fontWeight="medium">Unidade</Text>
-          <Tag.Root colorPalette="gray">
-            {unities.find((u) => u.id === selectedUnityId)?.name || 'Unidade não definida'}
-          </Tag.Root>
-        </Stack>
-      ) : (
-        <SelectRoot
+      <SelectRoot
           collection={createListCollection<{ label: string; value: string }>({
             items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) }))
           })}
           value={[selectedUnityId ? String(selectedUnityId) : '']}
-          onValueChange={(details: { value: string[] }) => {
-            setSelectedUnityId(Number(details.value[0]))
-          }}
+          onValueChange={(details: { value: string[] }) => handlers.updateUnityId(Number(details.value[0]))}
         >
           <SelectLabel>Unidade</SelectLabel>
           <SelectTrigger>
@@ -346,48 +190,50 @@ export const Reunion = () => {
               </SelectItem>
             ))}
           </SelectContent>
-        </SelectRoot>
-      )}
-
-      <Checkbox.Root>
-        <Checkbox.HiddenInput />
-        <Checkbox.Control />
-        <Checkbox.Label>Ministério</Checkbox.Label>
-      </Checkbox.Root>
+      </SelectRoot>
+            
       <Input
         label="Valor"
         type="number"
-        value={selectedRecord.valor}
-        onChange={(e) => setSelectedRecord({ ...selectedRecord, valor: Number(e.target.value) })}
+        value={record.valor}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => handlers.updateRecord({ valor: Number(e.target.value) })}
       />
       <Input
         label="Quantidade de Cestas"
         type="number"
-        value={selectedRecord.cestas}
-        onChange={(e) => setSelectedRecord({ ...selectedRecord, cestas: Number(e.target.value) })}
+        value={record.cestas}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => handlers.updateRecord({ cestas: Number(e.target.value) })}
       />
 
-      <Text fontWeight="bold" mt={2}>
-        Flags
-      </Text>
-      <Flex gap={3} wrap="wrap">
-        {Object.keys(LABEL_COLORS)?.map((flag) => (
-          <Checkbox.Root checked={selectedRecord.labels.includes(flag)} key={flag}>
+      <Stack gap={2} mt={2}>
+        <Checkbox.Root
+        checked={record.ministerio}
+        onCheckedChange={(details) => handlers.updateRecord({ ministerio: !!details.checked })}
+      >
+        <Checkbox.HiddenInput />
+        <Checkbox.Control />
+        <Checkbox.Label>Ministério</Checkbox.Label>
+      </Checkbox.Root>
+        {Object.keys(LABEL_COLORS).map((flag) => (
+          <Checkbox.Root
+            key={flag}
+            checked={record.labels.includes(flag)}
+            onCheckedChange={(details) => {
+              const checked = !!details.checked
+              const newLabels = checked
+                ? [...record.labels, flag]
+                : record.labels.filter((l) => l !== flag)
+              handlers.updateRecord({ labels: newLabels })
+            }}
+          >
             <Checkbox.HiddenInput />
-            <Checkbox.Control
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                setSelectedRecord({
-                  ...selectedRecord,
-                  labels: e.target.checked
-                    ? [...selectedRecord.labels, flag]
-                    : selectedRecord.labels.filter((l) => l !== flag)
-                })
-              }}
-            />
-            {flag}
+            <Checkbox.Control />
+            <Checkbox.Label>{flag}</Checkbox.Label>
           </Checkbox.Root>
         ))}
-      </Flex>
+      </Stack>
     </Stack>
   )
 
@@ -401,8 +247,7 @@ export const Reunion = () => {
       backgroundColor="bg"
       borderRadius="8px"
     >
-      {/* Header */}
-      <PageHeader title="Records" onBack={() => navigate('/reunioes')}>
+      <PageHeader title="Atendimentos" onBack={() => navigate('/reunioes')}>
         <Text color="fg.muted" fontSize="md" ml={4}>
           {summary.data || ''}
         </Text>
@@ -411,7 +256,6 @@ export const Reunion = () => {
         </Button>
       </PageHeader>
 
-      {/* Cards de resumo */}
       <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
         <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
           <Text color="fg.muted" fontSize="sm">
@@ -447,7 +291,6 @@ export const Reunion = () => {
         </Box>
       </SimpleGrid>
 
-      {/* Seção de atendimentos */}
       <Box>
         <Flex mb={4} gap={3} align="center">
           <InputGroup endElement={<FiSearch />} w="300px">
@@ -462,7 +305,7 @@ export const Reunion = () => {
             <FiFilter />
             Filtros
           </Button>
-          <Button colorScheme="blue" onClick={handleAdd}>
+          <Button colorScheme="blue" onClick={handlers.handleAdd}>
             <FiPlus />
             Adicionar
           </Button>
@@ -472,18 +315,18 @@ export const Reunion = () => {
           <Flex w="100%" h="100%" gap={16} position="relative">
             <BaseTable
               drawerOpen={drawerOpen}
-              data={hookRecords.filter((r) => String(r.prontuarioId).includes(search))}
-              columns={columns as Column<RecordType>[]}
+              data={filteredRecords}
+              columns={columns}
               isLoading={isLoading}
-              onRowClick={handleView}
+              onRowClick={handlers.handleView}
             />
             <DrawerForm
               isOpen={drawerOpen}
               onClose={() => setDrawerOpen(false)}
-              title={selectedRecord.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
+              title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
               primaryLabel="Salvar"
               secondaryLabel="Cancelar"
-              onPrimaryAction={handleSave}
+              onPrimaryAction={handlers.handleSave}
             >
               {drawerContent}
             </DrawerForm>

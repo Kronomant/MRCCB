@@ -41,6 +41,7 @@ declare global {
     emergency: boolean
     returned: boolean
     repeat: boolean
+    ministerio: boolean
     createdAt: string
     updatedAt: string
   }

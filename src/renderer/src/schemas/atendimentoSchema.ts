@@ -16,6 +16,7 @@ export const atendimentoSchema = z.object({
   emergency: z.boolean().default(false),
   returned: z.boolean().default(false),
   repeat: z.boolean().default(false),
+  ministerio: z.boolean().default(false),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional()
 })
