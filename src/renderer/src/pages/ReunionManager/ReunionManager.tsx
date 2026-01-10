@@ -4,6 +4,7 @@ import { DrawerForm, BaseTable, Input, PageHeader } from '../../components'
 import { statusMap } from './ReunionManager.helper'
 import { ReunionManagerViewProps, useReunionManager } from './useReunionManager'
 import { ReunionStatus } from '../../types/reunion-status'
+import SearchInput from './SearchInput'
 
 const columns: Column<Reunion>[] = [
   { header: 'Reunião', accessor: 'name' },
@@ -78,9 +79,11 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
       </PageHeader>
 
       <Flex w="100%" gap={4} alignItems="center" padding="12px 0">
-        <InputGroup w="40%" endElement={<FiSearch />}>
-          <Input borderRadius="3xl" label="Buscar" />
-        </InputGroup>
+        <SearchInput
+          onSearch={props.handleSearch}
+          placeholder="Pesquisar por nome da reunião..."
+          debounceTime={300}
+        />
         <Input
           type="date"
           width="180px"
@@ -124,7 +127,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
           >
             <BaseTable
               drawerOpen={drawerOpen}
-              data={reunions.data || []}
+              data={reunions || []}
               columns={columns}
               isLoading={false}
               onRowClick={handleRowClick}

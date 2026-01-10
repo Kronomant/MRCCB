@@ -109,19 +109,18 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
       try {
         setLoadingAtendimentos(true)
         // Buscar atendimentos relacionados ao prontuário
-        const atendimentosData = await window.electron.ipcRenderer.invoke(
+        const atendimentosData = (await window.electron.ipcRenderer.invoke(
           'atendimento:getByProntuarioId',
           prontuarioId
-        ) as Atendimento[]
+        )) as Atendimento[]
         setAtendimentos(atendimentosData ?? [])
 
         // Buscar status de entrega
-        const deliveryData = await window.electron.ipcRenderer.invoke(
-            'prontuarioDelivery:getByProntuario',
-            prontuarioId
-        ) as ProntuarioDeliveryData[]
+        const deliveryData = (await window.electron.ipcRenderer.invoke(
+          'prontuarioDelivery:getByProntuario',
+          prontuarioId
+        )) as ProntuarioDeliveryData[]
         setDeliveries(deliveryData ?? [])
-
       } catch (error) {
         console.error('Erro ao buscar dados do prontuário:', error)
         setAtendimentos([])
@@ -156,18 +155,18 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   }
 
   const getDeliveryStatus = (reunionId: number) => {
-      const delivery = deliveries.find(d => d.reunionId === reunionId)
-      return delivery?.status || 'pendente'
+    const delivery = deliveries.find((d) => d.reunionId === reunionId)
+    return delivery?.status || 'pendente'
   }
 
   const statusInfo = getStatusInfo(prontuario.status)
   const totalAtendimentos = atendimentos.length
   // Count as pending if not explicitly delivered or returned
   const atendimentosPendentes = atendimentos.filter((a) => {
-      const status = getDeliveryStatus(a.reunionId)
-      return status !== 'entregue' && status !== 'devolvido'
+    const status = getDeliveryStatus(a.reunionId)
+    return status !== 'entregue' && status !== 'devolvido'
   }).length
-  
+
   const valorTotalRecebido = atendimentos.reduce((total, a) => total + (a.value || 0), 0)
 
   return (
@@ -308,71 +307,79 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
                   Nenhum atendimento registrado para este prontuário
                 </Text>
               ) : (
-                <Table.Root>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Data</Table.ColumnHeader>
-                      <Table.ColumnHeader>Reunião</Table.ColumnHeader>
-                      <Table.ColumnHeader>Valor</Table.ColumnHeader>
-                      <Table.ColumnHeader>Cestas</Table.ColumnHeader>
-                      <Table.ColumnHeader>Status</Table.ColumnHeader>
-                      <Table.ColumnHeader>Características</Table.ColumnHeader>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {atendimentos.map((atendimento) => {
+                <Box overflowX="auto" w="100%">
+                  <Table.Root w="100%" minW={{ base: '800px', md: '100%' }}>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeader whiteSpace="nowrap">Data</Table.ColumnHeader>
+                        <Table.ColumnHeader whiteSpace="nowrap">Reunião</Table.ColumnHeader>
+                        <Table.ColumnHeader whiteSpace="nowrap">Valor</Table.ColumnHeader>
+                        <Table.ColumnHeader whiteSpace="nowrap">Cestas</Table.ColumnHeader>
+                        <Table.ColumnHeader whiteSpace="nowrap">Status</Table.ColumnHeader>
+                        <Table.ColumnHeader minW="150px">Características</Table.ColumnHeader>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {atendimentos.map((atendimento) => {
                         const status = getDeliveryStatus(atendimento.reunionId)
-                        const statusColor = 
-                            status === 'entregue' ? 'green' : 
-                            status === 'devolvido' ? 'blue' : 'orange'
-                        const statusLabel = 
-                            status === 'entregue' ? 'Entregue' : 
-                            status === 'devolvido' ? 'Devolvido' : 'Pendente'
+                        const statusColor =
+                          status === 'entregue'
+                            ? 'green'
+                            : status === 'devolvido'
+                              ? 'blue'
+                              : 'orange'
+                        const statusLabel =
+                          status === 'entregue'
+                            ? 'Entregue'
+                            : status === 'devolvido'
+                              ? 'Devolvido'
+                              : 'Pendente'
 
                         return (
-                      <Table.Row key={atendimento.id}>
-                        <Table.Cell>{formatDate(atendimento.date)}</Table.Cell>
-                        <Table.Cell>#{atendimento.reunionId}</Table.Cell>
-                        <Table.Cell>
-                          {atendimento.value ? formatCurrency(atendimento.value) : '-'}
-                        </Table.Cell>
-                        <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
-                        <Table.Cell>
-                          <Badge
-                            colorPalette={statusColor}
-                            variant="solid"
-                          >
-                            {statusLabel}
-                          </Badge>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Flex gap={1} wrap="wrap">
-                            {atendimento.emergency && (
-                              <Badge colorPalette="red" size="sm">
-                                <FiAlertTriangle size={10} />
+                          <Table.Row key={atendimento.id}>
+                            <Table.Cell whiteSpace="nowrap">
+                              {formatDate(atendimento.date)}
+                            </Table.Cell>
+                            <Table.Cell whiteSpace="nowrap">#{atendimento.reunionId}</Table.Cell>
+                            <Table.Cell whiteSpace="nowrap">
+                              {atendimento.value ? formatCurrency(atendimento.value) : '-'}
+                            </Table.Cell>
+                            <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
+                            <Table.Cell whiteSpace="nowrap">
+                              <Badge colorPalette={statusColor} variant="solid">
+                                {statusLabel}
                               </Badge>
-                            )}
-                            {atendimento.aprovedValue && (
-                              <Badge colorPalette="green" size="sm">
-                                <FiCheck size={10} />
-                              </Badge>
-                            )}
-                            {atendimento.repeat && (
-                              <Badge colorPalette="orange" size="sm">
-                                <FiRepeat size={10} />
-                              </Badge>
-                            )}
-                            {atendimento.onlyClothes && (
-                              <Badge colorPalette="purple" size="sm">
-                                <FiPackage size={10} />
-                              </Badge>
-                            )}
-                          </Flex>
-                        </Table.Cell>
-                      </Table.Row>
-                    )})}
-                  </Table.Body>
-                </Table.Root>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Flex gap={1} wrap="wrap">
+                                {atendimento.emergency && (
+                                  <Badge colorPalette="red" size="sm">
+                                    <FiAlertTriangle size={10} />
+                                  </Badge>
+                                )}
+                                {atendimento.aprovedValue && (
+                                  <Badge colorPalette="green" size="sm">
+                                    <FiCheck size={10} />
+                                  </Badge>
+                                )}
+                                {atendimento.repeat && (
+                                  <Badge colorPalette="orange" size="sm">
+                                    <FiRepeat size={10} />
+                                  </Badge>
+                                )}
+                                {atendimento.onlyClothes && (
+                                  <Badge colorPalette="purple" size="sm">
+                                    <FiPackage size={10} />
+                                  </Badge>
+                                )}
+                              </Flex>
+                            </Table.Cell>
+                          </Table.Row>
+                        )
+                      })}
+                    </Table.Body>
+                  </Table.Root>
+                </Box>
               )}
             </Stack>
           </Card.Body>

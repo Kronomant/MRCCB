@@ -16,36 +16,7 @@ const defaultReunion: Reunion = {
   status: ReunionStatus.NEW
 }
 
-export interface UseReunionManagerResult {
-  drawerOpen: boolean
-  isEditMode: boolean
-  selectedReunion: Reunion
-  register: ReturnType<typeof useForm<ReunionFormData>>['register']
-  errors: ReturnType<typeof useForm<ReunionFormData>>['formState']['errors']
-  isSubmitting: boolean
-  reunions: ReturnType<typeof useReunions>['reunions']
-  handleRowClick: (reunion: Reunion) => void
-  handleAddNew: () => void
-  handleCloseDrawer: () => void
-  handleEditToggle: () => void
-  title: string
-  primaryLabel: string
-  secondaryLabel: string
-  onPrimaryAction: () => void | Promise<void>
-  canEdit: boolean
-  canShowEditButton: boolean
-  editError: string | null
-  handleDelete: () => Promise<void>
-  startDateInput: string
-  setStartDateInput: React.Dispatch<React.SetStateAction<string>>
-  endDateInput: string
-  setEndDateInput: React.Dispatch<React.SetStateAction<string>>
-  statusInput: string
-  setStatusInput: React.Dispatch<React.SetStateAction<string>>
-  handleFilter: () => void
-}
-
-export function useReunionManager(): UseReunionManagerResult {
+export function useReunionManager() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedReunion, setSelectedReunion] = useState<Reunion>(defaultReunion)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -53,8 +24,10 @@ export function useReunionManager(): UseReunionManagerResult {
   const [startDateInput, setStartDateInput] = useState('')
   const [endDateInput, setEndDateInput] = useState('')
   const [statusInput, setStatusInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredReunions, setFilteredReunions] = useState<Reunion[]>([])
   const [activeFilter, setActiveFilter] = useState<
-    { startDate?: string; endDate?: string; status?: string } | undefined
+    { startDate?: string; endDate?: string; status?: string; search?: string } | undefined
   >(undefined)
   const navigate = useNavigate()
 
@@ -74,8 +47,21 @@ export function useReunionManager(): UseReunionManagerResult {
     setActiveFilter({
       startDate: startDateInput || undefined,
       endDate: endDateInput || undefined,
-      status: statusInput || undefined
+      status: statusInput || undefined,
+      search: searchQuery || undefined
     })
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    const filtered = reunions?.data || []
+    setFilteredReunions(
+      filtered.filter((reunion) => reunion.name.toLowerCase().includes(query.toLowerCase()))
+    )
+    setActiveFilter((prev) => ({
+      ...prev,
+      search: query || undefined
+    }))
   }
 
   const handleRowClick = (reunion: Reunion) => {
@@ -231,7 +217,7 @@ export function useReunionManager(): UseReunionManagerResult {
     register,
     errors,
     isSubmitting,
-    reunions,
+    reunions: filteredReunions.length > 0 ? filteredReunions : reunions.data,
     handleRowClick,
     handleAddNew,
     handleCloseDrawer,
@@ -250,7 +236,9 @@ export function useReunionManager(): UseReunionManagerResult {
     setEndDateInput,
     handleFilter,
     statusInput,
-    setStatusInput
+    setStatusInput,
+    searchQuery,
+    handleSearch
   }
 }
 

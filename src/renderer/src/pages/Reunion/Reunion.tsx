@@ -47,8 +47,10 @@ import { ptBR } from 'date-fns/locale'
 
 import { RecordType } from '../../hooks/records/useRecords'
 import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
+import { useEffect } from 'react'
+import { ReunionStatus } from '../../types/reunion-status'
 
-  export const Reunion = () => {
+export const Reunion = () => {
   const {
     navigate,
     drawerOpen,
@@ -68,15 +70,24 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
   } = useReunionBehavior()
 
   const { record, prontuarioSearch, prontuarioError, selectedUnityId } = formState
-  const isClosed = reunionStatus === 'finished'
+  const isClosed = reunionStatus === ReunionStatus.FINISHED
 
   // Table columns
-  const columns: Column<RecordType>[] = [
-    { header: 'Prontuário', accessor: 'prontuarioNumber', customRender: (row: RecordType) => 
-    <Flex>
-{row.prontuarioNumber}
-{(row.ministerio === true) ? <Tag.Root colorPalette="blue" ml={2}>A</Tag.Root> : null}
-    </Flex> },
+  const columns = [
+    {
+      header: 'Prontuário',
+      accessor: 'prontuarioNumber',
+      customRender: (row: RecordType) => (
+        <Flex>
+          {row.prontuarioNumber}
+          {row.ministerio === true ? (
+            <Tag.Root colorPalette="blue" ml={2}>
+              A
+            </Tag.Root>
+          ) : null}
+        </Flex>
+      )
+    },
     {
       header: 'Valor (R$)',
       accessor: 'valor',
@@ -97,22 +108,28 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
         </Flex>
       )
     },
-    {
-        header: 'Entregue',
-        accessor: 'delivered',
-        customRender: (row: RecordType) => (
-            <Checkbox.Root
+    ...(isClosed
+      ? [
+          {
+            header: 'Entregue',
+            accessor: 'delivered',
+            customRender: (row: RecordType) => (
+              <Checkbox.Root
                 checked={row.delivered}
-                onCheckedChange={() => handlers.toggleDelivery.mutate({
+                onCheckedChange={() =>
+                  handlers.toggleDelivery.mutate({
                     prontuarioId: row.prontuarioId,
                     currentStatus: row.delivered
-                })}
-            >
+                  })
+                }
+              >
                 <Checkbox.HiddenInput />
                 <Checkbox.Control />
-            </Checkbox.Root>
-        )
-    },
+              </Checkbox.Root>
+            )
+          }
+        ]
+      : []),
     {
       header: 'Ações',
       customRender: (row: RecordType) => (
@@ -184,25 +201,27 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
       </ComboboxRoot>
 
       <SelectRoot
-          collection={createListCollection<{ label: string; value: string }>({
-            items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) }))
-          })}
-          value={[selectedUnityId ? String(selectedUnityId) : '']}
-          onValueChange={(details: { value: string[] }) => handlers.updateUnityId(Number(details.value[0]))}
-        >
-          <SelectLabel>Unidade</SelectLabel>
-          <SelectTrigger>
-            <SelectValueText placeholder="Selecione a unidade" />
-          </SelectTrigger>
-          <SelectContent>
-            {(unities || []).map((u) => (
-              <SelectItem key={u.id} item={String(u.id)}>
-                <SelectItemText>{u.name}</SelectItemText>
-              </SelectItem>
-            ))}
-          </SelectContent>
+        collection={createListCollection<{ label: string; value: string }>({
+          items: (unities || []).map((u) => ({ label: u.name, value: String(u.id) }))
+        })}
+        value={[selectedUnityId ? String(selectedUnityId) : '']}
+        onValueChange={(details: { value: string[] }) =>
+          handlers.updateUnityId(Number(details.value[0]))
+        }
+      >
+        <SelectLabel>Unidade</SelectLabel>
+        <SelectTrigger>
+          <SelectValueText placeholder="Selecione a unidade" />
+        </SelectTrigger>
+        <SelectContent>
+          {(unities || []).map((u) => (
+            <SelectItem key={u.id} item={String(u.id)}>
+              <SelectItemText>{u.name}</SelectItemText>
+            </SelectItem>
+          ))}
+        </SelectContent>
       </SelectRoot>
-            
+
       <Input
         label="Valor"
         type="number"
@@ -220,13 +239,13 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 
       <Stack gap={2} mt={2}>
         <Checkbox.Root
-        checked={record.ministerio}
-        onCheckedChange={(details) => handlers.updateRecord({ ministerio: !!details.checked })}
-      >
-        <Checkbox.HiddenInput />
-        <Checkbox.Control />
-        <Checkbox.Label>Ministério</Checkbox.Label>
-      </Checkbox.Root>
+          checked={record.ministerio}
+          onCheckedChange={(details) => handlers.updateRecord({ ministerio: !!details.checked })}
+        >
+          <Checkbox.HiddenInput />
+          <Checkbox.Control />
+          <Checkbox.Label>Ministério</Checkbox.Label>
+        </Checkbox.Root>
         {Object.keys(LABEL_COLORS).map((flag) => (
           <Checkbox.Root
             key={flag}
@@ -250,46 +269,46 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 
   const renderSummary = () => {
     if (isClosed) {
-        return (
-            <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
-                 <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
-                  <Text color="fg.muted" fontSize="sm">
-                    Total Gasto
-                  </Text>
-                  <Text fontWeight="bold" fontSize="2xl">
-                    R$ {summary.totalGasto.toLocaleString('pt-BR')}
-                  </Text>
-                </Box>
-                <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
-                  <Text color="fg.muted" fontSize="sm">
-                    Prontuários Entregues
-                  </Text>
-                  <Text fontWeight="bold" fontSize="2xl">
-                    {summary.entregues}/{summary.atendimentos}
-                  </Text>
-                </Box>
-                <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
-          <Text color="fg.muted" fontSize="sm">
-            Atendimentos Realizados
-          </Text>
-          <Text fontWeight="bold" fontSize="2xl">
-            {summary.atendimentos}
-          </Text>
-        </Box>
-        <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
-          <Text color="fg.muted" fontSize="sm">
-            Cestas Entregues
-          </Text>
-          <Text fontWeight="bold" fontSize="2xl">
-            {summary.cestas}
-          </Text>
-        </Box>
-            </SimpleGrid>
-        )
+      return (
+        <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
+          <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+            <Text color="fg.muted" fontSize="sm">
+              Total Gasto
+            </Text>
+            <Text fontWeight="bold" fontSize="2xl">
+              R$ {summary.totalGasto.toLocaleString('pt-BR')}
+            </Text>
+          </Box>
+          <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+            <Text color="fg.muted" fontSize="sm">
+              Prontuários Entregues
+            </Text>
+            <Text fontWeight="bold" fontSize="2xl">
+              {summary.entregues}/{summary.atendimentos}
+            </Text>
+          </Box>
+          <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+            <Text color="fg.muted" fontSize="sm">
+              Atendimentos Realizados
+            </Text>
+            <Text fontWeight="bold" fontSize="2xl">
+              {summary.atendimentos}
+            </Text>
+          </Box>
+          <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
+            <Text color="fg.muted" fontSize="sm">
+              Cestas Entregues
+            </Text>
+            <Text fontWeight="bold" fontSize="2xl">
+              {summary.cestas}
+            </Text>
+          </Box>
+        </SimpleGrid>
+      )
     }
 
     return (
-        <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
+      <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} w="100%">
         <Box bg="bg.subtle" p={5} rounded="md" minW="180px">
           <Text color="fg.muted" fontSize="sm">
             Total Atribuído
@@ -338,12 +357,17 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
     >
       <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
         <Text color="fg.muted" fontSize="md" ml={4}>
-          {summary.data ? format(parseISO(summary.data), "d 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(/de ([a-z])/g, (match) => match.replace(match[3], match[3].toUpperCase())) : ''}
+          {summary.data
+            ? format(parseISO(summary.data), "d 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(
+                /de ([a-z])/g,
+                (match) => match.replace(match[3], match[3].toUpperCase())
+              )
+            : ''}
         </Text>
         {!isClosed && (
-            <Button colorScheme="red" ml={4} onClick={() => setCloseModalOpen(true)}>
+          <Button colorScheme="red" ml={4} onClick={() => setCloseModalOpen(true)}>
             Encerrar Reunião
-            </Button>
+          </Button>
         )}
       </PageHeader>
 
@@ -364,29 +388,29 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
             Filtros
           </Button>
           {!isClosed && (
-               <Button colorScheme="blue" onClick={handlers.handleAdd}>
-               <FiPlus />
-               Adicionar
-             </Button>
+            <Button colorScheme="blue" onClick={handlers.handleAdd}>
+              <FiPlus />
+              Adicionar
+            </Button>
           )}
         </Flex>
 
         <Flex w="100%" h="70vh" pb={10}>
           <Flex w="100%" h="100%" position="relative" overflow="hidden">
-            <Box 
-              w={drawerOpen ? 'calc(100% - 400px)' : '100%'} 
-              h="100%" 
+            <Box
+              w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
+              h="100%"
               transition="width 0.4s cubic-bezier(.4,0,.2,1)"
             >
               <BaseTable
                 drawerOpen={drawerOpen}
                 data={filteredRecords}
-                columns={columns}
+                columns={columns as Column<RecordType>[]}
                 isLoading={isLoading}
                 onRowClick={handlers.handleView}
               />
             </Box>
-            
+
             <DrawerForm
               isOpen={drawerOpen}
               onClose={() => setDrawerOpen(false)}
@@ -402,8 +426,8 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
       </Box>
 
       {/* Modal de confirmação para encerrar reunião */}
-      <DialogRoot 
-        open={closeModalOpen} 
+      <DialogRoot
+        open={closeModalOpen}
         onOpenChange={(e) => setCloseModalOpen(e.open)}
         placement="center"
       >
@@ -420,12 +444,17 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
                   <Text fontSize="md" mb={2}>
                     Você está prestes a encerrar esta reunião. Confira os dados:
                   </Text>
-                  
+
                   <Box bg="bg.subtle" p={4} rounded="md">
                     <Stack gap={2}>
                       <Flex justify="space-between">
                         <Text fontWeight="semibold">Valor Total Atribuído:</Text>
-                        <Text>R$ {summary.totalAtribuido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+                        <Text>
+                          R${' '}
+                          {summary.totalAtribuido.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                          })}
+                        </Text>
                       </Flex>
                       <Flex justify="space-between">
                         <Text fontWeight="semibold">Cestas Associadas:</Text>
@@ -447,8 +476,8 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
                 <Button variant="outline" onClick={() => setCloseModalOpen(false)}>
                   Cancelar
                 </Button>
-                <Button 
-                  colorScheme="red" 
+                <Button
+                  colorScheme="red"
                   onClick={() => {
                     handlers.handleCloseReunion()
                     setCloseModalOpen(false)

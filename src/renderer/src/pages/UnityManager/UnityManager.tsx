@@ -1,4 +1,4 @@
-import { Button, Flex, InputGroup, Stack, Text, Tag } from '@chakra-ui/react'
+import { Button, Flex, InputGroup, Stack, Text, Tag, Box } from '@chakra-ui/react'
 import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
 import { DrawerForm } from '../../components/DrawerForm'
 import { BaseTable } from '../../components/Table/BaseTable'
@@ -44,7 +44,9 @@ export const UnityManager = () => {
     defaultValues: { name: '' }
   })
 
-  const filtered = (unities || []).filter((u) => u.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = (unities || []).filter((u) =>
+    u.name.toLowerCase().includes(search.toLowerCase())
+  )
 
   const handleRowClick = (unity: Unity) => {
     setSelectedUnity(unity)
@@ -104,14 +106,21 @@ export const UnityManager = () => {
   const primaryLabel = isNew || isEditMode ? 'Salvar' : 'Fechar'
   const secondaryLabel = isNew || isEditMode ? 'Cancelar' : 'Excluir'
   const onPrimaryAction = isNew || isEditMode ? handleSubmit(onSubmit) : () => setDrawerOpen(false)
-  const onSecondaryAction = isNew || isEditMode ? () => { setDrawerOpen(false); setIsEditMode(false); } : handleDelete
+  const onSecondaryAction =
+    isNew || isEditMode
+      ? () => {
+          setDrawerOpen(false)
+          setIsEditMode(false)
+        }
+      : handleDelete
 
-  const headerActions = !isNew && !isEditMode ? (
-    <Button size="sm" variant="outline" onClick={handleEditToggle} colorPalette="blue">
-      <FiEdit />
-      Editar
-    </Button>
-  ) : null
+  const headerActions =
+    !isNew && !isEditMode ? (
+      <Button size="sm" variant="outline" onClick={handleEditToggle} colorPalette="blue">
+        <FiEdit />
+        Editar
+      </Button>
+    ) : null
 
   return (
     <Flex
@@ -141,14 +150,20 @@ export const UnityManager = () => {
       </Flex>
 
       <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" gap={16} position="relative">
-          <BaseTable
-            drawerOpen={drawerOpen}
-            data={filtered}
-            columns={columns}
-            isLoading={false}
-            onRowClick={handleRowClick}
-          />
+        <Flex w="100%" h="100%" position="relative">
+          <Box
+            w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
+            h="100%"
+            transition="width 0.4s cubic-bezier(.4,0,.2,1)"
+          >
+            <BaseTable
+              drawerOpen={drawerOpen}
+              data={filtered}
+              columns={columns}
+              isLoading={false}
+              onRowClick={handleRowClick}
+            />
+          </Box>
 
           <DrawerForm
             isOpen={drawerOpen}
@@ -172,10 +187,16 @@ export const UnityManager = () => {
                   <b>Unidade:</b> {selectedUnity.name}
                 </Text>
                 <Text>
-                  <b>Criado em:</b> <Tag.Root colorPalette="gray" size="sm">{formatDate(selectedUnity.createdAt)}</Tag.Root>
+                  <b>Criado em:</b>{' '}
+                  <Tag.Root colorPalette="gray" size="sm">
+                    {formatDate(selectedUnity.createdAt)}
+                  </Tag.Root>
                 </Text>
                 <Text>
-                  <b>Atualizado em:</b> <Tag.Root colorPalette="gray" size="sm">{formatDate(selectedUnity.updatedAt)}</Tag.Root>
+                  <b>Atualizado em:</b>{' '}
+                  <Tag.Root colorPalette="gray" size="sm">
+                    {formatDate(selectedUnity.updatedAt)}
+                  </Tag.Root>
                 </Text>
               </Stack>
             ) : null}

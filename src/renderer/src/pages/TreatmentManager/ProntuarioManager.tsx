@@ -286,14 +286,20 @@ export const ProntuarioManager = () => {
       </Flex>
 
       <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" gap={16} position="relative">
-          <BaseTable
-            drawerOpen={isDrawerOpen}
-            data={filteredProntuarios}
-            columns={columns}
-            isLoading={isLoading}
-            onRowClick={(prontuario) => handleView(prontuario)}
-          />
+        <Flex w="100%" h="100%" position="relative">
+          <Box
+            w={isDrawerOpen ? 'calc(100% - 400px)' : '100%'}
+            h="100%"
+            transition="width 0.4s cubic-bezier(.4,0,.2,1)"
+          >
+            <BaseTable
+              drawerOpen={isDrawerOpen}
+              data={filteredProntuarios}
+              columns={columns}
+              isLoading={isLoading}
+              onRowClick={(prontuario) => handleView(prontuario)}
+            />
+          </Box>
 
           <DrawerForm
             isOpen={isDrawerOpen}
