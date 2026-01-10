@@ -33,13 +33,14 @@ const floatingStyles = defineStyle({
 export interface CustomInputProps extends ChakraInputProps {
   label?: string
   error?: string
+  width?: string
 }
 
 export const Input = React.forwardRef<HTMLInputElement, CustomInputProps>(
-  ({ label, error, ...props }, ref) => {
+  ({ label, error, width, ...props }, ref) => {
     return (
-      <Field.Root invalid={!!error}>
-        <Box className={style['chakra-input-container']} pos="relative" w="full">
+      <Field.Root w={width || 'full'} invalid={!!error}>
+        <Box className={style['chakra-input-container']} pos="relative" w={width || 'full'}>
           <ChakraInput
             ref={ref}
             className={style['chakra-input']}

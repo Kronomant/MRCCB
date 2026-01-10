@@ -82,19 +82,10 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       justify="flex-end"
       gap={3}
     >
-      <Button 
-        variant="outline" 
-        onClick={onSecondaryAction || onClose}
-        disabled={isLoading}
-      >
+      <Button variant="outline" onClick={onSecondaryAction || onClose} disabled={isLoading}>
         {secondaryLabel}
       </Button>
-      <Button 
-        colorScheme="blue" 
-        onClick={onPrimaryAction}
-        loading={isLoading}
-        disabled={isLoading}
-      >
+      <Button colorScheme="blue" onClick={onPrimaryAction} loading={isLoading} disabled={isLoading}>
         {primaryLabel}
       </Button>
     </Flex>

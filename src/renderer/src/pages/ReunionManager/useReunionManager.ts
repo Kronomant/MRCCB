@@ -35,6 +35,14 @@ export interface UseReunionManagerResult {
   canEdit: boolean
   canShowEditButton: boolean
   editError: string | null
+  handleDelete: () => Promise<void>
+  startDateInput: string
+  setStartDateInput: React.Dispatch<React.SetStateAction<string>>
+  endDateInput: string
+  setEndDateInput: React.Dispatch<React.SetStateAction<string>>
+  statusInput: string
+  setStatusInput: React.Dispatch<React.SetStateAction<string>>
+  handleFilter: () => void
 }
 
 export function useReunionManager(): UseReunionManagerResult {
@@ -42,6 +50,12 @@ export function useReunionManager(): UseReunionManagerResult {
   const [selectedReunion, setSelectedReunion] = useState<Reunion>(defaultReunion)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
+  const [startDateInput, setStartDateInput] = useState('')
+  const [endDateInput, setEndDateInput] = useState('')
+  const [statusInput, setStatusInput] = useState('')
+  const [activeFilter, setActiveFilter] = useState<
+    { startDate?: string; endDate?: string; status?: string } | undefined
+  >(undefined)
   const navigate = useNavigate()
 
   const {
@@ -54,13 +68,30 @@ export function useReunionManager(): UseReunionManagerResult {
     defaultValues: defaultReunion
   })
 
-  const { reunions, createReunion, updateReunion } = useReunions()
+  const { reunions, createReunion, updateReunion, deleteReunion } = useReunions(activeFilter)
+
+  const handleFilter = () => {
+    setActiveFilter({
+      startDate: startDateInput || undefined,
+      endDate: endDateInput || undefined,
+      status: statusInput || undefined
+    })
+  }
 
   const handleRowClick = (reunion: Reunion) => {
     setSelectedReunion(reunion)
     reset(reunion)
     setIsEditMode(false)
     setDrawerOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (selectedReunion.id && selectedReunion.id !== 0) {
+      if (confirm('Tem certeza que deseja excluir esta reunião?')) {
+        await deleteReunion.mutateAsync(selectedReunion.id)
+        handleCloseDrawer()
+      }
+    }
   }
 
   const handleAddNew = () => {
@@ -77,7 +108,10 @@ export function useReunionManager(): UseReunionManagerResult {
         status: ReunionStatus.IN_PROGRESS
       })
       setSelectedReunion((prev) => ({ ...prev, status: ReunionStatus.IN_PROGRESS }))
-    } else if (selectedReunion.status === ReunionStatus.IN_PROGRESS) {
+    } else if (
+      selectedReunion.status === ReunionStatus.IN_PROGRESS ||
+      selectedReunion.status === ReunionStatus.FINISHED
+    ) {
       navigate(`/reunioes/${selectedReunion.id}`)
     }
   }
@@ -179,15 +213,16 @@ export function useReunionManager(): UseReunionManagerResult {
 
     return {
       title,
-      primaryLabel: 'Fechar',
-      primaryAction: handleCloseDrawer,
-      secondaryLabel: 'Cancelar',
+      primaryLabel: 'Visualizar Reunião',
+      primaryAction: handleStartOrAccess,
+      secondaryLabel: 'Fechar',
       canEdit
     }
   }
 
   const { title, primaryLabel, primaryAction, secondaryLabel, canEdit } = getDrawerContent()
-  const canShowEditButton = selectedReunion.status !== ReunionStatus.NEW && selectedReunion.id !== 0 && !isEditMode
+  const canShowEditButton =
+    selectedReunion.status !== ReunionStatus.NEW && selectedReunion.id !== 0 && !isEditMode
 
   return {
     drawerOpen,
@@ -201,13 +236,21 @@ export function useReunionManager(): UseReunionManagerResult {
     handleAddNew,
     handleCloseDrawer,
     handleEditToggle,
+    handleDelete,
     title,
     primaryLabel,
     secondaryLabel,
     onPrimaryAction: primaryAction,
     canEdit,
     canShowEditButton,
-    editError
+    editError,
+    startDateInput,
+    setStartDateInput,
+    endDateInput,
+    setEndDateInput,
+    handleFilter,
+    statusInput,
+    setStatusInput
   }
 }
 

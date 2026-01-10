@@ -80,6 +80,21 @@ declare global {
     backupPath: string
   }
 
+  type ProntuarioDeliveryStatus = 'pendente' | 'entregue' | 'devolvido'
+
+  interface ProntuarioDeliveryData {
+    id?: number
+    prontuarioId: number
+    reunionId: number
+    status: ProntuarioDeliveryStatus
+    deliveredAt?: string
+    deliveredBy?: string
+    returnedAt?: string
+    returnedBy?: string
+    createdAt?: string
+    updatedAt?: string
+  }
+
   type Column<T> = {
     header: string
     accessor?: keyof T

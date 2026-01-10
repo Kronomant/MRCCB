@@ -4,8 +4,11 @@ import { useRecords } from '../../hooks'
 import { useProntuarios } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
 import { getProntuarioByNumber } from '../../services/prontuarioService'
+import { updateReunion } from '../../services/reunionService'
 import { RecordType } from '../../hooks/records/useRecords'
 import { createListCollection } from '@ark-ui/react/collection'
+import { ReunionStatus } from '../../types/reunion-status'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 // Constants derived from UI needs but containing logic mappings
 export const LABEL_COLORS: Record<string, string> = {
@@ -25,7 +28,8 @@ const defaultRecord: RecordType = {
   labels: [],
   representacao: false,
   somenteRoupas: false,
-  valorTotalAprovado: false
+  valorTotalAprovado: false,
+  delivered: false
 }
 
 const isValidProntuarioNumber = (value: string) => /^\d+$/.test(value) && Number(value) > 0
@@ -42,8 +46,11 @@ export const useReunionBehavior = () => {
     createAtendimento,
     updateAtendimento,
     deleteAtendimento,
+    toggleDelivery,
     reunions
   } = useRecords(reunionId)
+
+
 
   const { prontuarios, activeProntuarios, createProntuario } = useProntuarios()
   const { unities } = useUnities()
@@ -51,6 +58,7 @@ export const useReunionBehavior = () => {
   // State consolidation
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [closeModalOpen, setCloseModalOpen] = useState(false)
   const [formState, setFormState] = useState({
     record: defaultRecord,
     prontuarioSearch: '',
@@ -278,6 +286,37 @@ export const useReunionBehavior = () => {
     setFormState(prev => ({ ...prev, selectedUnityId: id }))
   }
 
+  // React Query Client para invalidar queries
+  const queryClient = useQueryClient()
+
+  // Mutation para atualizar reunião
+  const updateReunionMutation = useMutation({
+    mutationFn: updateReunion,
+    onSuccess: () => {
+      // Invalida as queries de reuniões para forçar recarregamento
+      queryClient.invalidateQueries({ queryKey: ['reunion', reunionId] })
+      queryClient.invalidateQueries({ queryKey: ['reunions'] })
+    }
+  })
+
+  // Handler para encerrar reunião
+  const handleCloseReunion = async () => {
+    try {
+      const currentReunion = reunions.data
+      if (!currentReunion) return
+
+      await updateReunionMutation.mutateAsync({
+        ...currentReunion,
+        status: ReunionStatus.FINISHED
+      })
+
+      // Navega de volta para a lista de reuniões
+      navigate('/reunioes')
+    } catch (err) {
+      console.error('Falha ao encerrar reunião:', err)
+    }
+  }
+
   return {
     navigate,
     drawerOpen,
@@ -290,6 +329,9 @@ export const useReunionBehavior = () => {
     filteredRecords,
     filteredProntuarios,
     unities,
+    closeModalOpen,
+    setCloseModalOpen,
+    reunionStatus: reunions.data?.status,
     handlers: {
       handleAdd,
       handleEdit,
@@ -301,7 +343,9 @@ export const useReunionBehavior = () => {
       updateProntuarioSearch,
       updateUnityId,
       isValidProntuarioNumber,
-      collection
+      collection,
+      handleCloseReunion,
+      toggleDelivery
     }
   }
 }

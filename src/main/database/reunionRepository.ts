@@ -34,11 +34,51 @@ export function createReunion(data: Omit<ReunionData, 'id'>): ReunionData {
 }
 
 // READ ALL
-export function getAllReunions(): ReunionData[] {
+export function getAllReunions(filters?: { startDate?: string; endDate?: string; status?: string }): ReunionData[] {
   const db = getDb()
 
-  const stmt = db.prepare('SELECT * FROM reunions')
-  return stmt.all() as ReunionData[]
+  let query = `
+    SELECT 
+      r.id,
+      r.name,
+      r.value,
+      r.date,
+      r.status,
+      COALESCE(COUNT(a.id), 0) as treatmentQuantity,
+      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity
+    FROM reunions r
+    LEFT JOIN atendimentos a ON a.reunionId = r.id
+  `
+
+  const conditions: string[] = []
+  const params: any[] = []
+
+  if (filters?.startDate) {
+    conditions.push(`r.date >= ?`)
+    params.push(filters.startDate)
+  }
+
+  if (filters?.endDate) {
+    conditions.push(`r.date <= ?`)
+    params.push(filters.endDate)
+  }
+
+  if (filters?.status) {
+    conditions.push(`r.status = ?`)
+    params.push(filters.status)
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`
+  }
+
+  query += `
+    GROUP BY r.id
+    ORDER BY r.date DESC
+  `
+
+  const stmt = db.prepare(query)
+  return stmt.all(...params) as ReunionData[]
 }
 
 export function getReunionById(id: number): ReunionData | undefined {

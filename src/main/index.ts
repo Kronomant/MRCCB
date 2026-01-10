@@ -8,6 +8,8 @@ import { registerAtendimentoHandlers } from './ipc/atendimentoHandlers'
 import { registerUnityHandlers } from './ipc/unityHandlers'
 import { initDb } from './database/db'
 
+import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHandlers'
+
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -24,6 +26,7 @@ app.whenReady().then(() => {
   registerProntuarioHandlers()
   registerAtendimentoHandlers()
   registerUnityHandlers()
+  registerProntuarioDeliveryHandlers()
   createWindow()
 
   app.on('activate', function () {

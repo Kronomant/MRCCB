@@ -35,6 +35,8 @@ export const BaseTable = <T extends { id: number }>({
       height="60px"
       data-selected={selection.includes(item.id) ? 1 : undefined}
       onClick={() => onRowClick?.(item)}
+      cursor="pointer"
+      _hover={{ bg: 'bg.subtle' }}
     >
       {hasCheckbox && (
         <Table.Cell height="60px">
@@ -69,10 +71,9 @@ export const BaseTable = <T extends { id: number }>({
 
   return (
     <Box
-      height="fit-content"
-      transition="max-width 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s cubic-bezier(.4,0,.2,1)"
-      maxWidth={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-      flex="1 1 0%"
+      height="100%"
+      transition="width 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s cubic-bezier(.4,0,.2,1)"
+      width="100%"
     >
       <Flex w="100%" h="100%" flexDir="column">
         {isLoading ? (
@@ -86,7 +87,7 @@ export const BaseTable = <T extends { id: number }>({
           </Text>
         ) : (
           <Table.ScrollArea borderWidth="1px" rounded="md" height="full">
-            <Table.Root interactive stickyHeader colorPalette="gray" height="full">
+            <Table.Root interactive stickyHeader colorPalette="gray">
               <Table.Header>
                 <Table.Row bg="bg.subtle">
                   {hasCheckbox && (

@@ -2,7 +2,7 @@
 import { ipcMain } from 'electron'
 import * as repository from '../database/prontuarioDeliveryRepository'
 
-export function setupProntuarioDeliveryHandlers(): void {
+export function registerProntuarioDeliveryHandlers(): void {
   // Get prontuario delivery status by IDs
   ipcMain.handle('prontuarioDelivery:getByIds', async (_, prontuarioId: number, reunionId: number) => {
     try {
@@ -49,6 +49,35 @@ export function setupProntuarioDeliveryHandlers(): void {
       return repository.markProntuarioAsReturned(prontuarioId, reunionId, returnedBy)
     } catch (error) {
       console.error('Error marking prontuario as returned:', error)
+      throw error
+    }
+  })
+
+  // Update delivery status generically
+  ipcMain.handle('prontuarioDelivery:updateStatus', async (_, prontuarioId: number, reunionId: number, status: string, by: string) => {
+    try {
+      const now = new Date().toISOString()
+      const data: any = {
+        prontuarioId,
+        reunionId,
+        status,
+        updatedAt: now
+      }
+      
+      if (status === 'entregue') {
+         data.deliveredAt = now
+         data.deliveredBy = by
+      } else if (status === 'devolvido') {
+         data.returnedAt = now
+         data.returnedBy = by
+      } else if (status === 'pendente') {
+         // Reset dates if needed, or just status? Usually just status is enough for now, 
+         // but let's keep it simple and just update status.
+      }
+
+      return repository.upsertProntuarioDelivery(data)
+    } catch (error) {
+      console.error('Error updating prontuario delivery status:', error)
       throw error
     }
   })

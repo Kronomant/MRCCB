@@ -101,20 +101,31 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   } = useProntuario(prontuarioId)
   const { unities } = useUnities()
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
+  const [deliveries, setDeliveries] = useState<ProntuarioDeliveryData[]>([])
   const [loadingAtendimentos, setLoadingAtendimentos] = useState(true)
 
   useEffect(() => {
     const fetchAtendimentos = async () => {
       try {
+        setLoadingAtendimentos(true)
         // Buscar atendimentos relacionados ao prontuário
-        const data = await window.electron.ipcRenderer.invoke(
+        const atendimentosData = await window.electron.ipcRenderer.invoke(
           'atendimento:getByProntuarioId',
           prontuarioId
         ) as Atendimento[]
-        setAtendimentos(data ?? [])
+        setAtendimentos(atendimentosData ?? [])
+
+        // Buscar status de entrega
+        const deliveryData = await window.electron.ipcRenderer.invoke(
+            'prontuarioDelivery:getByProntuario',
+            prontuarioId
+        ) as ProntuarioDeliveryData[]
+        setDeliveries(deliveryData ?? [])
+
       } catch (error) {
-        console.error('Erro ao buscar atendimentos:', error)
+        console.error('Erro ao buscar dados do prontuário:', error)
         setAtendimentos([])
+        setDeliveries([])
       } finally {
         setLoadingAtendimentos(false)
       }
@@ -144,9 +155,19 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
     )
   }
 
+  const getDeliveryStatus = (reunionId: number) => {
+      const delivery = deliveries.find(d => d.reunionId === reunionId)
+      return delivery?.status || 'pendente'
+  }
+
   const statusInfo = getStatusInfo(prontuario.status)
   const totalAtendimentos = atendimentos.length
-  const atendimentosPendentes = atendimentos.filter((a) => !a.returned).length
+  // Count as pending if not explicitly delivered or returned
+  const atendimentosPendentes = atendimentos.filter((a) => {
+      const status = getDeliveryStatus(a.reunionId)
+      return status !== 'entregue' && status !== 'devolvido'
+  }).length
+  
   const valorTotalRecebido = atendimentos.reduce((total, a) => total + (a.value || 0), 0)
 
   return (
@@ -299,7 +320,16 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
-                    {atendimentos.map((atendimento) => (
+                    {atendimentos.map((atendimento) => {
+                        const status = getDeliveryStatus(atendimento.reunionId)
+                        const statusColor = 
+                            status === 'entregue' ? 'green' : 
+                            status === 'devolvido' ? 'blue' : 'orange'
+                        const statusLabel = 
+                            status === 'entregue' ? 'Entregue' : 
+                            status === 'devolvido' ? 'Devolvido' : 'Pendente'
+
+                        return (
                       <Table.Row key={atendimento.id}>
                         <Table.Cell>{formatDate(atendimento.date)}</Table.Cell>
                         <Table.Cell>#{atendimento.reunionId}</Table.Cell>
@@ -309,10 +339,10 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
                         <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
                         <Table.Cell>
                           <Badge
-                            colorPalette={atendimento.returned ? 'green' : 'orange'}
+                            colorPalette={statusColor}
                             variant="solid"
                           >
-                            {atendimento.returned ? 'Entregue' : 'Pendente'}
+                            {statusLabel}
                           </Badge>
                         </Table.Cell>
                         <Table.Cell>
@@ -340,7 +370,7 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
                           </Flex>
                         </Table.Cell>
                       </Table.Row>
-                    ))}
+                    )})}
                   </Table.Body>
                 </Table.Root>
               )}

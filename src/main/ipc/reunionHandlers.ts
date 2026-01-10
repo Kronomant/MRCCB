@@ -22,8 +22,8 @@ export function registerReunionHandlers() {
   })
 
   // READ ALL
-  ipcMain.handle('reunion:all', () => {
-    return getAllReunions()
+  ipcMain.handle('reunion:all', (event, filters?: { startDate?: string; endDate?: string; status?: string }) => {
+    return getAllReunions(filters)
   })
 
   // UPDATE

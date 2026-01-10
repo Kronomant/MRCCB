@@ -62,7 +62,7 @@ export function initDb(): void {
   const columns = db.prepare("PRAGMA table_info('atendimentos')").all() as Array<{ name: string }>
   const hasProntuarioNumber = columns.some((c) => c.name === 'prontuarioNumber')
   if (!hasProntuarioNumber) {
-    db.exec("ALTER TABLE atendimentos ADD COLUMN prontuarioNumber INTEGER")
+    db.exec('ALTER TABLE atendimentos ADD COLUMN prontuarioNumber INTEGER')
     db.exec(`
       UPDATE atendimentos
       SET prontuarioNumber = (
@@ -73,7 +73,7 @@ export function initDb(): void {
 
   const hasMinisterio = columns.some((c) => c.name === 'ministerio')
   if (!hasMinisterio) {
-    db.exec("ALTER TABLE atendimentos ADD COLUMN ministerio INTEGER DEFAULT 0")
+    db.exec('ALTER TABLE atendimentos ADD COLUMN ministerio INTEGER DEFAULT 0')
   }
   // Manter tabela treatments para compatibilidade temporária
   db.exec(`
