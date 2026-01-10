@@ -12,7 +12,7 @@ import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHand
 
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.ccb.gestao')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

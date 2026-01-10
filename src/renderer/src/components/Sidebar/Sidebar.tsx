@@ -19,6 +19,7 @@ const NavItem = ({ icon, children, href, onClick, selected }: NavItemProps) => {
   return (
     <Link className="sidebar__nav" to={href} onClick={onClick}>
       <Flex
+        className={`sidebar__nav-item ${selected ? 'sidebar__nav-item--selected' : ''}`}
         w="100%"
         align="center"
         justify="center"
@@ -26,12 +27,11 @@ const NavItem = ({ icon, children, href, onClick, selected }: NavItemProps) => {
         borderRadius="md"
         role="group"
         cursor="pointer"
-        backgroundColor={selected ? 'gray.200' : ''}
       >
-        <Icon mr="3" size="md" color="gray.solid">
+        <Icon mr="3" size="md" className="sidebar__nav-icon">
           {icon}
         </Icon>
-        <Text fontSize="md" color="fg">
+        <Text fontSize="md" className="sidebar__nav-text">
           {children}
         </Text>
       </Flex>

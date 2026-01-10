@@ -133,9 +133,9 @@ export function useReunionManager() {
       let savedReunion: Reunion
 
       if (selectedReunion.id === 0) {
-        savedReunion = await createReunion.mutateAsync(data)
-        setSelectedReunion(savedReunion)
-        reset(savedReunion)
+        await createReunion.mutateAsync(data)
+        handleCloseDrawer()
+        return
       } else {
         savedReunion = await updateReunion.mutateAsync({
           id: selectedReunion.id || 0,
