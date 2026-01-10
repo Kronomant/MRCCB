@@ -50,8 +50,6 @@ export const useReunionBehavior = () => {
     reunions
   } = useRecords(reunionId)
 
-
-
   const { prontuarios, activeProntuarios, createProntuario } = useProntuarios()
   const { unities } = useUnities()
 
@@ -59,6 +57,7 @@ export const useReunionBehavior = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [closeModalOpen, setCloseModalOpen] = useState(false)
+  const [protocolModalOpen, setProtocolModalOpen] = useState(false)
   const [formState, setFormState] = useState({
     record: defaultRecord,
     prontuarioSearch: '',
@@ -68,8 +67,8 @@ export const useReunionBehavior = () => {
   })
 
   // Derived state (Functional approach - memoized selectors)
-  const filteredRecords = useMemo(() => 
-    hookRecords.filter((r) => String(r.prontuarioNumber).includes(search)),
+  const filteredRecords = useMemo(
+    () => hookRecords.filter((r) => String(r.prontuarioNumber).includes(search)),
     [hookRecords, search]
   )
 
@@ -94,8 +93,8 @@ export const useReunionBehavior = () => {
     return filtered
   }, [activeProntuarios, formState.prontuarioSearch])
 
-  const collection = useMemo(() => 
-    createListCollection({ items: filteredProntuarios }),
+  const collection = useMemo(
+    () => createListCollection({ items: filteredProntuarios }),
     [filteredProntuarios]
   )
 
@@ -116,47 +115,56 @@ export const useReunionBehavior = () => {
     setDrawerOpen(true)
   }, [reunions.data])
 
-  const handleEdit = useCallback((record: RecordType) => {
-    const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
-    setFormState({
-      record,
-      prontuarioSearch: String(record.prontuarioNumber || ''),
-      prontuarioError: null,
-      selectedUnityId: prontuario?.unityId ?? null,
-      isNewProntuario: record.id !== 0 && !record.prontuarioId
-    })
-    setDrawerOpen(true)
-  }, [prontuarios])
+  const handleEdit = useCallback(
+    (record: RecordType) => {
+      const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
+      setFormState({
+        record,
+        prontuarioSearch: String(record.prontuarioNumber || ''),
+        prontuarioError: null,
+        selectedUnityId: prontuario?.unityId ?? null,
+        isNewProntuario: record.id !== 0 && !record.prontuarioId
+      })
+      setDrawerOpen(true)
+    },
+    [prontuarios]
+  )
 
-  const handleView = useCallback((record: RecordType) => {
-    const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
-    setFormState({
-      record,
-      prontuarioSearch: String(record.prontuarioNumber || ''),
-      prontuarioError: null,
-      selectedUnityId: prontuario?.unityId ?? null,
-      isNewProntuario: record.id !== 0 && !record.prontuarioId
-    })
-    setDrawerOpen(true)
-  }, [prontuarios])
+  const handleView = useCallback(
+    (record: RecordType) => {
+      const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
+      setFormState({
+        record,
+        prontuarioSearch: String(record.prontuarioNumber || ''),
+        prontuarioError: null,
+        selectedUnityId: prontuario?.unityId ?? null,
+        isNewProntuario: record.id !== 0 && !record.prontuarioId
+      })
+      setDrawerOpen(true)
+    },
+    [prontuarios]
+  )
 
-  const handleDelete = useCallback((id: number) => {
-     deleteAtendimento.mutate(id)
-  }, [deleteAtendimento])
+  const handleDelete = useCallback(
+    (id: number) => {
+      deleteAtendimento.mutate(id)
+    },
+    [deleteAtendimento]
+  )
 
   const resolveProntuario = async () => {
     const { record, prontuarioSearch, selectedUnityId } = formState
-    
+
     if (record.prontuarioId) return { id: record.prontuarioId, number: record.prontuarioNumber }
     if (prontuarioSearch.trim() === '') return null
     if (!isValidProntuarioNumber(prontuarioSearch.trim())) {
-      setFormState(prev => ({ ...prev, prontuarioError: 'Número de prontuário inválido' }))
+      setFormState((prev) => ({ ...prev, prontuarioError: 'Número de prontuário inválido' }))
       return null
     }
 
     const typedNumber = Number(prontuarioSearch.trim())
     const existing = await getProntuarioByNumber(typedNumber)
-    
+
     if (existing) return { id: existing.id!, number: existing.number }
 
     const created = await createProntuario.mutateAsync({
@@ -165,7 +173,7 @@ export const useReunionBehavior = () => {
       ministry: record.ministerio,
       status: 'active'
     })
-    
+
     return { id: created.id!, number: created.number }
   }
 
@@ -190,9 +198,10 @@ export const useReunionBehavior = () => {
         prontuarioNumber: prontuarioData?.number ?? 0
       }
 
-      const action = record.id === 0 
-        ? createAtendimento.mutateAsync(payload)
-        : updateAtendimento.mutateAsync({ id: record.id, ...payload })
+      const action =
+        record.id === 0
+          ? createAtendimento.mutateAsync(payload)
+          : updateAtendimento.mutateAsync({ id: record.id, ...payload })
 
       await action
       setDrawerOpen(false)
@@ -248,7 +257,7 @@ export const useReunionBehavior = () => {
   }
 
   const updateRecord = (updates: Partial<RecordType>) => {
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       record: { ...prev.record, ...updates }
     }))
@@ -283,7 +292,7 @@ export const useReunionBehavior = () => {
   }
 
   const updateUnityId = (id: number | null) => {
-    setFormState(prev => ({ ...prev, selectedUnityId: id }))
+    setFormState((prev) => ({ ...prev, selectedUnityId: id }))
   }
 
   // React Query Client para invalidar queries
@@ -326,11 +335,15 @@ export const useReunionBehavior = () => {
     formState,
     isLoading,
     summary,
+    records: hookRecords,
     filteredRecords,
     filteredProntuarios,
+    prontuarios,
     unities,
     closeModalOpen,
     setCloseModalOpen,
+    protocolModalOpen,
+    setProtocolModalOpen,
     reunionStatus: reunions.data?.status,
     handlers: {
       handleAdd,

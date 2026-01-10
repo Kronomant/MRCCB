@@ -41,7 +41,8 @@ import {
 
 import { createListCollection } from '@ark-ui/react/collection'
 import { PageHeader, DrawerForm, BaseTable, Input } from '../../components'
-import { FiSearch, FiFilter, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { Tooltip } from '../../components/ui/tooltip'
+import { FiSearch, FiFilter, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -49,6 +50,7 @@ import { RecordType } from '../../hooks/records/useRecords'
 import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 import { useEffect } from 'react'
 import { ReunionStatus } from '../../types/reunion-status'
+import { ProtocolModal } from '../../components/ProtocolPDF/ProtocolModal'
 
 export const Reunion = () => {
   const {
@@ -61,12 +63,16 @@ export const Reunion = () => {
     isLoading,
     summary,
     filteredRecords,
+    records,
     filteredProntuarios,
+    prontuarios,
     unities,
     handlers,
     closeModalOpen,
     setCloseModalOpen,
-    reunionStatus
+    reunionStatus,
+    protocolModalOpen,
+    setProtocolModalOpen
   } = useReunionBehavior()
 
   const { record, prontuarioSearch, prontuarioError, selectedUnityId } = formState
@@ -369,6 +375,13 @@ export const Reunion = () => {
             Encerrar Reunião
           </Button>
         )}
+        {isClosed && (
+          <Tooltip content="Gerar protocolo da reunião">
+            <Button colorScheme="green" ml={4} onClick={() => setProtocolModalOpen(true)}>
+              <FiFileText /> Gerar Protocolo
+            </Button>
+          </Tooltip>
+        )}
       </PageHeader>
 
       {renderSummary()}
@@ -490,6 +503,15 @@ export const Reunion = () => {
           </DialogPositioner>
         </Portal>
       </DialogRoot>
+
+      <ProtocolModal
+        isOpen={protocolModalOpen}
+        onClose={() => setProtocolModalOpen(false)}
+        records={records}
+        unities={unities}
+        prontuarios={prontuarios}
+        date={summary.data}
+      />
     </Flex>
   )
 }
