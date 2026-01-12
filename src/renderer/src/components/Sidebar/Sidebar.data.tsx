@@ -1,6 +1,11 @@
-import { FiHome, FiSettings, FiUser, FiFileText } from 'react-icons/fi'
+import { FiHome, FiSettings, FiUser, FiFileText, FiPieChart } from 'react-icons/fi'
 
 export const menuItems = [
+  {
+    title: 'Dashboard',
+    path: 'dashboard',
+    icon: <FiPieChart />
+  },
   {
     title: 'Reuniões',
     path: 'reunioes',
