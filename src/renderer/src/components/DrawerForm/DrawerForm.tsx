@@ -30,6 +30,11 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
   headerActions
 }) => (
   <Box
+    as="form"
+    onSubmit={(e) => {
+      e.preventDefault()
+      onPrimaryAction?.()
+    }}
     position="absolute"
     right={-5}
     top={0}
@@ -66,7 +71,7 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       )}
       <Flex align="center" gap={2}>
         {headerActions}
-        <Button variant="outline" onClick={onClose} size="sm">
+        <Button variant="outline" onClick={onClose} size="sm" type="button">
           <FiX />
         </Button>
       </Flex>
@@ -82,10 +87,15 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       justify="flex-end"
       gap={3}
     >
-      <Button variant="outline" onClick={onSecondaryAction || onClose} disabled={isLoading}>
+      <Button
+        variant="outline"
+        onClick={onSecondaryAction || onClose}
+        disabled={isLoading}
+        type="button"
+      >
         {secondaryLabel}
       </Button>
-      <Button colorScheme="blue" onClick={onPrimaryAction} loading={isLoading} disabled={isLoading}>
+      <Button colorScheme="blue" type="submit" loading={isLoading} disabled={isLoading}>
         {primaryLabel}
       </Button>
     </Flex>

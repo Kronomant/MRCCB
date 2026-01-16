@@ -19,6 +19,9 @@ export const reunionSchema = z.object({
     .number({ message: 'Valor deve ser um número' })
     .min(0, 'Valor deve ser maior ou igual a zero')
     .max(999999.99, 'Valor deve ser menor que R$ 999.999,99'),
+  basketValue: z
+    .number({ message: 'Valor da cesta deve ser um número' })
+    .min(0, 'Valor deve ser maior ou igual a zero'),
   treatmentQuantity: z
     .number({ message: 'Quantidade de atendimentos deve ser um número' })
     .int('Quantidade deve ser um número inteiro')

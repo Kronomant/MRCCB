@@ -21,9 +21,10 @@ const NavItem = ({ icon, children, href, onClick, selected }: NavItemProps) => {
       <Flex
         className={`sidebar__nav-item ${selected ? 'sidebar__nav-item--selected' : ''}`}
         w="100%"
-        align="center"
-        justify="center"
+        align="start"
+        justify="start"
         p="3"
+        paddingLeft="6"
         borderRadius="md"
         role="group"
         cursor="pointer"

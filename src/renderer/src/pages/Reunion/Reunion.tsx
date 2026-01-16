@@ -40,9 +40,9 @@ import {
 } from '@chakra-ui/react'
 
 import { createListCollection } from '@ark-ui/react/collection'
-import { PageHeader, DrawerForm, BaseTable, Input } from '../../components'
+import { PageHeader, DrawerForm, BaseTable, Input, CurrencyInput, PageContainer } from '../../components'
 import { Tooltip } from '../../components/ui/tooltip'
-import { FiSearch, FiFilter, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiPlus, FiTrash2, FiFileText, FiEye } from 'react-icons/fi'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -72,7 +72,8 @@ export const Reunion = () => {
     setCloseModalOpen,
     reunionStatus,
     protocolModalOpen,
-    setProtocolModalOpen
+    setProtocolModalOpen,
+    reunion
   } = useReunionBehavior()
 
   const { record, prontuarioSearch, prontuarioError, selectedUnityId } = formState
@@ -145,6 +146,16 @@ export const Reunion = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation()
+              handlers.handleView(row)
+            }}
+          >
+            <FiEye />
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
               handlers.handleDelete(row.id)
             }}
           >
@@ -156,7 +167,7 @@ export const Reunion = () => {
   ]
 
   const drawerContent = (
-    <Stack gap={3}>
+    <Stack gap={6}>
       <ComboboxRoot
         collection={handlers.collection}
         value={
@@ -228,12 +239,10 @@ export const Reunion = () => {
         </SelectContent>
       </SelectRoot>
 
-      <Input
+      <CurrencyInput
         label="Valor"
-        type="number"
         value={record.valor}
-        onFocus={(e) => e.target.select()}
-        onChange={(e) => handlers.updateRecord({ valor: Number(e.target.value) })}
+        onChange={(val) => handlers.updateRecord({ valor: val })}
       />
       <Input
         label="Quantidade de Cestas"
@@ -352,45 +361,38 @@ export const Reunion = () => {
   }
 
   return (
-    <Flex
-      p="24px"
-      flexDir="column"
-      gap="32px"
-      w="100%"
-      h="100%"
-      backgroundColor="bg"
-      borderRadius="8px"
-    >
-      <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
-        <Text color="fg.muted" fontSize="md" ml={4}>
-          {summary.data
-            ? format(parseISO(summary.data), "d 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(
-                /de ([a-z])/g,
-                (match) => match.replace(match[3], match[3].toUpperCase())
-              )
-            : ''}
-        </Text>
-        {!isClosed && (
-          <Button colorScheme="red" ml={4} onClick={() => setCloseModalOpen(true)}>
-            Encerrar Reunião
-          </Button>
-        )}
-        {isClosed && (
-          <Tooltip content="Gerar protocolo da reunião">
-            <Button colorScheme="green" ml={4} onClick={() => setProtocolModalOpen(true)}>
-              <FiFileText /> Gerar Protocolo
+    <PageContainer>
+      <Stack gap={8}>
+        <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
+          <Text color="fg.muted" fontSize="md" ml={4}>
+            {summary.data
+              ? format(parseISO(summary.data), "d 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(
+                  /de ([a-z])/g,
+                  (match) => match.replace(match[3], match[3].toUpperCase())
+                )
+              : ''}
+          </Text>
+          {!isClosed && (
+            <Button colorScheme="red" ml={4} onClick={() => setCloseModalOpen(true)}>
+              Encerrar Reunião
             </Button>
-          </Tooltip>
-        )}
-      </PageHeader>
+          )}
+          {isClosed && (
+            <Tooltip content="Gerar protocolo da reunião">
+              <Button colorScheme="green" ml={4} onClick={() => setProtocolModalOpen(true)}>
+                <FiFileText /> Gerar Protocolo
+              </Button>
+            </Tooltip>
+          )}
+        </PageHeader>
 
-      {renderSummary()}
+        {renderSummary()}
 
-      <Box>
-        <Flex mb={4} gap={3} align="center">
-          <InputGroup endElement={<FiSearch />} w="300px">
-            <Input
-              borderRadius="3xl"
+        <Box>
+          <Flex mb={4} gap={3} align="center">
+            <InputGroup endElement={<FiSearch />} w="300px">
+              <Input
+                borderRadius="3xl"
               label="Pesquisar"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -420,7 +422,6 @@ export const Reunion = () => {
                 data={filteredRecords}
                 columns={columns as Column<RecordType>[]}
                 isLoading={isLoading}
-                onRowClick={handlers.handleView}
               />
             </Box>
 
@@ -461,10 +462,33 @@ export const Reunion = () => {
                   <Box bg="bg.subtle" p={4} rounded="md">
                     <Stack gap={2}>
                       <Flex justify="space-between">
-                        <Text fontWeight="semibold">Valor Total Atribuído:</Text>
+                        <Text fontWeight="semibold">Valor Total (Atendimentos + Cestas):</Text>
                         <Text>
                           R${' '}
-                          {summary.totalAtribuido.toLocaleString('pt-BR', {
+                          {(
+                            summary.totalGasto +
+                            summary.cestas * (reunion?.basketValue || 0)
+                          ).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                          })}
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text fontWeight="semibold">Valor Atendimentos:</Text>
+                        <Text>
+                          R${' '}
+                          {summary.totalGasto.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                          })}
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text fontWeight="semibold">Valor Cestas:</Text>
+                        <Text>
+                          R${' '}
+                          {(
+                            summary.cestas * (reunion?.basketValue || 0)
+                          ).toLocaleString('pt-BR', {
                             minimumFractionDigits: 2
                           })}
                         </Text>
@@ -512,6 +536,7 @@ export const Reunion = () => {
         prontuarios={prontuarios}
         date={summary.data}
       />
-    </Flex>
+      </Stack>
+    </PageContainer>
   )
 }

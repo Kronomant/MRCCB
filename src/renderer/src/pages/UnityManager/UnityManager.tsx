@@ -2,7 +2,7 @@ import { Button, Flex, InputGroup, Stack, Text, Tag, Box } from '@chakra-ui/reac
 import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
 import { DrawerForm } from '../../components/DrawerForm'
 import { BaseTable } from '../../components/Table/BaseTable'
-import { PageHeader } from '../../components/PageHeader/Header'
+import { PageHeader, PageContainer } from '../../components'
 import { Input } from '../../components/Input'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -123,16 +123,9 @@ export const UnityManager = () => {
     ) : null
 
   return (
-    <Flex
-      p="24px"
-      flexDir="column"
-      gap="48px"
-      w="100%"
-      h="100%"
-      backgroundColor="bg"
-      borderRadius="8px"
-    >
-      <PageHeader title="Unidades">
+    <PageContainer>
+      <Stack gap={12}>
+        <PageHeader title="Unidades">
         <Button colorPalette="gray" onClick={handleAddNew}>
           Adicionar unidade
         </Button>
@@ -204,7 +197,7 @@ export const UnityManager = () => {
             <Input
               label="Nome da unidade"
               placeholder="Ex.: Obra da Piedade - Sede"
-              mb={3}
+              mb={6}
               disabled={!canEdit}
               {...register('name')}
               error={errors.name?.message}
@@ -212,6 +205,7 @@ export const UnityManager = () => {
           </DrawerForm>
         </Flex>
       </Flex>
-    </Flex>
+      </Stack>
+    </PageContainer>
   )
 }

@@ -9,6 +9,7 @@ import { registerUnityHandlers } from './ipc/unityHandlers'
 import { initDb } from './database/db'
 
 import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHandlers'
+import { registerSettingsHandlers } from './ipc/settingsHandlers'
 
 app.whenReady().then(() => {
   // Set app user model id for windows
@@ -27,6 +28,7 @@ app.whenReady().then(() => {
   registerAtendimentoHandlers()
   registerUnityHandlers()
   registerProntuarioDeliveryHandlers()
+  registerSettingsHandlers()
   createWindow()
 
   app.on('activate', function () {

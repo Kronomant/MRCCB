@@ -50,9 +50,6 @@ export const useReunionBehavior = () => {
     reunions
   } = useRecords(reunionId)
 
-  const { prontuarios, activeProntuarios, createProntuario } = useProntuarios()
-  const { unities } = useUnities()
-
   // State consolidation
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -65,6 +62,19 @@ export const useReunionBehavior = () => {
     selectedUnityId: null as number | null,
     isNewProntuario: false
   })
+
+  const {
+    activeProntuarios,
+    createProntuario,
+    getProntuariosForReunion
+  } = useProntuarios({
+    fetchAll: false,
+    fetchActive: drawerOpen
+  })
+
+  const { data: reunionProntuarios } = getProntuariosForReunion(hookRecords)
+
+  const { unities } = useUnities()
 
   // Derived state (Functional approach - memoized selectors)
   const filteredRecords = useMemo(
@@ -117,7 +127,7 @@ export const useReunionBehavior = () => {
 
   const handleEdit = useCallback(
     (record: RecordType) => {
-      const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
+      const prontuario = (reunionProntuarios || []).find((p) => p.id === record.prontuarioId)
       setFormState({
         record,
         prontuarioSearch: String(record.prontuarioNumber || ''),
@@ -127,12 +137,12 @@ export const useReunionBehavior = () => {
       })
       setDrawerOpen(true)
     },
-    [prontuarios]
+    [reunionProntuarios]
   )
 
   const handleView = useCallback(
     (record: RecordType) => {
-      const prontuario = prontuarios?.find((p) => p.id === record.prontuarioId)
+      const prontuario = (reunionProntuarios || []).find((p) => p.id === record.prontuarioId)
       setFormState({
         record,
         prontuarioSearch: String(record.prontuarioNumber || ''),
@@ -142,7 +152,7 @@ export const useReunionBehavior = () => {
       })
       setDrawerOpen(true)
     },
-    [prontuarios]
+    [reunionProntuarios]
   )
 
   const handleDelete = useCallback(
@@ -199,9 +209,9 @@ export const useReunionBehavior = () => {
       }
 
       const action =
-        record.id === 0
-          ? createAtendimento.mutateAsync(payload)
-          : updateAtendimento.mutateAsync({ id: record.id, ...payload })
+          record.id === 0
+            ? createAtendimento.mutateAsync(payload)
+            : updateAtendimento.mutateAsync({ id: record.id, ...payload })
 
       await action
       setDrawerOpen(false)
@@ -286,7 +296,7 @@ export const useReunionBehavior = () => {
         prontuarioSearch: val,
         isNewProntuario: false,
         prontuarioError:
-          val && !isValidProntuarioNumber(val) ? 'Número de prontuário inválido' : null
+            val && !isValidProntuarioNumber(val) ? 'Número de prontuário inválido' : null
       }
     })
   }
@@ -338,7 +348,7 @@ export const useReunionBehavior = () => {
     records: hookRecords,
     filteredRecords,
     filteredProntuarios,
-    prontuarios,
+    prontuarios: reunionProntuarios || [],
     unities,
     closeModalOpen,
     setCloseModalOpen,
@@ -359,6 +369,7 @@ export const useReunionBehavior = () => {
       collection,
       handleCloseReunion,
       toggleDelivery
-    }
+    },
+    reunion: reunions.data
   }
 }

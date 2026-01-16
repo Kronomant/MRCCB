@@ -57,6 +57,19 @@ export function getProntuarioById(id: number): ProntuarioData | undefined {
   }
 }
 
+export function getProntuariosByIds(ids: number[]): ProntuarioData[] {
+  if (ids.length === 0) return []
+  const db = getDb()
+  const placeholders = ids.map(() => '?').join(',')
+  const stmt = db.prepare(`SELECT * FROM prontuarios WHERE id IN (${placeholders})`)
+  const rows = stmt.all(ids) as ProntuarioData[]
+
+  return rows.map((r) => ({
+    ...r,
+    ministry: !!r.ministry
+  }))
+}
+
 export function getProntuarioByNumber(number: number): ProntuarioData | undefined {
   const db = getDb()
   const stmt = db.prepare('SELECT * FROM prontuarios WHERE number = ?')

@@ -3,12 +3,24 @@ import Database from 'better-sqlite3'
 import path from 'path'
 import { app } from 'electron'
 import { createUnitiesTable } from './migrations/002_create_unities_table'
+import { loadConfig } from '../config'
 
 let db: Database.Database | null = null
 
 export function initDb(): void {
-  const dbPath = path.join(process.cwd(), 'database.sqlite')
-  db = new Database(dbPath)
+  const config = loadConfig()
+  const dbPath = config.dbPath
+  
+  console.log('Initializing database at:', dbPath)
+  
+  try {
+    db = new Database(dbPath)
+  } catch (error) {
+    console.error(`Failed to open database at ${dbPath}. Fallback to default.`, error)
+    const fallbackPath = path.join(process.cwd(), 'database.sqlite')
+    db = new Database(fallbackPath)
+  }
+
   db.pragma('journal_mode = WAL')
   createUnitiesTable()
 
@@ -17,6 +29,7 @@ export function initDb(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       value REAL,
+      basketValue REAL DEFAULT 200,
       treatmentQuantity INTEGER,
       foodBasketQuantity INTEGER,
       date TEXT,
@@ -92,6 +105,19 @@ export function initDb(): void {
       repeat INTEGER
     )
   `)
+
+  // Create indexes for performance
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_atendimentos_reunionId ON atendimentos (reunionId);
+    CREATE INDEX IF NOT EXISTS idx_atendimentos_prontuarioId ON atendimentos (prontuarioId);
+    CREATE INDEX IF NOT EXISTS idx_prontuarios_number ON prontuarios (number);
+  `)
+  
+  const reunionColumns = db.prepare("PRAGMA table_info('reunions')").all() as Array<{ name: string }>
+  const hasBasketValue = reunionColumns.some((c) => c.name === 'basketValue')
+  if (!hasBasketValue) {
+    db.exec('ALTER TABLE reunions ADD COLUMN basketValue REAL DEFAULT 200')
+  }
 }
 
 export function getDb(): Database.Database {

@@ -1,6 +1,14 @@
 import { RouteObject } from 'react-router-dom'
 import App from '../App'
-import { ReunionManager, Reunion, ProntuarioManager, UnityManager, Home, Dashboard } from '../pages'
+import {
+  ReunionManager,
+  Reunion,
+  ProntuarioManager,
+  UnityManager,
+  Home,
+  Dashboard,
+  Settings
+} from '../pages'
 
 const AppRoutes: RouteObject[] = [
   {
@@ -26,6 +34,10 @@ const AppRoutes: RouteObject[] = [
       {
         path: 'prontuarios',
         element: <ProntuarioManager />
+      },
+      {
+        path: 'configuracoes',
+        element: <Settings />
       },
       {
         path: 'unidades',

@@ -1,9 +1,17 @@
 import { Button, Flex, InputGroup, Tag, Box, NativeSelect, Text } from '@chakra-ui/react'
 import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
-import { DrawerForm, BaseTable, Input, PageHeader } from '../../components'
+import {
+  DrawerForm,
+  BaseTable,
+  Input,
+  PageHeader,
+  CurrencyInput,
+  PageContainer
+} from '../../components'
 import { statusMap } from './ReunionManager.helper'
 import { ReunionManagerViewProps, useReunionManager } from './useReunionManager'
 import { ReunionStatus } from '../../types/reunion-status'
+import { Controller } from 'react-hook-form'
 import SearchInput from './SearchInput'
 
 const columns: Column<Reunion>[] = [
@@ -16,7 +24,15 @@ const columns: Column<Reunion>[] = [
       return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
     }
   },
-  { header: 'Total', accessor: 'value' },
+  {
+    header: 'Total',
+    accessor: 'value',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(row.value)
+  },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
   { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
   { header: 'Data Reunião', accessor: 'date' }
@@ -28,6 +44,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     isEditMode,
     selectedReunion,
     register,
+    control,
     errors,
     isSubmitting,
     reunions,
@@ -63,15 +80,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
   )
 
   return (
-    <Flex
-      p="24px"
-      flexDir="column"
-      gap="48px"
-      w="100%"
-      h="100%"
-      backgroundColor="bg"
-      borderRadius="8px"
-    >
+    <PageContainer>
       <PageHeader title="Reuniões">
         <Button colorPalette="gray" onClick={handleAddNew}>
           Adicionar reunião
@@ -119,7 +128,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
       </Flex>
 
       <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" position="relative">
+        <Flex w="100%" h="100%" position="relative" overflowX="hidden">
           <Box
             w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
             h="100%"
@@ -151,7 +160,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
 
             <Input
               label="Nome da reunião"
-              mb={3}
+              mb={6}
               disabled={!canEdit}
               {...register('name')}
               error={errors.name?.message}
@@ -159,19 +168,38 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
             <Input
               label="Data"
               type="date"
-              mb={3}
+              mb={6}
               disabled={!canEdit}
               {...register('date')}
               error={errors.date?.message}
             />
-            <Input
-              label="Valor da reunião"
-              type="number"
-              step="0.01"
-              mb={3}
-              disabled={!canEdit}
-              {...register('value', { valueAsNumber: true })}
-              error={errors.value?.message}
+            <Controller
+              name="value"
+              control={control}
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Valor da reunião"
+                  mb={6}
+                  disabled={!canEdit}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.value?.message}
+                />
+              )}
+            />
+            <Controller
+              name="basketValue"
+              control={control}
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Valor da Cesta"
+                  mb={6}
+                  disabled={!canEdit}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.basketValue?.message}
+                />
+              )}
             />
 
             {selectedReunion.status !== ReunionStatus.NEW && (
@@ -193,7 +221,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
           </DrawerForm>
         </Flex>
       </Flex>
-    </Flex>
+    </PageContainer>
   )
 }
 

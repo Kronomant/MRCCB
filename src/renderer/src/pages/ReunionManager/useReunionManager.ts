@@ -10,6 +10,7 @@ const defaultReunion: Reunion = {
   id: 0,
   name: '',
   value: 0,
+  basketValue: 200,
   treatmentQuantity: 0,
   foodBasketQuantity: 0,
   date: '',
@@ -35,6 +36,7 @@ export function useReunionManager() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting }
   } = useForm<ReunionFormData>({
     resolver: zodResolver(reunionFormSchema),
@@ -215,6 +217,7 @@ export function useReunionManager() {
     isEditMode,
     selectedReunion,
     register,
+    control,
     errors,
     isSubmitting,
     reunions: filteredReunions.length > 0 ? filteredReunions : reunions.data,

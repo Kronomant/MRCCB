@@ -15,7 +15,7 @@ function App(): JSX.Element {
   }, [])
 
   return (
-    <Flex w="100vw" overflow="hidden">
+    <Flex w="100vw" h="100vh" overflow="hidden">
       <Flex
         transition="transform 400ms cubic-bezier(.4,0,.2,1), opacity 320ms cubic-bezier(.4,0,.2,1)"
         transform={animStart ? 'translateX(-32px)' : 'translateX(0)'}
@@ -25,7 +25,8 @@ function App(): JSX.Element {
       </Flex>
       <Flex
         w="100%"
-        padding="12px"
+        h="100%"
+        overflow="hidden"
         bg="bg.muted"
         transition="transform 420ms cubic-bezier(.4,0,.2,1), opacity 320ms cubic-bezier(.4,0,.2,1)"
         transform={animStart ? 'translateY(8px)' : 'translateY(0)'}

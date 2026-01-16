@@ -6,6 +6,7 @@ import {
   getAllProntuarios,
   getProntuarioById,
   getProntuarioByNumber,
+  getProntuariosByIds,
   getProntuariosByUnity,
   getActiveProntuarios,
   updateProntuario,
@@ -27,6 +28,10 @@ export function registerProntuarioHandlers() {
 
   ipcMain.handle('prontuario:getById', async (_event, id: number) => {
     return getProntuarioById(id)
+  })
+
+  ipcMain.handle('prontuario:getByIds', async (_event, ids: number[]) => {
+    return getProntuariosByIds(ids)
   })
 
   ipcMain.handle('prontuario:getByNumber', async (_event, number: number) => {

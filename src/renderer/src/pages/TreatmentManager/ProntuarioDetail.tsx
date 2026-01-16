@@ -26,6 +26,7 @@ import {
 import { useState, useEffect } from 'react'
 import { useProntuario } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
+import { PageContainer } from '../../components'
 
 interface ProntuarioDetailProps {
   prontuarioId: number
@@ -89,6 +90,7 @@ const InfoItem: React.FC<{
     </Box>
   </Flex>
 )
+
 
 export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   prontuarioId,
@@ -170,7 +172,7 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   const valorTotalRecebido = atendimentos.reduce((total, a) => total + (a.value || 0), 0)
 
   return (
-    <Flex direction="column" p={6} mx="auto" overflowY="scroll" maxH="90vh">
+    <PageContainer>
       <Card.Root mb={6}>
         <Card.Body>
           <Flex justify="space-between" align="center">
@@ -385,6 +387,6 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
           </Card.Body>
         </Card.Root>
       </Flex>
-    </Flex>
+    </PageContainer>
   )
 }

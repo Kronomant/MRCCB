@@ -5,6 +5,7 @@ declare global {
     id: number
     name: string
     value: number
+    basketValue: number
     treatmentQuantity: number
     foodBasketQuantity: number
     date: string

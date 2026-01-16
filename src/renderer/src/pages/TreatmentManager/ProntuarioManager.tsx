@@ -14,7 +14,7 @@ import {
   SelectItem,
   SelectItemText
 } from '@chakra-ui/react'
-import { PageHeader } from '../../components'
+import { PageHeader, PageContainer } from '../../components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
 import { DrawerForm } from '../../components/DrawerForm'
@@ -259,15 +259,7 @@ export const ProntuarioManager = () => {
   }
 
   return (
-    <Flex
-      p="24px"
-      flexDir="column"
-      gap="48px"
-      w="100%"
-      h="100%"
-      backgroundColor="bg"
-      borderRadius="8px"
-    >
+    <PageContainer>
       <PageHeader title="Prontuários">
         <Button colorPalette="gray" onClick={handleNewProntuario}>
           Adicionar prontuário
@@ -286,7 +278,7 @@ export const ProntuarioManager = () => {
       </Flex>
 
       <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" position="relative">
+        <Flex w="100%" h="100%" position="relative" overflowX="hidden">
           <Box
             w={isDrawerOpen ? 'calc(100% - 400px)' : '100%'}
             h="100%"
@@ -388,6 +380,6 @@ export const ProntuarioManager = () => {
           </DrawerForm>
         </Flex>
       </Flex>
-    </Flex>
+    </PageContainer>
   )
 }

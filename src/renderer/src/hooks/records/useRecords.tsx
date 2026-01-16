@@ -59,6 +59,14 @@ export const useRecords = (reunionId: number) => {
     }
   })
 
+  const deliveryMap = useMemo(() => {
+    const map = new Map<number, string>()
+    deliveries.data?.forEach((d) => {
+      map.set(d.prontuarioId, d.status)
+    })
+    return map
+  }, [deliveries.data])
+
   const mapAtendimentoToRecord = useCallback(
     (atendimento: Atendimento): RecordType => {
       const labels: string[] = []
@@ -68,8 +76,8 @@ export const useRecords = (reunionId: number) => {
       if (atendimento.returned) labels.push('Representação')
       if (atendimento.repeat) labels.push('Repetição')
 
-      const delivery = deliveries.data?.find((d) => d.prontuarioId === atendimento.prontuarioId)
-      const isDelivered = delivery?.status === 'entregue'
+      const deliveryStatus = deliveryMap.get(atendimento.prontuarioId)
+      const isDelivered = deliveryStatus === 'entregue'
 
       return {
         id: atendimento.id!,
@@ -85,12 +93,12 @@ export const useRecords = (reunionId: number) => {
         delivered: isDelivered
       }
     },
-    [deliveries.data]
+    [deliveryMap]
   )
 
   const records = useMemo<RecordType[]>(() => {
     return atendimentos?.data ? atendimentos.data.map(mapAtendimentoToRecord) : []
-  }, [atendimentos?.data, deliveries.data])
+  }, [atendimentos?.data, mapAtendimentoToRecord])
 
   const summary = useMemo(() => {
     const deliveredCount = records.filter((r) => r.delivered).length

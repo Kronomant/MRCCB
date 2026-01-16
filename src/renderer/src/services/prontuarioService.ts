@@ -13,6 +13,10 @@ export async function getProntuarioByNumber(number: number): Promise<Prontuario 
   return await window.electron.ipcRenderer.invoke('prontuario:getByNumber', number)
 }
 
+export async function getProntuariosByIds(ids: number[]): Promise<Prontuario[]> {
+  return await window.electron.ipcRenderer.invoke('prontuario:getByIds', ids)
+}
+
 export async function getProntuariosByUnity(unityId: number): Promise<Prontuario[]> {
   return await window.electron.ipcRenderer.invoke('prontuario:getByUnity', unityId)
 }

@@ -4,6 +4,7 @@ import {
   getAllProntuarios,
   getProntuarioById,
   getProntuarioByNumber,
+  getProntuariosByIds,
   getProntuariosByUnity,
   getActiveProntuarios,
   createProntuario,
@@ -12,24 +13,43 @@ import {
 } from '../../services/prontuarioService'
 import { CreateProntuario, UpdateProntuario } from '../../schemas/prontuarioSchema'
 
-export const useProntuarios = () => {
+export const useProntuarios = (options?: {
+  fetchAll?: boolean
+  fetchActive?: boolean
+}) => {
   const queryClient = useQueryClient()
 
   const prontuarios = useQuery<Prontuario[]>({
     queryKey: ['prontuarios', 'all'],
-    queryFn: () => getAllProntuarios()
+    queryFn: () => getAllProntuarios(),
+    enabled: options?.fetchAll ?? true,
+    staleTime: 1000 * 60 * 10 // 10 minutes
   })
 
   const activeProntuarios = useQuery<Prontuario[]>({
     queryKey: ['prontuarios', 'active'],
-    queryFn: () => getActiveProntuarios()
+    queryFn: () => getActiveProntuarios(),
+    enabled: options?.fetchActive ?? true,
+    staleTime: 1000 * 60 * 5 // 5 minutes
   })
 
   const getProntuario = (id: number) => {
     return useQuery<Prontuario | undefined>({
       queryKey: ['prontuario', id],
       queryFn: () => getProntuarioById(id),
-      enabled: !!id
+      enabled: !!id,
+      staleTime: 1000 * 60 * 30 // 30 minutes
+    })
+  }
+
+  // New query to fetch only prontuarios that are actually in the reunion records
+  const getProntuariosForReunion = (reunionRecords: { prontuarioId: number }[]) => {
+    const ids = Array.from(new Set(reunionRecords.map((r) => r.prontuarioId))).filter(Boolean)
+    return useQuery<Prontuario[]>({
+      queryKey: ['prontuarios', 'reunion', ids.join(',')],
+      queryFn: () => getProntuariosByIds(ids),
+      enabled: ids.length > 0,
+       staleTime: 1000 * 60 * 10 // 10 minutes
     })
   }
 
@@ -37,7 +57,8 @@ export const useProntuarios = () => {
     return useQuery<Prontuario | undefined>({
       queryKey: ['prontuario', 'number', number],
       queryFn: () => getProntuarioByNumber(number),
-      enabled: !!number
+      enabled: !!number,
+      staleTime: 1000 * 60 * 30
     })
   }
 
@@ -45,7 +66,8 @@ export const useProntuarios = () => {
     return useQuery<Prontuario[]>({
       queryKey: ['prontuarios', 'unity', unityId],
       queryFn: () => getProntuariosByUnity(unityId),
-      enabled: !!unityId
+      enabled: !!unityId,
+      staleTime: 1000 * 60 * 10
     })
   }
 
@@ -53,12 +75,6 @@ export const useProntuarios = () => {
     mutationFn: (data: CreateProntuario) => createProntuario(data),
     onSuccess: (created) => {
       queryClient.setQueryData<Prontuario[]>(['prontuarios', 'active'], (prev) => {
-        const list = Array.isArray(prev) ? prev : []
-        const exists = list.some((p) => p.id === created.id)
-        const next = exists ? list.map((p) => (p.id === created.id ? created : p)) : [...list, created]
-        return next.sort((a, b) => a.number - b.number)
-      })
-      queryClient.setQueryData<Prontuario[]>(['prontuarios', 'all'], (prev) => {
         const list = Array.isArray(prev) ? prev : []
         const exists = list.some((p) => p.id === created.id)
         const next = exists ? list.map((p) => (p.id === created.id ? created : p)) : [...list, created]
@@ -95,6 +111,7 @@ export const useProntuarios = () => {
     prontuarios: prontuarios.data || [],
     activeProntuarios: activeProntuarios.data || [],
     getProntuario,
+    getProntuariosForReunion,
     getProntuarioByNumber: getProntuarioByNumberQuery,
     getProntuariosByUnity: getProntuariosByUnityQuery,
     createProntuario: createProntuarioMutation,

@@ -38,19 +38,20 @@ export interface CustomInputProps extends ChakraInputProps {
 
 export const Input = React.forwardRef<HTMLInputElement, CustomInputProps>(
   ({ label, error, width, ...props }, ref) => {
+    const { mb, ...rest } = props as any
     return (
-      <Field.Root w={width || 'full'} invalid={!!error}>
+      <Field.Root w={width || 'full'} invalid={!!error} mb={mb}>
         <Box className={style['chakra-input-container']} pos="relative" w={width || 'full'}>
           <ChakraInput
             ref={ref}
             className={style['chakra-input']}
             color="fg"
             placeholder={props.placeholder || ''}
-            {...props}
+            {...rest}
           />
           <Field.Label {...floatingStyles}>{label}</Field.Label>
           {error && (
-            <Field.ErrorText color="red.500" fontSize="sm" mt={1}>
+            <Field.ErrorText color="red.500" fontSize="sm" mt="0.5">
               {error}
             </Field.ErrorText>
           )}

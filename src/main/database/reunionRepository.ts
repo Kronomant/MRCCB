@@ -6,6 +6,7 @@ export type ReunionData = {
   id?: number
   name: string
   value: number
+  basketValue: number
   treatmentQuantity: number
   foodBasketQuantity: number
   date: string
@@ -17,13 +18,14 @@ export function createReunion(data: Omit<ReunionData, 'id'>): ReunionData {
   const db = getDb()
 
   const stmt = db.prepare(`
-    INSERT INTO reunions (name, value, treatmentQuantity, foodBasketQuantity, date, status)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO reunions (name, value, basketValue, treatmentQuantity, foodBasketQuantity, date, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
 
   const result = stmt.run(
     data.name,
     data.value,
+    data.basketValue,
     data.treatmentQuantity,
     data.foodBasketQuantity,
     data.date,
@@ -42,6 +44,7 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
       r.id,
       r.name,
       r.value,
+      r.basketValue,
       r.date,
       r.status,
       COALESCE(COUNT(a.id), 0) as treatmentQuantity,
@@ -97,13 +100,14 @@ export function updateReunion(data: ReunionData): ReunionData {
 
   const stmt = db.prepare(`
     UPDATE reunions
-    SET name = ?, value = ?, treatmentQuantity = ?, foodBasketQuantity = ?, date = ?, status = ?
+    SET name = ?, value = ?, basketValue = ?, treatmentQuantity = ?, foodBasketQuantity = ?, date = ?, status = ?
     WHERE id = ?
   `)
 
   stmt.run(
     data.name,
     data.value,
+    data.basketValue,
     data.treatmentQuantity,
     data.foodBasketQuantity,
     data.date,
