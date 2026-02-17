@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAllReunions, createReunion, updateReunion, deleteReunion } from '../../services/reunionService'
 import { CreateReunion, UpdateReunion } from '../../schemas/reunionSchema'
 
-export const useReunions = () => {
+export const useReunions = (filters?: { startDate?: string; endDate?: string; status?: string }) => {
   const queryClient = useQueryClient()
 
   const reunions = useQuery({
-    queryKey: ['reunions'],
-    queryFn: getAllReunions
+    queryKey: ['reunions', filters],
+    queryFn: () => getAllReunions(filters)
   })
 
   const createReunionMutation = useMutation({

@@ -12,6 +12,7 @@ interface DrawerFormProps {
   onSecondaryAction?: () => void
   secondaryLabel?: string
   isLoading?: boolean
+  headerActions?: React.ReactNode
 }
 
 const drawerWidth = 400
@@ -25,9 +26,15 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
   primaryLabel = 'Salvar',
   onSecondaryAction,
   secondaryLabel = 'Cancelar',
-  isLoading = false
+  isLoading = false,
+  headerActions
 }) => (
   <Box
+    as="form"
+    onSubmit={(e) => {
+      e.preventDefault()
+      onPrimaryAction?.()
+    }}
     position="absolute"
     right={-5}
     top={0}
@@ -62,9 +69,12 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
           {title}
         </Text>
       )}
-      <Button variant="outline" onClick={onClose} size="sm">
-        <FiX />
-      </Button>
+      <Flex align="center" gap={2}>
+        {headerActions}
+        <Button variant="outline" onClick={onClose} size="sm" type="button">
+          <FiX />
+        </Button>
+      </Flex>
     </Flex>
     <Box flex={1} px={6} py={4} overflowY="auto">
       {children}
@@ -77,19 +87,15 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       justify="flex-end"
       gap={3}
     >
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onClick={onSecondaryAction || onClose}
         disabled={isLoading}
+        type="button"
       >
         {secondaryLabel}
       </Button>
-      <Button 
-        colorScheme="blue" 
-        onClick={onPrimaryAction}
-        loading={isLoading}
-        disabled={isLoading}
-      >
+      <Button colorScheme="blue" type="submit" loading={isLoading} disabled={isLoading}>
         {primaryLabel}
       </Button>
     </Flex>

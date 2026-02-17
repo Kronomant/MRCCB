@@ -1,18 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import {
-  ActionBar,
-  Box,
-  Button,
-  Checkbox,
-  Kbd,
-  Portal,
-  Table,
-  Text,
-  Spinner,
-  Flex
-} from '@chakra-ui/react'
+import { ActionBar, Box, Checkbox, Portal, Table, Text, Spinner, Flex } from '@chakra-ui/react'
 
 type Props<T> = {
   data: T[]
@@ -46,6 +35,8 @@ export const BaseTable = <T extends { id: number }>({
       height="60px"
       data-selected={selection.includes(item.id) ? 1 : undefined}
       onClick={() => onRowClick?.(item)}
+      cursor="pointer"
+      _hover={{ bg: 'bg.subtle' }}
     >
       {hasCheckbox && (
         <Table.Cell height="60px">
@@ -54,7 +45,7 @@ export const BaseTable = <T extends { id: number }>({
             top="0.5"
             aria-label="Select row"
             checked={selection.includes(item.id)}
-            onCheckedChange={(changes: { checked: any }) => {
+            onCheckedChange={(changes: { checked: boolean | 'indeterminate' }) => {
               setSelection((prev) =>
                 changes.checked ? [...prev, item.id] : selection.filter((id) => id !== item.id)
               )
@@ -80,10 +71,9 @@ export const BaseTable = <T extends { id: number }>({
 
   return (
     <Box
-      height="fit-content"
-      transition="max-width 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s cubic-bezier(.4,0,.2,1)"
-      maxWidth={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-      flex="1 1 0%"
+      height="100%"
+      transition="width 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s cubic-bezier(.4,0,.2,1)"
+      width="100%"
     >
       <Flex w="100%" h="100%" flexDir="column">
         {isLoading ? (
@@ -96,51 +86,58 @@ export const BaseTable = <T extends { id: number }>({
             {emptyMessage}
           </Text>
         ) : (
-          <Table.ScrollArea borderWidth="1px" rounded="md" height="full">
-            <Table.Root interactive stickyHeader colorPalette="gray" height="full">
-              <Table.Header>
-                <Table.Row bg="bg.subtle">
-                  {hasCheckbox && (
-                    <Table.ColumnHeader w="6">
-                      <Checkbox.Root
-                        size="sm"
-                        top="0.5"
-                        aria-label="Select all rows"
-                        checked={indeterminate ? 'indeterminate' : selection.length > 0}
-                        onCheckedChange={(changes: { checked: any }) => {
-                          setSelection(changes.checked ? data.map((item) => item.id) : [])
-                        }}
-                      >
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                      </Checkbox.Root>
-                    </Table.ColumnHeader>
-                  )}
+          <>
+            <Flex justify="flex-end" mb={2}>
+              <Text fontSize="xs" fontWeight="medium" color="fg.muted">
+                {data.length} {data.length === 1 ? 'registro' : 'registros'} encontrados
+              </Text>
+            </Flex>
+            <Table.ScrollArea borderWidth="1px" rounded="md" height="full">
+              <Table.Root interactive stickyHeader colorPalette="gray">
+                <Table.Header>
+                  <Table.Row bg="bg.subtle">
+                    {hasCheckbox && (
+                      <Table.ColumnHeader w="6">
+                        <Checkbox.Root
+                          size="sm"
+                          top="0.5"
+                          aria-label="Select all rows"
+                          checked={indeterminate ? 'indeterminate' : selection.length > 0}
+                          onCheckedChange={(changes: { checked: boolean | 'indeterminate' }) => {
+                            setSelection(changes.checked ? data.map((item) => item.id) : [])
+                          }}
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Control />
+                        </Checkbox.Root>
+                      </Table.ColumnHeader>
+                    )}
 
-                  {columns.map((column) => {
-                    return <Table.ColumnHeader>{column.header}</Table.ColumnHeader>
-                  })}
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>{rows}</Table.Body>
-            </Table.Root>
-            <ActionBar.Root open={hasSelection}>
-              <Portal>
-                <ActionBar.Positioner>
-                  <ActionBar.Content>
-                    <ActionBar.SelectionTrigger color="fg">
-                      {selection.length} selected
-                    </ActionBar.SelectionTrigger>
-                    <ActionBar.Separator />
-                    {actions &&
-                      actions.map((action, index) => (
-                        <React.Fragment key={index}>{action}</React.Fragment>
-                      ))}
-                  </ActionBar.Content>
-                </ActionBar.Positioner>
-              </Portal>
-            </ActionBar.Root>
-          </Table.ScrollArea>
+                    {columns.map((column, colIndex) => {
+                      return <Table.ColumnHeader key={colIndex}>{column.header}</Table.ColumnHeader>
+                    })}
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>{rows}</Table.Body>
+              </Table.Root>
+              <ActionBar.Root open={hasSelection}>
+                <Portal>
+                  <ActionBar.Positioner>
+                    <ActionBar.Content>
+                      <ActionBar.SelectionTrigger color="fg">
+                        {selection.length} selected
+                      </ActionBar.SelectionTrigger>
+                      <ActionBar.Separator />
+                      {actions &&
+                        actions.map((action, index) => (
+                          <React.Fragment key={index}>{action}</React.Fragment>
+                        ))}
+                    </ActionBar.Content>
+                  </ActionBar.Positioner>
+                </Portal>
+              </ActionBar.Root>
+            </Table.ScrollArea>
+          </>
         )}
       </Flex>
     </Box>

@@ -2,11 +2,18 @@ import { app, BrowserWindow } from 'electron'
 import { createWindow } from './windows/mainWindows'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerReunionHandlers } from './ipc/reunionHandlers'
+import { registerTreatmentHandlers } from './ipc/treatmentHandlers'
+import { registerProntuarioHandlers } from './ipc/prontuarioHandlers'
+import { registerAtendimentoHandlers } from './ipc/atendimentoHandlers'
+import { registerUnityHandlers } from './ipc/unityHandlers'
 import { initDb } from './database/db'
+
+import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHandlers'
+import { registerSettingsHandlers } from './ipc/settingsHandlers'
 
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.ccb.gestao')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -16,6 +23,12 @@ app.whenReady().then(() => {
   })
   initDb() // Inicializa e migra o banco de dados
   registerReunionHandlers()
+  registerTreatmentHandlers()
+  registerProntuarioHandlers()
+  registerAtendimentoHandlers()
+  registerUnityHandlers()
+  registerProntuarioDeliveryHandlers()
+  registerSettingsHandlers()
   createWindow()
 
   app.on('activate', function () {

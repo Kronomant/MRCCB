@@ -2,10 +2,11 @@
 import { getDb } from './db'
 
 // Usando o tipo Reunion global definido em types/global.d.ts
-type ReunionData = {
+export type ReunionData = {
   id?: number
   name: string
   value: number
+  basketValue: number
   treatmentQuantity: number
   foodBasketQuantity: number
   date: string
@@ -17,13 +18,14 @@ export function createReunion(data: Omit<ReunionData, 'id'>): ReunionData {
   const db = getDb()
 
   const stmt = db.prepare(`
-    INSERT INTO reunions (name, value, treatmentQuantity, foodBasketQuantity, date, status)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO reunions (name, value, basketValue, treatmentQuantity, foodBasketQuantity, date, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
 
   const result = stmt.run(
     data.name,
     data.value,
+    data.basketValue,
     data.treatmentQuantity,
     data.foodBasketQuantity,
     data.date,
@@ -34,11 +36,52 @@ export function createReunion(data: Omit<ReunionData, 'id'>): ReunionData {
 }
 
 // READ ALL
-export function getAllReunions(): ReunionData[] {
+export function getAllReunions(filters?: { startDate?: string; endDate?: string; status?: string }): ReunionData[] {
   const db = getDb()
 
-  const stmt = db.prepare('SELECT * FROM reunions')
-  return stmt.all() as ReunionData[]
+  let query = `
+    SELECT 
+      r.id,
+      r.name,
+      r.value,
+      r.basketValue,
+      r.date,
+      r.status,
+      COALESCE(COUNT(a.id), 0) as treatmentQuantity,
+      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity
+    FROM reunions r
+    LEFT JOIN atendimentos a ON a.reunionId = r.id
+  `
+
+  const conditions: string[] = []
+  const params: any[] = []
+
+  if (filters?.startDate) {
+    conditions.push(`r.date >= ?`)
+    params.push(filters.startDate)
+  }
+
+  if (filters?.endDate) {
+    conditions.push(`r.date <= ?`)
+    params.push(filters.endDate)
+  }
+
+  if (filters?.status) {
+    conditions.push(`r.status = ?`)
+    params.push(filters.status)
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`
+  }
+
+  query += `
+    GROUP BY r.id
+    ORDER BY r.date DESC
+  `
+
+  const stmt = db.prepare(query)
+  return stmt.all(...params) as ReunionData[]
 }
 
 export function getReunionById(id: number): ReunionData | undefined {
@@ -57,13 +100,14 @@ export function updateReunion(data: ReunionData): ReunionData {
 
   const stmt = db.prepare(`
     UPDATE reunions
-    SET name = ?, value = ?, treatmentQuantity = ?, foodBasketQuantity = ?, date = ?, status = ?
+    SET name = ?, value = ?, basketValue = ?, treatmentQuantity = ?, foodBasketQuantity = ?, date = ?, status = ?
     WHERE id = ?
   `)
 
   stmt.run(
     data.name,
     data.value,
+    data.basketValue,
     data.treatmentQuantity,
     data.foodBasketQuantity,
     data.date,

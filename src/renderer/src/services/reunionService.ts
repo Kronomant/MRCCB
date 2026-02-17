@@ -1,7 +1,7 @@
 // Service para CRUD de reuniões via IPC Electron
 
-export async function getAllReunions(): Promise<Reunion[]> {
-  return await window.electron.ipcRenderer.invoke('reunion:all')
+export async function getAllReunions(filters?: { startDate?: string; endDate?: string; status?: string }): Promise<Reunion[]> {
+  return await window.electron.ipcRenderer.invoke('reunion:all', filters)
 }
 
 export async function getReunionById(id: number): Promise<Reunion | undefined> {

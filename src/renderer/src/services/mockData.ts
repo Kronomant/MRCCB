@@ -2,6 +2,10 @@
 import { faker } from '@faker-js/faker'
 import { ReunionStatus } from '../types/reunion-status'
 
+// Importar os tipos do global.d.ts
+type Treatment = globalThis.Treatment
+type Enchiridion = globalThis.Enchiridion
+
 const lenghts = {
   unities: 2,
   reunions: 2,
@@ -14,7 +18,9 @@ const lenghts = {
 const generateUnities = (length: number): Array<Unity> => {
   return Array.from({ length }, () => ({
     id: faker.number.int(1000),
-    name: `Unidade ${faker.location.city()}`
+    name: `Unidade ${faker.location.city()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }))
 }
 
@@ -26,6 +32,7 @@ const generateReunions = (length: number): Array<Reunion> => {
       'Reunião de Atendimento Ministério'
     ]),
     value: faker.number.float({ fractionDigits: 2, max: 20000 }),
+    basketValue: faker.number.float({ fractionDigits: 2, max: 200 }),
     treatmentQuantity: faker.number.int(20),
     foodBasketQuantity: faker.number.int(2),
     date: faker.date.recent({ days: 10 }).toISOString().split('T')[0].replaceAll('-', '/'),

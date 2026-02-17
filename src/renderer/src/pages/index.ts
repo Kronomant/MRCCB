@@ -1,2 +1,7 @@
 export * from './ReunionManager'
 export * from './Reunion'
+export { ProntuarioManager, ProntuarioDetail, TreatmentDetail } from './TreatmentManager'
+export * from './UnityManager'
+export * from './Settings/Settings'
+export * from './Home'
+export * from './Dashboard/Dashboard'

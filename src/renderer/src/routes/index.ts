@@ -1,6 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 import AppRoutes from './AppRoutes'
 
-const router = createBrowserRouter(AppRoutes)
+const router = createHashRouter(AppRoutes)
 
 export default router

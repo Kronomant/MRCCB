@@ -7,12 +7,13 @@ import {
   getAllReunions,
   updateReunion,
   deleteReunion,
-  getReunionById
+  getReunionById,
+  type ReunionData
 } from '../database/reunionRepository'
 
 export function registerReunionHandlers() {
   // CREATE
-  ipcMain.handle('reunion:create', (event, data: Omit<Reunion, 'id'>) => {
+  ipcMain.handle('reunion:create', (event, data: Omit<ReunionData, 'id'>) => {
     return createReunion(data)
   })
 
@@ -21,12 +22,12 @@ export function registerReunionHandlers() {
   })
 
   // READ ALL
-  ipcMain.handle('reunion:all', () => {
-    return getAllReunions()
+  ipcMain.handle('reunion:all', (event, filters?: { startDate?: string; endDate?: string; status?: string }) => {
+    return getAllReunions(filters)
   })
 
   // UPDATE
-  ipcMain.handle('reunion:update', (event, data: Reunion) => {
+  ipcMain.handle('reunion:update', (event, data: ReunionData) => {
     return updateReunion(data)
   })
 

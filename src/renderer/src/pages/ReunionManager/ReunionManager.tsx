@@ -1,46 +1,23 @@
-import { Button, Flex, InputGroup, Tag, Stack, Text, Box } from '@chakra-ui/react'
-import { PageHeader } from '../../components'
-import { FiSearch } from 'react-icons/fi'
-import { BaseTable } from '../../components/Table/BaseTable'
-import { DrawerForm } from '../../components/DrawerForm'
-import { useState } from 'react'
+import { Button, Flex, InputGroup, Tag, Box, NativeSelect, Text } from '@chakra-ui/react'
+import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
+import {
+  DrawerForm,
+  BaseTable,
+  Input,
+  PageHeader,
+  CurrencyInput,
+  PageContainer,
+  SyncButton
+} from '../../components'
+import { statusMap } from './ReunionManager.helper'
+import { ReunionManagerViewProps, useReunionManager } from './useReunionManager'
 import { ReunionStatus } from '../../types/reunion-status'
-import { RenderDrawerContent } from './ReunionManager.helper'
-import { Input } from '../../components/Input'
-import { useNavigate } from 'react-router-dom'
-import { useReunions } from '../../hooks/reunion/useReunions'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { reunionFormSchema, ReunionFormData } from '../../schemas/reunionSchema'
-
-const statusMap = {
-  [ReunionStatus.NEW]: { label: 'Prevista', colorScheme: 'green' },
-  [ReunionStatus.IN_PROGRESS]: { label: 'Em Andamento', colorScheme: 'blue' },
-  [ReunionStatus.FINISHED]: { label: 'Encerrada', colorScheme: 'orange' }
-}
-
-const InfoSection: React.FC<{ reunion: Reunion }> = ({ reunion }) => (
-  <Stack color="fg" gap={2} mb={6}>
-    <Text>
-      <b>Status:</b>{' '}
-      <Tag.Root colorPalette={statusMap[reunion.status]?.colorScheme || 'gray'}>
-        {statusMap[reunion.status]?.label || reunion.status}
-      </Tag.Root>
-    </Text>
-    <Text>
-      <b>Qtd. Atendimentos:</b> {reunion.treatmentQuantity}
-    </Text>
-    <Text>
-      <b>Qtd. Cestas:</b> {reunion.foodBasketQuantity}
-    </Text>
-    <Text>
-      <b>Valor total:</b> R$ {reunion.value}
-    </Text>
-  </Stack>
-)
+import { Controller } from 'react-hook-form'
+import SearchInput from './SearchInput'
+import { useTutorialContext } from '../../contexts/TutorialContext'
+import { useEffect } from 'react'
 
 const columns: Column<Reunion>[] = [
-  { header: 'Reunião', accessor: 'id' },
   { header: 'Reunião', accessor: 'name' },
   {
     header: 'Status',
@@ -50,219 +27,225 @@ const columns: Column<Reunion>[] = [
       return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
     }
   },
+  {
+    header: 'Total',
+    accessor: 'value',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(row.value)
+  },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
   { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
-  { header: 'Total', accessor: 'value' },
   { header: 'Data Reunião', accessor: 'date' }
 ]
 
-const defaultReunion: Reunion = {
-  id: 0,
-  name: '',
-  value: 0,
-  treatmentQuantity: 0,
-  foodBasketQuantity: 0,
-  date: '',
-  status: ReunionStatus.NEW
-}
-
-const defaultFormValues: ReunionFormData = {
-  id: 0,
-  name: '',
-  value: 0,
-  treatmentQuantity: 0,
-  foodBasketQuantity: 0,
-  date: '',
-  status: ReunionStatus.NEW
-}
-
-export const ReunionManager = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedReunion, setSelectedReunion] = useState<Reunion>(defaultReunion)
-  const navigate = useNavigate()
-
+const ReunionManagerView = (props: ReunionManagerViewProps) => {
   const {
+    drawerOpen,
+    isEditMode,
+    selectedReunion,
     register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors, isSubmitting }
-  } = useForm<ReunionFormData>({
-    resolver: zodResolver(reunionFormSchema),
-    defaultValues: defaultFormValues
-  })
+    control,
+    errors,
+    isSubmitting,
+    reunions,
+    handleRowClick,
+    handleAddNew,
+    handleCloseDrawer,
+    handleEditToggle,
+    title,
+    primaryLabel,
+    secondaryLabel,
+    onPrimaryAction,
+    canEdit,
+    canShowEditButton,
+    editError,
+    handleDelete
+  } = props
 
-  const fields = watch()
-
-  console.log(fields)
-
-  const { reunions, createReunion, updateReunion } = useReunions()
-
-  const handleRowClick = (reunion: Reunion) => {
-    setSelectedReunion(reunion)
-    reset({
-      id: reunion.id,
-      name: reunion.name,
-      value: reunion.value,
-      treatmentQuantity: reunion.treatmentQuantity,
-      foodBasketQuantity: reunion.foodBasketQuantity,
-      date: reunion.date,
-      status: reunion.status
-    })
-    setDrawerOpen(true)
-  }
-
-  const handleAddNew = () => {
-    setSelectedReunion(defaultReunion)
-    reset(defaultFormValues)
-    setDrawerOpen(true)
-  }
-
-  const handleStartOrAccess = () => {
-    if (selectedReunion.status === ReunionStatus.NEW) {
-      setSelectedReunion((prev) => ({ ...prev, status: ReunionStatus.IN_PROGRESS }))
-    } else if (selectedReunion.status === ReunionStatus.IN_PROGRESS) {
-      navigate(`/reunioes/${selectedReunion.id}`)
-    }
-  }
-
-  const onSubmit = async (data: ReunionFormData) => {
-    try {
-      if (selectedReunion.id === 0) {
-        // Criando nova reunião
-        await createReunion.mutateAsync({
-          name: data.name,
-          date: data.date,
-          value: data.value,
-          treatmentQuantity: data.treatmentQuantity,
-          foodBasketQuantity: data.foodBasketQuantity,
-          status: data.status
-        })
-      } else {
-        // Atualizando reunião existente
-        await updateReunion.mutateAsync({
-          id: selectedReunion.id || 0,
-          name: data.name,
-          date: data.date,
-          value: data.value,
-          treatmentQuantity: data.treatmentQuantity,
-          foodBasketQuantity: data.foodBasketQuantity,
-          status: data.status
-        })
-      }
-
-      // Fechar drawer após sucesso
-      setDrawerOpen(false)
-      reset(defaultFormValues)
-      setSelectedReunion(defaultReunion)
-    } catch (error) {
-      console.error('Erro ao salvar reunião:', error)
-      // Aqui você pode adicionar uma notificação de erro para o usuário
-    }
-  }
-
-  const renderDrawerContent = () => (
-    <>
-      <InfoSection reunion={selectedReunion} />
-      {(selectedReunion.status === ReunionStatus.NEW ||
-        selectedReunion.status === ReunionStatus.IN_PROGRESS) && (
-        <>
-          <Box as="hr" borderWidth="1px" borderColor="gray.200" my={4} />
-          <Button
-            colorPalette={selectedReunion.status === ReunionStatus.NEW ? 'green' : 'blue'}
-            w="100%"
-            variant="surface"
-            onClick={handleStartOrAccess}
-          >
-            {selectedReunion.status === ReunionStatus.NEW ? 'Iniciar Reunião' : 'Acessar Reunião'}
-          </Button>
-        </>
+  const headerActions = (
+    <Flex gap={2}>
+      {canShowEditButton && (
+        <Button size="sm" variant="outline" onClick={handleEditToggle} colorPalette="blue">
+          <FiEdit />
+          Editar
+        </Button>
       )}
-    </>
+      {selectedReunion.id !== 0 && (
+        <Button size="sm" variant="outline" onClick={handleDelete} colorPalette="red">
+          <FiTrash2 />
+          Excluir
+        </Button>
+      )}
+    </Flex>
   )
 
-  const { title, primaryLabel, secondaryLabel } = RenderDrawerContent(selectedReunion.status)
-
   return (
-    <Flex
-      p="24px"
-      flexDir="column"
-      gap="48px"
-      w="100%"
-      h="100%"
-      backgroundColor="bg"
-      borderRadius="8px"
-    >
-      <PageHeader title="Reuniões">
-        <Button colorPalette="gray" onClick={handleAddNew}>
-          Adicionar reunião
-        </Button>
-      </PageHeader>
+    <PageContainer>
+      <Box id="reunioes-header">
+        <PageHeader title="Reuniões">
+          <Flex gap={2} alignItems="center">
+            <SyncButton />
+            <Button id="reunioes-add-btn" colorPalette="gray" onClick={handleAddNew}>
+              Adicionar reunião
+            </Button>
+          </Flex>
+        </PageHeader>
+      </Box>
 
-      <Flex w="60%">
-        <InputGroup endElement={<FiSearch />}>
-          <Input borderRadius="3xl" label="Buscar" />
-        </InputGroup>
+      <Flex id="reunioes-filters" w="100%" gap={4} alignItems="center" padding="12px 0">
+        <Box id="reunioes-search">
+          <SearchInput
+            onSearch={props.handleSearch}
+            placeholder="Pesquisar por nome da reunião..."
+            debounceTime={300}
+          />
+        </Box>
+        <Input
+          type="date"
+          width="180px"
+          value={props.startDateInput}
+          onChange={(e) => props.setStartDateInput(e.target.value)}
+          label="Data Início"
+          borderRadius="3xl"
+        />
+        <Input
+          type="date"
+          width="180px"
+          value={props.endDateInput}
+          onChange={(e) => props.setEndDateInput(e.target.value)}
+          label="Data Fim"
+          borderRadius="3xl"
+        />
+        <NativeSelect.Root width="280px" size="md">
+          <NativeSelect.Field
+            borderRadius="3xl"
+            value={props.statusInput}
+            onChange={(e) => props.setStatusInput(e.currentTarget.value)}
+          >
+            <option value="">Status: Todos</option>
+            <option value={ReunionStatus.NEW}>Prevista</option>
+            <option value={ReunionStatus.IN_PROGRESS}>Em andamento</option>
+            <option value={ReunionStatus.FINISHED}>Encerrada</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+        <Button onClick={props.handleFilter} variant="outline">
+          Filtrar
+        </Button>
       </Flex>
 
       <Flex w="100%" h="70vh">
-        <Flex w="100%" h="100%" gap={16} position="relative">
-          <BaseTable
-            drawerOpen={drawerOpen}
-            data={reunions.data || []}
-            columns={columns}
-            isLoading={false}
-            onRowClick={handleRowClick}
-          />
-
+        <Flex w="100%" h="100%" position="relative" overflowX="hidden">
+          <Box
+            id="reunioes-table"
+            w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
+            h="100%"
+            transition="width 0.4s cubic-bezier(.4,0,.2,1)"
+          >
+            <BaseTable
+              drawerOpen={drawerOpen}
+              data={reunions || []}
+              columns={columns}
+              isLoading={false}
+              onRowClick={handleRowClick}
+            />
+          </Box>{' '}
           <DrawerForm
             isOpen={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
+            onClose={handleCloseDrawer}
             title={title}
             primaryLabel={primaryLabel}
             secondaryLabel={secondaryLabel}
-            onPrimaryAction={handleSubmit(onSubmit)}
+            onPrimaryAction={onPrimaryAction}
             isLoading={isSubmitting}
+            headerActions={headerActions}
           >
+            {editError ? (
+              <Tag.Root colorPalette="red" mb={3}>
+                {editError}
+              </Tag.Root>
+            ) : null}
+
             <Input
               label="Nome da reunião"
-              mb={3}
+              mb={6}
+              disabled={!canEdit}
               {...register('name')}
               error={errors.name?.message}
             />
             <Input
               label="Data"
               type="date"
-              mb={3}
+              mb={6}
+              disabled={!canEdit}
               {...register('date')}
               error={errors.date?.message}
             />
-            <Input
-              label="Valor da reunião"
-              type="number"
-              step="0.01"
-              mb={3}
-              {...register('value', { valueAsNumber: true })}
-              error={errors.value?.message}
+            <Controller
+              name="value"
+              control={control}
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Valor da reunião"
+                  mb={6}
+                  disabled={!canEdit}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.value?.message}
+                />
+              )}
             />
-            <Input
-              label="Quantidade de Atendimentos"
-              type="number"
-              mb={3}
-              {...register('treatmentQuantity', { valueAsNumber: true })}
-              error={errors.treatmentQuantity?.message}
+            <Controller
+              name="basketValue"
+              control={control}
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Valor da Cesta"
+                  mb={6}
+                  disabled={!canEdit}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.basketValue?.message}
+                />
+              )}
             />
-            <Input
-              label="Quantidade de Cestas"
-              type="number"
-              mb={3}
-              {...register('foodBasketQuantity', { valueAsNumber: true })}
-              error={errors.foodBasketQuantity?.message}
-            />
-            {renderDrawerContent()}
+
+            {selectedReunion.status !== ReunionStatus.NEW && (
+              <Flex justifyContent="space-around" my={4}>
+                <Box textAlign="center">
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {selectedReunion.treatmentQuantity}
+                  </Text>
+                  <Text>Atendimentos</Text>
+                </Box>
+                <Box textAlign="center">
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {selectedReunion.foodBasketQuantity}
+                  </Text>
+                  <Text>Cestas</Text>
+                </Box>
+              </Flex>
+            )}
           </DrawerForm>
         </Flex>
       </Flex>
-    </Flex>
+    </PageContainer>
   )
 }
+
+export const ReunionManager = () => {
+  const logic = useReunionManager()
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
+
+  useEffect(() => {
+    if (!hasSeenTutorial('reunionManager')) {
+      startTutorial('reunionManager')
+    }
+  }, [])
+
+  return <ReunionManagerView {...logic} />
+}
+
