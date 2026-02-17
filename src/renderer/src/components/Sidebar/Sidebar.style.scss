@@ -1,0 +1,55 @@
+.sidebar {
+  &__nav {
+    display: flex;
+    width: 100%;
+
+    &-item {
+      transition: background-color 0.2s, color 0.2s;
+
+      .sidebar__nav-icon {
+        color: var(--chakra-colors-gray-solid, #718096);
+      }
+
+      .sidebar__nav-text {
+        color: var(--chakra-colors-fg, #1A202C);
+      }
+
+      &--selected {
+        background-color: #E2E8F0; // gray.200
+
+        .sidebar__nav-icon {
+          color: #2D3748; // gray.700
+        }
+
+        .sidebar__nav-text {
+          color: #1A202C; // gray.800
+        }
+      }
+    }
+  }
+}
+
+// Dark mode support
+:global(.dark), [data-theme="dark"] {
+  .sidebar__nav-item {
+    .sidebar__nav-icon {
+      color: #A0AEC0; // gray.400
+    }
+
+    .sidebar__nav-text {
+      color: #E2E8F0; // gray.200
+    }
+
+    &--selected {
+      background-color: #2D3748; // gray.700
+
+      .sidebar__nav-icon {
+        color: #E2E8F0; // gray.200
+      }
+
+      .sidebar__nav-text {
+        color: #FFFFFF; // white
+      }
+    }
+  }
+}
