@@ -1,4 +1,5 @@
 :root {
+  /* Primitives - Blue Palette */
   --blue-50: #e6ecef;
   --blue-100: #b1c3ce;
   --blue-200: #8ba6b6;
@@ -9,6 +10,8 @@
   --blue-700: #022b44;
   --blue-800: #022235;
   --blue-900: #011a28;
+
+  /* Primitives - Grayscale */
   --gray-50: #fdfdfd;
   --gray-100: #f7f7f7;
   --gray-200: #f4f4f4;
@@ -20,6 +23,7 @@
   --gray-800: #7f7f7f;
   --gray-900: #616161;
 
+  /* Primitives - Specialized Colors */
   --ev-c-white: #ffffff;
   --ev-c-white-soft: #f8f8f8;
   --ev-c-white-mute: #f2f2f2;
@@ -32,24 +36,37 @@
   --ev-c-gray-2: #414853;
   --ev-c-gray-3: #32363f;
 
-  --ev-c-text-1: #222222;
-  --ev-c-text-2: rgba(235, 235, 245, 0.6);
-  --ev-c-text-3: rgba(235, 235, 245, 0.38);
+  /* Semantics - DEFAULT (LIGHT MODE) */
+  --color-background: var(--ev-c-white);
+  --color-background-soft: var(--ev-c-white-soft);
+  --color-background-mute: var(--ev-c-white-mute);
+  
+  --color-text: var(--ev-c-black-soft);
+  --ev-c-text-1: var(--ev-c-black);
+  --ev-c-text-2: rgba(60, 60, 67, 0.78);
+  --ev-c-text-3: rgba(60, 60, 67, 0.56);
 
   --ev-button-alt-border: transparent;
   --ev-button-alt-text: var(--ev-c-text-1);
-  --ev-button-alt-bg: var(--ev-c-gray-3);
+  --ev-button-alt-bg: var(--gray-200);
   --ev-button-alt-hover-border: transparent;
   --ev-button-alt-hover-text: var(--ev-c-text-1);
-  --ev-button-alt-hover-bg: var(--ev-c-gray-2);
+  --ev-button-alt-hover-bg: var(--gray-300);
 }
 
-:root {
+/* Semantics - DARK MODE OVERRIDES */
+:root.dark {
   --color-background: var(--ev-c-black);
   --color-background-soft: var(--ev-c-black-soft);
   --color-background-mute: var(--ev-c-black-mute);
 
-  --color-text: var(--ev-c-text-1);
+  --color-text: rgba(255, 255, 255, 0.87);
+  --ev-c-text-1: #ffffff;
+  --ev-c-text-2: rgba(235, 235, 245, 0.6);
+  --ev-c-text-3: rgba(235, 235, 245, 0.38);
+
+  --ev-button-alt-bg: var(--ev-c-gray-3);
+  --ev-button-alt-hover-bg: var(--ev-c-gray-2);
 }
 
 *,

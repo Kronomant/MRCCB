@@ -2,7 +2,7 @@ import { Bar } from 'react-chartjs-2'
 import { Box, Stack, Text, Skeleton, Flex, Center, Button, Group } from '@chakra-ui/react'
 import { useState, useMemo, useRef } from 'react'
 import { useDashboardData } from '../../../hooks/useDashboardData'
-import { startOfDay, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns'
+import { startOfDay, startOfWeek, startOfMonth, isAfter, parseISO, subMonths } from 'date-fns'
 import { useColorModeValue } from '../../../components/ui/color-mode'
 import { Select } from '../../../components/Select'
 import { FiDownload } from 'react-icons/fi'
@@ -20,13 +20,34 @@ export const BarChart = () => {
     let startDate = startOfMonth(now)
 
     if (filter === 'day') startDate = startOfDay(now)
-    if (filter === 'week') startDate = startOfWeek(now)
-    if (filter === 'month') startDate = startOfMonth(now)
+    else if (filter === 'week') startDate = startOfWeek(now)
+    else if (filter === 'month') startDate = startOfMonth(now)
+    else if (filter === '3_months') startDate = subMonths(now, 3)
+    else if (filter === '6_months') startDate = subMonths(now, 6)
+    else if (filter === '12_months') startDate = subMonths(now, 12)
+    else if (filter === 'years') startDate = new Date(0) // All time
 
     const filteredAtendimentos = atendimentos.filter((a: any) => {
       try {
-        return isAfter(parseISO(a.date), startDate)
-      } catch {
+        const attendanceDate = parseISO(a.date)
+        
+        // For 'day' filter, we want specifically TODAY, so using isSameDay might be safer or check interval
+        // But the original logic was isAfter(startOfDay).
+        // Note: isAfter is strict (>). If event is at 00:00:00 and start is 00:00:00, it returns false.
+        // We generally want >=.
+        
+        let matches = false
+        if (filter === 'day') {
+           // check if is same day
+           // strict check for debugging:
+           matches = isAfter(attendanceDate, startDate) || attendanceDate.getTime() === startDate.getTime()
+        } else {
+           matches = isAfter(attendanceDate, startDate) || attendanceDate.getTime() === startDate.getTime()
+        }
+        
+        return matches
+      } catch (e) {
+        console.error('Error parsing date:', a.date, e)
         return false
       }
     })
@@ -98,7 +119,11 @@ export const BarChart = () => {
   const selectOptions = [
     { label: 'Hoje', value: 'day' },
     { label: 'Esta Semana', value: 'week' },
-    { label: 'Este Mês', value: 'month' }
+    { label: 'Este Mês', value: 'month' },
+    { label: 'Últimos 3 Meses', value: '3_months' },
+    { label: 'Últimos 6 Meses', value: '6_months' },
+    { label: 'Últimos 12 Meses', value: '12_months' },
+    { label: 'Por Anos', value: 'years' }
   ]
 
   const downloadImage = () => {

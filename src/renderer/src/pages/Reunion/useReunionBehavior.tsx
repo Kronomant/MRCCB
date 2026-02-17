@@ -54,6 +54,7 @@ export const useReunionBehavior = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [closeModalOpen, setCloseModalOpen] = useState(false)
+  const [reopenModalOpen, setReopenModalOpen] = useState(false)
   const [protocolModalOpen, setProtocolModalOpen] = useState(false)
   const [formState, setFormState] = useState({
     record: defaultRecord,
@@ -336,6 +337,30 @@ export const useReunionBehavior = () => {
     }
   }
 
+  // Handler para reabrir reunião
+  const handleReopenReunion = async () => {
+    try {
+      const currentReunion = reunions.data
+      if (!currentReunion) return
+
+      await updateReunionMutation.mutateAsync({
+        ...currentReunion,
+        status: ReunionStatus.IN_PROGRESS
+      })
+    } catch (err) {
+      console.error('Falha ao reabrir reunião:', err)
+    }
+  }
+
+  const handleToggleDelivery = async (prontuarioId: number, currentStatus: boolean) => {
+    try {
+      await toggleDelivery.mutateAsync({ prontuarioId, currentStatus })
+      updateRecord({ delivered: !currentStatus })
+    } catch (err) {
+      console.error('Falha ao alternar entrega:', err)
+    }
+  }
+
   return {
     navigate,
     drawerOpen,
@@ -352,6 +377,8 @@ export const useReunionBehavior = () => {
     unities,
     closeModalOpen,
     setCloseModalOpen,
+    reopenModalOpen,
+    setReopenModalOpen,
     protocolModalOpen,
     setProtocolModalOpen,
     reunionStatus: reunions.data?.status,
@@ -368,7 +395,9 @@ export const useReunionBehavior = () => {
       isValidProntuarioNumber,
       collection,
       handleCloseReunion,
-      toggleDelivery
+      handleReopenReunion,
+      toggleDelivery,
+      handleToggleDelivery
     },
     reunion: reunions.data
   }

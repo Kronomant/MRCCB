@@ -6,13 +6,16 @@ import {
   Input,
   PageHeader,
   CurrencyInput,
-  PageContainer
+  PageContainer,
+  SyncButton
 } from '../../components'
 import { statusMap } from './ReunionManager.helper'
 import { ReunionManagerViewProps, useReunionManager } from './useReunionManager'
 import { ReunionStatus } from '../../types/reunion-status'
 import { Controller } from 'react-hook-form'
 import SearchInput from './SearchInput'
+import { useTutorialContext } from '../../contexts/TutorialContext'
+import { useEffect } from 'react'
 
 const columns: Column<Reunion>[] = [
   { header: 'Reunião', accessor: 'name' },
@@ -81,18 +84,25 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
 
   return (
     <PageContainer>
-      <PageHeader title="Reuniões">
-        <Button colorPalette="gray" onClick={handleAddNew}>
-          Adicionar reunião
-        </Button>
-      </PageHeader>
+      <Box id="reunioes-header">
+        <PageHeader title="Reuniões">
+          <Flex gap={2} alignItems="center">
+            <SyncButton />
+            <Button id="reunioes-add-btn" colorPalette="gray" onClick={handleAddNew}>
+              Adicionar reunião
+            </Button>
+          </Flex>
+        </PageHeader>
+      </Box>
 
-      <Flex w="100%" gap={4} alignItems="center" padding="12px 0">
-        <SearchInput
-          onSearch={props.handleSearch}
-          placeholder="Pesquisar por nome da reunião..."
-          debounceTime={300}
-        />
+      <Flex id="reunioes-filters" w="100%" gap={4} alignItems="center" padding="12px 0">
+        <Box id="reunioes-search">
+          <SearchInput
+            onSearch={props.handleSearch}
+            placeholder="Pesquisar por nome da reunião..."
+            debounceTime={300}
+          />
+        </Box>
         <Input
           type="date"
           width="180px"
@@ -130,6 +140,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
       <Flex w="100%" h="70vh">
         <Flex w="100%" h="100%" position="relative" overflowX="hidden">
           <Box
+            id="reunioes-table"
             w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
             h="100%"
             transition="width 0.4s cubic-bezier(.4,0,.2,1)"
@@ -227,5 +238,14 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
 
 export const ReunionManager = () => {
   const logic = useReunionManager()
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
+
+  useEffect(() => {
+    if (!hasSeenTutorial('reunionManager')) {
+      startTutorial('reunionManager')
+    }
+  }, [])
+
   return <ReunionManagerView {...logic} />
 }
+

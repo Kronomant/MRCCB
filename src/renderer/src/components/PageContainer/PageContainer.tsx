@@ -15,7 +15,7 @@ export const PageContainer = ({ children, isFixed = false, ...props }: PageConta
       overflowX="hidden"
       p={6}
       position="relative"
-      backgroundColor="white"
+      backgroundColor="bg.panel"
       {...props}
     >
       {children}

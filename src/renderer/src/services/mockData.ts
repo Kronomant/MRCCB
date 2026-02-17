@@ -32,6 +32,7 @@ const generateReunions = (length: number): Array<Reunion> => {
       'Reunião de Atendimento Ministério'
     ]),
     value: faker.number.float({ fractionDigits: 2, max: 20000 }),
+    basketValue: faker.number.float({ fractionDigits: 2, max: 200 }),
     treatmentQuantity: faker.number.int(20),
     foodBasketQuantity: faker.number.int(2),
     date: faker.date.recent({ days: 10 }).toISOString().split('T')[0].replaceAll('-', '/'),

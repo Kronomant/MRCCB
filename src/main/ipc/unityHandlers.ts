@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import {
   createUnity,
+  createUnitiesBulk,
   getAllUnities,
   getUnityById,
   updateUnity,
@@ -11,6 +12,10 @@ import {
 export function registerUnityHandlers() {
   ipcMain.handle('unity:create', (_event, payload: Omit<UnityData, 'id' | 'createdAt' | 'updatedAt'>) => {
     return createUnity(payload)
+  })
+
+  ipcMain.handle('unity:createBulk', (_event, names: string[]) => {
+    return createUnitiesBulk(names)
   })
 
   ipcMain.handle('unity:all', () => {

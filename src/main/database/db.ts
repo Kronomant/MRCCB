@@ -3,6 +3,7 @@ import Database from 'better-sqlite3'
 import path from 'path'
 import { app } from 'electron'
 import { createUnitiesTable } from './migrations/002_create_unities_table'
+import { createDeliveryTables } from './migrations/003_create_delivery_tables'
 import { loadConfig } from '../config'
 
 let db: Database.Database | null = null
@@ -10,8 +11,6 @@ let db: Database.Database | null = null
 export function initDb(): void {
   const config = loadConfig()
   const dbPath = config.dbPath
-  
-  console.log('Initializing database at:', dbPath)
   
   try {
     db = new Database(dbPath)
@@ -21,8 +20,11 @@ export function initDb(): void {
     db = new Database(fallbackPath)
   }
 
-  db.pragma('journal_mode = WAL')
+  db.pragma('journal_mode = DELETE')
+  db.pragma('busy_timeout = 5000')
+  db.pragma('synchronous = FULL')
   createUnitiesTable()
+  createDeliveryTables()
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS reunions (

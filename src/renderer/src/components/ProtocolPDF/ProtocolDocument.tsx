@@ -1,7 +1,8 @@
 import React from 'react'
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer'
+import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import logoPDF from '../../assets/logo-pdf.png'
 
 // Interfaces (simplified based on what we need)
 interface RecordType {
@@ -40,15 +41,27 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 15,
+    padding: '16px 24px',
     fontFamily: 'Helvetica'
   },
   header: {
     marginBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    paddingBottom: 2,
-    alignItems: 'center'
+    paddingBottom: 5,
+    alignItems: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    minHeight: 65
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    objectFit: 'contain'
   },
   institution: {
     fontSize: 10,
@@ -188,6 +201,7 @@ export const ProtocolDocument: React.FC<ProtocolDocumentProps> = ({
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
+          <Image src={logoPDF} style={styles.logo} />
           <Text style={styles.institution}>{institutionName}</Text>
           <Text style={styles.title}>Protocolo da Reunião</Text>
           <Text style={styles.date}>{formattedDate}</Text>

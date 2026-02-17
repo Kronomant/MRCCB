@@ -1,14 +1,15 @@
-import { Button, Flex, InputGroup, Stack, Text, Tag, Box } from '@chakra-ui/react'
+import { Button, Flex, InputGroup, Stack, Text, Tag, Box, Textarea, Switch } from '@chakra-ui/react'
 import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
 import { DrawerForm } from '../../components/DrawerForm'
 import { BaseTable } from '../../components/Table/BaseTable'
 import { PageHeader, PageContainer } from '../../components'
 import { Input } from '../../components/Input'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useUnities } from '../../hooks/unity/useUnities'
 import { unityFormSchema, type UnityFormData } from '../../schemas/unitySchema'
+import { useTutorialContext } from '../../contexts/TutorialContext'
 
 type Column<T> = globalThis.Column<T>
 
@@ -31,8 +32,17 @@ export const UnityManager = () => {
   const [isEditMode, setIsEditMode] = useState(false)
   const [selectedUnity, setSelectedUnity] = useState<Unity | null>(null)
   const [search, setSearch] = useState('')
+  const [isBulkMode, setIsBulkMode] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
 
-  const { unities, createUnity, updateUnity, deleteUnity } = useUnities()
+  useEffect(() => {
+    if (!hasSeenTutorial('unityManager')) {
+      startTutorial('unityManager')
+    }
+  }, [])
+
+  const { unities, createUnity, createUnitiesBulk, updateUnity, deleteUnity } = useUnities()
 
   const {
     register,
@@ -52,6 +62,8 @@ export const UnityManager = () => {
     setSelectedUnity(unity)
     reset({ name: unity.name })
     setIsEditMode(false)
+    setIsBulkMode(false)
+    setBulkText('')
     setDrawerOpen(true)
   }
 
@@ -59,6 +71,8 @@ export const UnityManager = () => {
     setSelectedUnity(null)
     reset({ name: '' })
     setIsEditMode(true)
+    setIsBulkMode(false)
+    setBulkText('')
     setDrawerOpen(true)
   }
 
@@ -72,16 +86,39 @@ export const UnityManager = () => {
   const onSubmit = async (data: UnityFormData) => {
     try {
       if (!selectedUnity) {
+        // Creating new unity - keep modal open and clear fields
         await createUnity.mutateAsync(data)
+        reset({ name: '' })
+        // Don't close drawer, don't change edit mode, don't clear selected
       } else {
+        // Updating existing unity - close modal
         await updateUnity.mutateAsync({ id: selectedUnity.id, name: data.name })
+        setDrawerOpen(false)
+        setIsEditMode(false)
+        setSelectedUnity(null)
+        reset({ name: '' })
       }
-      setDrawerOpen(false)
-      setIsEditMode(false)
-      setSelectedUnity(null)
-      reset({ name: '' })
     } catch (error) {
       console.error('Erro ao salvar unidade:', error)
+    }
+  }
+
+  const onBulkSubmit = async () => {
+    try {
+      const names = bulkText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+      
+      if (names.length === 0) {
+        return
+      }
+
+      await createUnitiesBulk.mutateAsync(names)
+      setBulkText('')
+      // Keep modal open in bulk mode
+    } catch (error) {
+      console.error('Erro ao salvar unidades em massa:', error)
     }
   }
 
@@ -105,12 +142,14 @@ export const UnityManager = () => {
   const title = isNew ? 'Nova Unidade' : isEditMode ? 'Editar Unidade' : 'Detalhes da Unidade'
   const primaryLabel = isNew || isEditMode ? 'Salvar' : 'Fechar'
   const secondaryLabel = isNew || isEditMode ? 'Cancelar' : 'Excluir'
-  const onPrimaryAction = isNew || isEditMode ? handleSubmit(onSubmit) : () => setDrawerOpen(false)
+  const onPrimaryAction = isBulkMode ? onBulkSubmit : handleSubmit(onSubmit)
   const onSecondaryAction =
     isNew || isEditMode
       ? () => {
           setDrawerOpen(false)
           setIsEditMode(false)
+          setIsBulkMode(false)
+          setBulkText('')
         }
       : handleDelete
 
@@ -125,13 +164,15 @@ export const UnityManager = () => {
   return (
     <PageContainer>
       <Stack gap={12}>
-        <PageHeader title="Unidades">
-        <Button colorPalette="gray" onClick={handleAddNew}>
-          Adicionar unidade
-        </Button>
-      </PageHeader>
+        <Box id="unidades-header">
+          <PageHeader title="Unidades">
+            <Button id="unidades-add-btn" colorPalette="gray" onClick={handleAddNew}>
+              Adicionar unidade
+            </Button>
+          </PageHeader>
+        </Box>
 
-      <Flex w="60%">
+      <Flex id="unidades-search" w="60%">
         <InputGroup endElement={<FiSearch />}>
           <Input
             borderRadius="3xl"
@@ -145,6 +186,7 @@ export const UnityManager = () => {
       <Flex w="100%" h="70vh">
         <Flex w="100%" h="100%" position="relative">
           <Box
+            id="unidades-table"
             w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
             h="100%"
             transition="width 0.4s cubic-bezier(.4,0,.2,1)"
@@ -164,6 +206,8 @@ export const UnityManager = () => {
               setDrawerOpen(false)
               setIsEditMode(false)
               setSelectedUnity(null)
+              setIsBulkMode(false)
+              setBulkText('')
               reset({ name: '' })
             }}
             title={title}
@@ -171,7 +215,7 @@ export const UnityManager = () => {
             secondaryLabel={secondaryLabel}
             onPrimaryAction={onPrimaryAction}
             onSecondaryAction={onSecondaryAction}
-            isLoading={isSubmitting}
+            isLoading={isSubmitting || createUnitiesBulk.isPending}
             headerActions={headerActions}
           >
             {selectedUnity && !isEditMode ? (
@@ -194,14 +238,45 @@ export const UnityManager = () => {
               </Stack>
             ) : null}
 
-            <Input
-              label="Nome da unidade"
-              placeholder="Ex.: Obra da Piedade - Sede"
-              mb={6}
-              disabled={!canEdit}
-              {...register('name')}
-              error={errors.name?.message}
-            />
+            {isNew && (
+              <Flex align="center" gap={3} mb={4}>
+                <Switch.Root
+                  checked={isBulkMode}
+                  onCheckedChange={(e) => setIsBulkMode(e.checked)}
+                  colorPalette="blue"
+                />
+                <Text fontSize="sm" fontWeight="medium">
+                  Cadastro em massa
+                </Text>
+              </Flex>
+            )}
+
+            {isBulkMode ? (
+              <Stack gap={2}>
+                <Text fontSize="sm" color="fg.muted">
+                  Digite uma unidade por linha:
+                </Text>
+                <Textarea
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder="Obra da Piedade - Sede&#10;Obra da Piedade - Filial 1&#10;Obra da Piedade - Filial 2"
+                  rows={10}
+                  resize="vertical"
+                />
+                <Text fontSize="xs" color="fg.muted">
+                  {bulkText.split('\n').filter(line => line.trim().length > 0).length} unidade(s) para cadastrar
+                </Text>
+              </Stack>
+            ) : (
+              <Input
+                label="Nome da unidade"
+                placeholder="Ex.: Obra da Piedade - Sede"
+                mb={6}
+                disabled={!canEdit}
+                {...register('name')}
+                error={errors.name?.message}
+              />
+            )}
           </DrawerForm>
         </Flex>
       </Flex>

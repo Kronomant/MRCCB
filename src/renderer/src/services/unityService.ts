@@ -13,6 +13,10 @@ export async function createUnity(data: CreateUnity): Promise<Unity> {
   return await window.electron.ipcRenderer.invoke('unity:create', data)
 }
 
+export async function createUnitiesBulk(names: string[]): Promise<Unity[]> {
+  return await window.electron.ipcRenderer.invoke('unity:createBulk', names)
+}
+
 export async function updateUnity(data: UpdateUnity): Promise<Unity> {
   return await window.electron.ipcRenderer.invoke('unity:update', data)
 }

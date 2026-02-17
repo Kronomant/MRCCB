@@ -12,19 +12,33 @@ import {
 import { PageHeader, PageContainer } from '../../components'
 import { useColorModeValue } from '../../components/ui/color-mode'
 import { useEffect, useState } from 'react'
+import { useTutorialContext } from '../../contexts/TutorialContext'
+
+interface SettingsConfig {
+  dbPath?: string
+}
+
+interface SaveResult {
+  success: boolean
+  error?: string
+}
 
 export const Settings = () => {
   const bg = useColorModeValue('white', 'gray.800')
   const [currentPath, setCurrentPath] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
 
   useEffect(() => {
     loadSettings()
+    if (!hasSeenTutorial('settings')) {
+      startTutorial('settings')
+    }
   }, [])
 
   const loadSettings = async () => {
     try {
-      const config = await window.electron.ipcRenderer.invoke('settings:get')
+      const config = (await window.electron.ipcRenderer.invoke('settings:get')) as SettingsConfig
       if (config && config.dbPath) {
         setCurrentPath(config.dbPath)
       }
@@ -38,10 +52,15 @@ export const Settings = () => {
       setIsLoading(true)
       const folder = await window.electron.ipcRenderer.invoke('settings:select-db-folder')
       if (folder) {
-        const result = await window.electron.ipcRenderer.invoke('settings:save-db-path', folder)
+        const result = (await window.electron.ipcRenderer.invoke(
+          'settings:save-db-path',
+          folder
+        )) as SaveResult
         if (result.success) {
-          const newConfig = await window.electron.ipcRenderer.invoke('settings:get')
-          setCurrentPath(newConfig.dbPath)
+          const newConfig = (await window.electron.ipcRenderer.invoke(
+            'settings:get'
+          )) as SettingsConfig
+          setCurrentPath(newConfig.dbPath || '')
           alert(
             'Pasta do banco de dados atualizada! Por favor, feche e abra o aplicativo novamente para usar o novo banco de dados.'
           )
@@ -59,11 +78,13 @@ export const Settings = () => {
 
   return (
     <PageContainer>
-      <PageHeader title="Configurações" />
+      <Box id="settings-header">
+        <PageHeader title="Configurações" />
+      </Box>
 
       <Box bg={bg} p={6} borderRadius="lg" shadow="sm" borderWidth="1px" mt={6}>
         <VStack align="start" gap={6}>
-          <Box w="100%">
+          <Box id="settings-db-path" w="100%">
             <Heading size="md" mb={4}>
               Armazenamento de Dados
             </Heading>
@@ -96,3 +117,4 @@ export const Settings = () => {
     </PageContainer>
   )
 }
+

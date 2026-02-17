@@ -51,8 +51,11 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 import { useEffect } from 'react'
 import { ReunionStatus } from '../../types/reunion-status'
 import { ProtocolModal } from '../../components/ProtocolPDF/ProtocolModal'
+import { useTutorialContext } from '../../contexts/TutorialContext'
 
 export const Reunion = () => {
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
+  
   const {
     navigate,
     drawerOpen,
@@ -70,11 +73,19 @@ export const Reunion = () => {
     handlers,
     closeModalOpen,
     setCloseModalOpen,
+    reopenModalOpen,
+    setReopenModalOpen,
     reunionStatus,
     protocolModalOpen,
     setProtocolModalOpen,
     reunion
   } = useReunionBehavior()
+
+  useEffect(() => {
+    if (!hasSeenTutorial('reunion')) {
+      startTutorial('reunion')
+    }
+  }, [])
 
   const { record, prontuarioSearch, prontuarioError, selectedUnityId } = formState
   const isClosed = reunionStatus === ReunionStatus.FINISHED
@@ -123,12 +134,7 @@ export const Reunion = () => {
             customRender: (row: RecordType) => (
               <Checkbox.Root
                 checked={row.delivered}
-                onCheckedChange={() =>
-                  handlers.toggleDelivery.mutate({
-                    prontuarioId: row.prontuarioId,
-                    currentStatus: row.delivered
-                  })
-                }
+                readOnly
               >
                 <Checkbox.HiddenInput />
                 <Checkbox.Control />
@@ -363,6 +369,7 @@ export const Reunion = () => {
   return (
     <PageContainer>
       <Stack gap={8}>
+      <Box id="reunion-header">
         <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
           <Text color="fg.muted" fontSize="md" ml={4}>
             {summary.data
@@ -378,18 +385,26 @@ export const Reunion = () => {
             </Button>
           )}
           {isClosed && (
-            <Tooltip content="Gerar protocolo da reunião">
-              <Button colorScheme="green" ml={4} onClick={() => setProtocolModalOpen(true)}>
-                <FiFileText /> Gerar Protocolo
+            <Flex gap={4}>
+              <Button colorScheme="blue" variant="outline" onClick={() => setReopenModalOpen(true)}>
+                Reabrir Reunião
               </Button>
-            </Tooltip>
+              <Tooltip content="Gerar protocolo da reunião">
+                <Button colorScheme="green" onClick={() => setProtocolModalOpen(true)}>
+                  <FiFileText /> Gerar Protocolo
+                </Button>
+              </Tooltip>
+            </Flex>
           )}
         </PageHeader>
+      </Box>
 
-        {renderSummary()}
+        <Box id="reunion-summary">
+          {renderSummary()}
+        </Box>
 
         <Box>
-          <Flex mb={4} gap={3} align="center">
+          <Flex id="reunion-search" mb={4} gap={3} align="center">
             <InputGroup endElement={<FiSearch />} w="300px">
               <Input
                 borderRadius="3xl"
@@ -403,7 +418,7 @@ export const Reunion = () => {
             Filtros
           </Button>
           {!isClosed && (
-            <Button colorScheme="blue" onClick={handlers.handleAdd}>
+            <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
               <FiPlus />
               Adicionar
             </Button>
@@ -413,6 +428,7 @@ export const Reunion = () => {
         <Flex w="100%" h="70vh" pb={10}>
           <Flex w="100%" h="100%" position="relative" overflow="hidden">
             <Box
+              id="reunion-table"
               w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
               h="100%"
               transition="width 0.4s cubic-bezier(.4,0,.2,1)"
@@ -432,12 +448,72 @@ export const Reunion = () => {
               primaryLabel="Salvar"
               secondaryLabel="Cancelar"
               onPrimaryAction={handlers.handleSave}
+              headerActions={
+                isClosed &&
+                record.id !== 0 && (
+                  <Button
+                    size="sm"
+                    colorPalette={record.delivered ? 'gray' : 'green'}
+                    onClick={() =>
+                      handlers.handleToggleDelivery(
+                        record.prontuarioId,
+                        record.delivered
+                      )
+                    }
+                  >
+                    {record.delivered ? 'ENTREGUE' : 'ENTREGAR'}
+                  </Button>
+                )
+              }
             >
               {drawerContent}
             </DrawerForm>
           </Flex>
         </Flex>
       </Box>
+
+      {/* Modal de confirmação para reabrir reunião */}
+      <DialogRoot
+        open={reopenModalOpen}
+        onOpenChange={(e) => setReopenModalOpen(e.open)}
+        placement="center"
+      >
+        <DialogBackdrop />
+        <Portal>
+          <DialogPositioner>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirmar Reabertura</DialogTitle>
+                <DialogCloseTrigger />
+              </DialogHeader>
+              <DialogBody>
+                <Stack gap={4}>
+                  <Text fontSize="md">
+                    Você está prestes a reabrir esta reunião. Deseja continuar?
+                  </Text>
+                  <Text fontSize="sm" color="fg.muted">
+                    Ao reabrir, você poderá adicionar novos atendimentos e editar os existentes.
+                  </Text>
+                </Stack>
+              </DialogBody>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setReopenModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  onClick={() => {
+                    handlers.handleReopenReunion()
+                    setReopenModalOpen(false)
+                  }}
+                >
+                  Confirmar Reabertura
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </DialogPositioner>
+        </Portal>
+      </DialogRoot>
 
       {/* Modal de confirmação para encerrar reunião */}
       <DialogRoot

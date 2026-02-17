@@ -45,6 +45,32 @@ export function updateUnity(data: UnityData): UnityData {
   return { ...data, updatedAt: now }
 }
 
+export function createUnitiesBulk(names: string[]): UnityData[] {
+  const db = getDb()
+  const now = new Date().toISOString()
+  const results: UnityData[] = []
+
+  const stmt = db.prepare(`
+    INSERT INTO unities (name, createdAt, updatedAt) VALUES (?, ?, ?)
+  `)
+
+  // Use transaction for better performance
+  const insertMany = db.transaction((unitNames: string[]) => {
+    for (const name of unitNames) {
+      const result = stmt.run(name.trim(), now, now)
+      results.push({
+        id: result.lastInsertRowid as number,
+        name: name.trim(),
+        createdAt: now,
+        updatedAt: now
+      })
+    }
+  })
+
+  insertMany(names)
+  return results
+}
+
 export function deleteUnity(id: number): void {
   const db = getDb()
   const stmt = db.prepare('DELETE FROM unities WHERE id = ?')

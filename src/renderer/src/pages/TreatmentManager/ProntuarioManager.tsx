@@ -14,11 +14,11 @@ import {
   SelectItem,
   SelectItemText
 } from '@chakra-ui/react'
-import { PageHeader, PageContainer } from '../../components'
+import { PageHeader, PageContainer, SyncButton } from '../../components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
 import { BaseTable } from '../../components/Table/BaseTable'
 import { DrawerForm } from '../../components/DrawerForm'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '../../components/Input'
 import { useProntuarios } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
@@ -27,6 +27,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createProntuarioSchema, CreateProntuario } from '../../schemas/prontuarioSchema'
 import { ProntuarioDetail } from './ProntuarioDetail'
+import { useTutorialContext } from '../../contexts/TutorialContext'
 
 // Importar o tipo Prontuario do global.d.ts
 type Prontuario = globalThis.Prontuario
@@ -110,6 +111,13 @@ export const ProntuarioManager = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [editingProntuario, setEditingProntuario] = useState<Prontuario | null>(null)
   const [viewingProntuario, setViewingProntuario] = useState<Prontuario | null>(null)
+  const { startTutorial, hasSeenTutorial } = useTutorialContext()
+
+  useEffect(() => {
+    if (!hasSeenTutorial('prontuarioManager')) {
+      startTutorial('prontuarioManager')
+    }
+  }, [])
 
   const {
     register,
@@ -260,13 +268,18 @@ export const ProntuarioManager = () => {
 
   return (
     <PageContainer>
-      <PageHeader title="Prontuários">
-        <Button colorPalette="gray" onClick={handleNewProntuario}>
-          Adicionar prontuário
-        </Button>
-      </PageHeader>
+      <Box id="prontuarios-header">
+        <PageHeader title="Prontuários">
+          <Flex gap={2} alignItems="center">
+            <SyncButton />
+            <Button id="prontuarios-add-btn" colorPalette="gray" onClick={handleNewProntuario}>
+              Adicionar prontuário
+            </Button>
+          </Flex>
+        </PageHeader>
+      </Box>
 
-      <Flex w="60%">
+      <Flex id="prontuarios-search" w="60%">
         <InputGroup endElement={<FiSearch />}>
           <Input
             borderRadius="3xl"
@@ -280,6 +293,7 @@ export const ProntuarioManager = () => {
       <Flex w="100%" h="70vh">
         <Flex w="100%" h="100%" position="relative" overflowX="hidden">
           <Box
+            id="prontuarios-table"
             w={isDrawerOpen ? 'calc(100% - 400px)' : '100%'}
             h="100%"
             transition="width 0.4s cubic-bezier(.4,0,.2,1)"
