@@ -399,6 +399,7 @@ export const useReunionBehavior = () => {
       toggleDelivery,
       handleToggleDelivery
     },
-    reunion: reunions.data
+    reunion: reunions.data,
+    reunionId
   }
 }

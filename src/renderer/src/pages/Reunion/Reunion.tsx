@@ -36,13 +36,14 @@ import {
   DialogTitle,
   DialogCloseTrigger,
   DialogBackdrop,
-  DialogPositioner
+  DialogPositioner,
+  Tabs,
 } from '@chakra-ui/react'
 
 import { createListCollection } from '@ark-ui/react/collection'
 import { PageHeader, DrawerForm, BaseTable, Input, CurrencyInput, PageContainer } from '../../components'
 import { Tooltip } from '../../components/ui/tooltip'
-import { FiSearch, FiFilter, FiPlus, FiTrash2, FiFileText, FiEye } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiPlus, FiTrash2, FiFileText, FiEye, FiList, FiDollarSign } from 'react-icons/fi'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -52,6 +53,7 @@ import { useEffect } from 'react'
 import { ReunionStatus } from '../../types/reunion-status'
 import { ProtocolModal } from '../../components/ProtocolPDF/ProtocolModal'
 import { useTutorialContext } from '../../contexts/TutorialContext'
+import { CashRegisterTab } from './components/CashRegisterTab'
 
 export const Reunion = () => {
   const { startTutorial, hasSeenTutorial } = useTutorialContext()
@@ -78,7 +80,8 @@ export const Reunion = () => {
     reunionStatus,
     protocolModalOpen,
     setProtocolModalOpen,
-    reunion
+    reunion,
+    reunionId
   } = useReunionBehavior()
 
   useEffect(() => {
@@ -399,78 +402,100 @@ export const Reunion = () => {
         </PageHeader>
       </Box>
 
-        <Box id="reunion-summary">
-          {renderSummary()}
-        </Box>
+        <Tabs.Root defaultValue="atendimentos" variant="subtle">
+          <Tabs.List mb={6}>
+            <Tabs.Trigger value="atendimentos">
+              <FiList style={{ marginRight: '8px' }} /> Atendimentos
+            </Tabs.Trigger>
+            <Tabs.Trigger value="caixa">
+              <FiDollarSign style={{ marginRight: '8px' }} /> Caixa
+            </Tabs.Trigger>
+          </Tabs.List>
 
-        <Box>
-          <Flex id="reunion-search" mb={4} gap={3} align="center">
-            <InputGroup endElement={<FiSearch />} w="300px">
-              <Input
-                borderRadius="3xl"
-              label="Pesquisar"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </InputGroup>
-          <Button variant="outline">
-            <FiFilter />
-            Filtros
-          </Button>
-          {!isClosed && (
-            <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
-              <FiPlus />
-              Adicionar
-            </Button>
-          )}
-        </Flex>
+          <Tabs.Content value="atendimentos">
+            <Stack gap={8}>
+              <Box id="reunion-summary">{renderSummary()}</Box>
 
-        <Flex w="100%" h="70vh" pb={10}>
-          <Flex w="100%" h="100%" position="relative" overflow="hidden">
-            <Box
-              id="reunion-table"
-              w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-              h="100%"
-              transition="width 0.4s cubic-bezier(.4,0,.2,1)"
-            >
-              <BaseTable
-                drawerOpen={drawerOpen}
-                data={filteredRecords}
-                columns={columns as Column<RecordType>[]}
-                isLoading={isLoading}
-              />
-            </Box>
-
-            <DrawerForm
-              isOpen={drawerOpen}
-              onClose={() => setDrawerOpen(false)}
-              title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
-              primaryLabel="Salvar"
-              secondaryLabel="Cancelar"
-              onPrimaryAction={handlers.handleSave}
-              headerActions={
-                isClosed &&
-                record.id !== 0 && (
-                  <Button
-                    size="sm"
-                    colorPalette={record.delivered ? 'gray' : 'green'}
-                    onClick={() =>
-                      handlers.handleToggleDelivery(
-                        record.prontuarioId,
-                        record.delivered
-                      )
-                    }
-                  >
-                    {record.delivered ? 'ENTREGUE' : 'ENTREGAR'}
+              <Box>
+                <Flex id="reunion-search" mb={4} gap={3} align="center">
+                  <InputGroup endElement={<FiSearch />} w="300px">
+                    <Input
+                      borderRadius="3xl"
+                      label="Pesquisar"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </InputGroup>
+                  <Button variant="outline">
+                    <FiFilter />
+                    Filtros
                   </Button>
-                )
-              }
-            >
-              {drawerContent}
-            </DrawerForm>
-          </Flex>
-        </Flex>
-      </Box>
+                  {!isClosed && (
+                    <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
+                      <FiPlus />
+                      Adicionar
+                    </Button>
+                  )}
+                </Flex>
+
+                <Flex w="100%" h="70vh" pb={10}>
+                  <Flex w="100%" h="100%" position="relative" overflow="hidden">
+                    <Box
+                      id="reunion-table"
+                      w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
+                      h="100%"
+                      transition="width 0.4s cubic-bezier(.4,0,.2,1)"
+                    >
+                      <BaseTable
+                        drawerOpen={drawerOpen}
+                        data={filteredRecords}
+                        columns={columns as any}
+                        isLoading={isLoading}
+                      />
+                    </Box>
+
+                    <DrawerForm
+                      isOpen={drawerOpen}
+                      onClose={() => setDrawerOpen(false)}
+                      title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
+                      primaryLabel="Salvar"
+                      secondaryLabel="Cancelar"
+                      onPrimaryAction={handlers.handleSave}
+                      headerActions={
+                        isClosed &&
+                        record.id !== 0 && (
+                          <Button
+                            size="sm"
+                            colorPalette={record.delivered ? 'gray' : 'green'}
+                            onClick={() =>
+                              handlers.handleToggleDelivery(record.prontuarioId, record.delivered)
+                            }
+                          >
+                            {record.delivered ? 'ENTREGUE' : 'ENTREGAR'}
+                          </Button>
+                        )
+                      }
+                    >
+                      {drawerContent}
+                    </DrawerForm>
+                  </Flex>
+                </Flex>
+              </Box>
+            </Stack>
+          </Tabs.Content>
+
+          <Tabs.Content value="caixa">
+            <CashRegisterTab
+              reunionId={reunionId}
+              reunionStatus={reunionStatus}
+              summary={{
+                totalGasto: summary.totalGasto,
+                cestas: summary.cestas
+              }}
+              basketValue={reunion?.basketValue || 200}
+            />
+          </Tabs.Content>
+        </Tabs.Root>
 
       {/* Modal de confirmação para reabrir reunião */}
       <DialogRoot
