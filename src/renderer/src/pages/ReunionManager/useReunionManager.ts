@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery } from '@tanstack/react-query'
 import { ReunionStatus } from '../../types/reunion-status'
 import { useReunions } from '../../hooks/reunion/useReunions'
 import { reunionFormSchema, ReunionFormData } from '../../schemas/reunionSchema'
+
+type DeliverySummary = { pendente: number; entregue: number; devolvido: number }
+type DeliverySummaries = Record<number, DeliverySummary>
 
 const defaultReunion: Reunion = {
   id: 0,
@@ -44,6 +48,31 @@ export function useReunionManager() {
   })
 
   const { reunions, createReunion, updateReunion, deleteReunion } = useReunions(activeFilter)
+
+  const displayedReunions: Reunion[] = useMemo(
+    () => (filteredReunions.length > 0 ? filteredReunions : reunions.data ?? []),
+    [filteredReunions, reunions.data]
+  )
+
+  const reunionIds = useMemo(() => displayedReunions.map((r) => r.id), [displayedReunions])
+
+  const deliverySummariesQuery = useQuery({
+    queryKey: ['deliverySummaries', reunionIds],
+    queryFn: async () => {
+      const rows = (await window.electron.ipcRenderer.invoke(
+        'prontuarioDelivery:getSummariesByReunions',
+        reunionIds
+      )) as Array<{ reunionId: number; pendente: number; entregue: number; devolvido: number }>
+      const map: DeliverySummaries = {}
+      rows.forEach((r) => {
+        map[r.reunionId] = { pendente: r.pendente, entregue: r.entregue, devolvido: r.devolvido }
+      })
+      return map
+    },
+    enabled: reunionIds.length > 0
+  })
+
+  const deliverySummaries: DeliverySummaries = deliverySummariesQuery.data ?? {}
 
   const handleFilter = () => {
     setActiveFilter({
@@ -220,7 +249,8 @@ export function useReunionManager() {
     control,
     errors,
     isSubmitting,
-    reunions: filteredReunions.length > 0 ? filteredReunions : reunions.data,
+    reunions: displayedReunions,
+    deliverySummaries,
     handleRowClick,
     handleAddNew,
     handleCloseDrawer,

@@ -34,7 +34,7 @@ export const useRecords = (reunionId: number) => {
     }
   })
 
-  // Mutation to toggle delivery status
+  // Mutation to toggle delivery status between pendente <-> devolvido
   const toggleDelivery = useMutation({
     mutationFn: async ({
       prontuarioId,
@@ -43,19 +43,29 @@ export const useRecords = (reunionId: number) => {
       prontuarioId: number
       currentStatus: boolean
     }) => {
-      const newStatus = currentStatus ? 'pendente' : 'entregue'
-      // TODO: Get actual user name if available, for now hardcoded or passed from context
       const by = 'Usuario'
-      return await window.electron.ipcRenderer.invoke(
-        'prontuarioDelivery:updateStatus',
-        prontuarioId,
-        reunionId,
-        newStatus,
-        by
-      )
+      if (currentStatus) {
+        // devolvido → pendente
+        return await window.electron.ipcRenderer.invoke(
+          'prontuarioDelivery:updateStatus',
+          prontuarioId,
+          reunionId,
+          'pendente',
+          by
+        )
+      } else {
+        // pendente → devolvido
+        return await window.electron.ipcRenderer.invoke(
+          'prontuarioDelivery:markReturned',
+          prontuarioId,
+          reunionId,
+          by
+        )
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries', reunionId] })
+      queryClient.invalidateQueries({ queryKey: ['deliverySummaries'] })
     }
   })
 
@@ -77,7 +87,7 @@ export const useRecords = (reunionId: number) => {
       if (atendimento.repeat) labels.push('Repetição')
 
       const deliveryStatus = deliveryMap.get(atendimento.prontuarioId)
-      const isDelivered = deliveryStatus === 'entregue'
+      const isDelivered = deliveryStatus === 'devolvido' || deliveryStatus === 'entregue'
 
       return {
         id: atendimento.id!,
@@ -101,14 +111,13 @@ export const useRecords = (reunionId: number) => {
   }, [atendimentos?.data, mapAtendimentoToRecord])
 
   const summary = useMemo(() => {
-    const deliveredCount = records.filter((r) => r.delivered).length
+    const devolvidoCount = records.filter((r) => r.delivered).length
     return {
       totalAtribuido: reunions.data?.value ?? 0,
       atendimentos: records.length,
       cestas: records.reduce((acc, r) => acc + r.cestas, 0),
-      // User requested "Total Gasto" and "Entregues/Total"
       totalGasto: records.reduce((acc, r) => acc + r.valor, 0),
-      entregues: deliveredCount,
+      entregues: devolvidoCount,
       data: reunions.data?.date ?? ''
     }
   }, [reunions.data, records])

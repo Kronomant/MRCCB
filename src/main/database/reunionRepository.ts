@@ -40,7 +40,7 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
   const db = getDb()
 
   let query = `
-    SELECT 
+    SELECT
       r.id,
       r.name,
       r.value,
@@ -48,7 +48,8 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
       r.date,
       r.status,
       COALESCE(COUNT(a.id), 0) as treatmentQuantity,
-      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity
+      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity,
+      COALESCE(SUM(CASE WHEN a.returned = 1 THEN 1 ELSE 0 END), 0) as returnedQuantity
     FROM reunions r
     LEFT JOIN atendimentos a ON a.reunionId = r.id
   `
