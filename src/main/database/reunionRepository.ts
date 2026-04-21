@@ -11,6 +11,9 @@ export type ReunionData = {
   foodBasketQuantity: number
   date: string
   status: string
+  totalAtendimentoValue?: number
+  totalBasketValue?: number
+  deliveredQuantity?: number
 }
 
 // CREATE
@@ -40,7 +43,7 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
   const db = getDb()
 
   let query = `
-    SELECT 
+    SELECT
       r.id,
       r.name,
       r.value,
@@ -48,9 +51,13 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
       r.date,
       r.status,
       COALESCE(COUNT(a.id), 0) as treatmentQuantity,
-      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity
+      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity,
+      COALESCE(SUM(a.value), 0) as totalAtendimentoValue,
+      COALESCE(SUM(a.foodBasketQuantity), 0) * r.basketValue as totalBasketValue,
+      COALESCE(COUNT(d.id), 0) as deliveredQuantity
     FROM reunions r
     LEFT JOIN atendimentos a ON a.reunionId = r.id
+    LEFT JOIN prontuario_delivery_status d ON d.reunionId = r.id AND d.status = 'entregue'
   `
 
   const conditions: string[] = []

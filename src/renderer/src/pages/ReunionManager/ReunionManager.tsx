@@ -27,17 +27,25 @@ const columns: Column<Reunion>[] = [
       return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
     }
   },
-  {
-    header: 'Total',
-    accessor: 'value',
-    customRender: (row) =>
-      new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(row.value)
-  },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
   { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
+  {
+    header: 'Valor Atendimentos',
+    accessor: 'totalAtendimentoValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalAtendimentoValue ?? 0
+      )
+  },
+  {
+    header: 'Valor Cestas',
+    accessor: 'totalBasketValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalBasketValue ?? 0
+      )
+  },
+  { header: 'Devoluções', accessor: 'deliveredQuantity' },
   { header: 'Data Reunião', accessor: 'date' }
 ]
 

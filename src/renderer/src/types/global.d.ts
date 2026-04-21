@@ -10,6 +10,9 @@ declare global {
     foodBasketQuantity: number
     date: string
     status: ReunionStatus
+    totalAtendimentoValue?: number
+    totalBasketValue?: number
+    deliveredQuantity?: number
   }
 
   interface Unity {
