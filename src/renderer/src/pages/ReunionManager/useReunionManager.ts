@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery } from '@tanstack/react-query'
 import { ReunionStatus } from '../../types/reunion-status'
 import { useReunions } from '../../hooks/reunion/useReunions'
 import { reunionFormSchema, ReunionFormData } from '../../schemas/reunionSchema'
@@ -44,6 +45,11 @@ export function useReunionManager() {
   })
 
   const { reunions, createReunion, updateReunion, deleteReunion } = useReunions(activeFilter)
+
+  const displayedReunions: Reunion[] = useMemo(
+    () => (filteredReunions.length > 0 ? filteredReunions : reunions.data ?? []),
+    [filteredReunions, reunions.data]
+  )
 
   const handleFilter = () => {
     setActiveFilter({
@@ -220,7 +226,7 @@ export function useReunionManager() {
     control,
     errors,
     isSubmitting,
-    reunions: filteredReunions.length > 0 ? filteredReunions : reunions.data,
+    reunions: displayedReunions,
     handleRowClick,
     handleAddNew,
     handleCloseDrawer,

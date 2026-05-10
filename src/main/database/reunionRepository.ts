@@ -11,6 +11,9 @@ export type ReunionData = {
   foodBasketQuantity: number
   date: string
   status: string
+  totalAtendimentoValue?: number
+  totalBasketValue?: number
+  deliveredQuantity?: number
 }
 
 // CREATE
@@ -40,17 +43,19 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
   const db = getDb()
 
   let query = `
-    SELECT 
+    SELECT
       r.id,
       r.name,
       r.value,
       r.basketValue,
       r.date,
       r.status,
-      COALESCE(COUNT(a.id), 0) as treatmentQuantity,
-      COALESCE(SUM(a.foodBasketQuantity), 0) as foodBasketQuantity
+      COALESCE((SELECT COUNT(*) FROM atendimentos a WHERE a.reunionId = r.id), 0) as treatmentQuantity,
+      COALESCE((SELECT SUM(a.foodBasketQuantity) FROM atendimentos a WHERE a.reunionId = r.id), 0) as foodBasketQuantity,
+      COALESCE((SELECT SUM(a.value) FROM atendimentos a WHERE a.reunionId = r.id), 0) as totalAtendimentoValue,
+      COALESCE((SELECT SUM(a.foodBasketQuantity) FROM atendimentos a WHERE a.reunionId = r.id), 0) * r.basketValue as totalBasketValue,
+      COALESCE((SELECT COUNT(*) FROM atendimentos a WHERE a.reunionId = r.id AND a.devolvido = 1), 0) as deliveredQuantity
     FROM reunions r
-    LEFT JOIN atendimentos a ON a.reunionId = r.id
   `
 
   const conditions: string[] = []
@@ -76,7 +81,6 @@ export function getAllReunions(filters?: { startDate?: string; endDate?: string;
   }
 
   query += `
-    GROUP BY r.id
     ORDER BY r.date DESC
   `
 
@@ -122,6 +126,6 @@ export function updateReunion(data: ReunionData): ReunionData {
 export function deleteReunion(id: number): void {
   const db = getDb()
 
-  const stmt = db.prepare('DELETE FROM reunions WHERE id = ?')
-  stmt.run(id)
+  db.prepare('DELETE FROM atendimentos WHERE reunionId = ?').run(id)
+  db.prepare('DELETE FROM reunions WHERE id = ?').run(id)
 }

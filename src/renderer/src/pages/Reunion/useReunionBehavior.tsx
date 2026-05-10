@@ -203,7 +203,8 @@ export const useReunionBehavior = () => {
         foodBasketQuantity: record.cestas,
         onlyClothes: record.labels.includes('Somente roupas'),
         emergency: record.labels.includes('Emergencial'),
-        returned: record.labels.includes('Representação'),
+        representacao: record.labels.includes('Representação'),
+        devolvido: record.delivered,
         repeat: false,
         ministerio: record.ministerio,
         prontuarioNumber: prontuarioData?.number ?? 0
@@ -352,9 +353,9 @@ export const useReunionBehavior = () => {
     }
   }
 
-  const handleToggleDelivery = async (prontuarioId: number, currentStatus: boolean) => {
+  const handleToggleDelivery = async (atendimentoId: number, currentStatus: boolean) => {
     try {
-      await toggleDelivery.mutateAsync({ prontuarioId, currentStatus })
+      await toggleDelivery.mutateAsync({ atendimentoId, currentStatus })
       updateRecord({ delivered: !currentStatus })
     } catch (err) {
       console.error('Falha ao alternar entrega:', err)

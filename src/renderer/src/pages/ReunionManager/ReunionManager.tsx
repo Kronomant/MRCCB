@@ -1,5 +1,5 @@
 import { Button, Flex, InputGroup, Tag, Box, NativeSelect, Text } from '@chakra-ui/react'
-import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
+import { FiEdit, FiTrash2, FiAlertCircle } from 'react-icons/fi'
 import {
   DrawerForm,
   BaseTable,
@@ -17,28 +17,69 @@ import SearchInput from './SearchInput'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { useEffect } from 'react'
 
-const columns: Column<Reunion>[] = [
+
+const buildColumns = (): Column<Reunion>[] => [
   { header: 'Reunião', accessor: 'name' },
   {
     header: 'Status',
     accessor: 'status',
     customRender: (row) => {
       const status = statusMap[row.status] || { label: row.status, colorScheme: 'gray' }
-      return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
+      const hasPending = row.deliveredQuantity !== row.treatmentQuantity
+      const colorScheme =
+        row.status === ReunionStatus.FINISHED
+          ? hasPending
+            ? 'orange'
+            : 'green'
+          : status.colorScheme
+      return (
+        <Flex gap={2} alignItems="center">
+          <Tag.Root colorPalette={colorScheme}>{status.label}</Tag.Root>
+          {hasPending && (
+            <Text color="orange.400" title="Prontuários com entrega pendente">
+              <FiAlertCircle />
+            </Text>
+          )}
+        </Flex>
+      )
     }
-  },
-  {
-    header: 'Total',
-    accessor: 'value',
-    customRender: (row) =>
-      new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(row.value)
   },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
   { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
-  { header: 'Data Reunião', accessor: 'date' }
+  {
+    header: 'Valor Atendimentos',
+    accessor: 'totalAtendimentoValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalAtendimentoValue ?? 0
+      )
+  },
+  {
+    header: 'Valor Cestas',
+    accessor: 'totalBasketValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalBasketValue ?? 0
+      )
+  },
+  {
+    header: 'Devoluções',
+    accessor: 'deliveredQuantity',
+    customRender: (row) => {
+      const total = row.deliveredQuantity ?? 0
+      return total > 0 ? (
+        <Text fontWeight="medium">{total}</Text>
+      ) : (
+        <Text color="fg.subtle">—</Text>
+      )
+    }
+  },
+  {
+    header: 'Data Reunião',
+    accessor: 'date',
+    customRender: (row) =>
+      new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(row.date))
+  }
 ]
 
 const ReunionManagerView = (props: ReunionManagerViewProps) => {
@@ -65,6 +106,9 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     handleDelete
   } = props
 
+  const columns = buildColumns()
+
+  console.log(reunions)
   const headerActions = (
     <Flex gap={2}>
       {canShowEditButton && (

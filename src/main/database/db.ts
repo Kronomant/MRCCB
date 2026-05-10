@@ -5,6 +5,7 @@ import { app } from 'electron'
 import { createUnitiesTable } from './migrations/002_create_unities_table'
 import { createDeliveryTables } from './migrations/003_create_delivery_tables'
 import { createCashRegisterTables } from './migrations/004_create_cash_register_tables'
+import { migrateDeliveryStatus } from './migrations/004_migrate_delivery_status'
 import { loadConfig } from '../config'
 
 let db: Database.Database | null = null
@@ -66,7 +67,8 @@ export function initDb(): void {
       foodBasketQuantity INTEGER NOT NULL DEFAULT 0,
       onlyClothes INTEGER NOT NULL DEFAULT 0,
       emergency INTEGER NOT NULL DEFAULT 0,
-      returned INTEGER NOT NULL DEFAULT 0,
+      representacao INTEGER NOT NULL DEFAULT 0,
+      devolvido INTEGER NOT NULL DEFAULT 0,
       repeat INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -92,6 +94,8 @@ export function initDb(): void {
   if (!hasMinisterio) {
     db.exec('ALTER TABLE atendimentos ADD COLUMN ministerio INTEGER DEFAULT 0')
   }
+
+  migrateDeliveryStatus()
   // Manter tabela treatments para compatibilidade temporária
   db.exec(`
     CREATE TABLE IF NOT EXISTS treatments (

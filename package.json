@@ -1,6 +1,6 @@
 {
   "name": "gestao-obra-piedade",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Sistema de Gestão de Reuniões da Obra da Piedade - Congregação Cristã no Brasil",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -23,6 +23,7 @@
     "rebuild:sqlite": "npm rebuild better-sqlite3"
   },
   "dependencies": {
+    "@ark-ui/react": "^5.36.0",
     "@chakra-ui/react": "^3.21.0",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
@@ -58,6 +59,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^35.0.3",
     "electron-builder": "^25.1.8",
+    "electron-rebuild": "^3.2.9",
     "electron-vite": "^3.1.0",
     "eslint": "^9.23.0",
     "eslint-plugin-react-hooks": "^7.0.0",
