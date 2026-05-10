@@ -44,7 +44,8 @@ declare global {
     foodBasketQuantity: number
     onlyClothes: boolean
     emergency: boolean
-    returned: boolean
+    representacao: boolean
+    devolvido: boolean
     repeat: boolean
     ministerio: boolean
     createdAt: string

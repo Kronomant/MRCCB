@@ -8,6 +8,7 @@ import {
   getAtendimentosByProntuario,
   getAtendimentoById,
   updateAtendimento,
+  toggleAtendimentoDelivery,
   type AtendimentoData
 } from '../database/atendimentoRepository'
 
@@ -43,5 +44,9 @@ export function registerAtendimentoHandlers() {
   ipcMain.handle('atendimento:delete', async (_event, id: number) => {
     deleteAtendimento(id)
     return true
+  })
+
+  ipcMain.handle('atendimento:toggleDelivery', async (_event, id: number, devolvido: boolean) => {
+    toggleAtendimentoDelivery(id, devolvido)
   })
 }

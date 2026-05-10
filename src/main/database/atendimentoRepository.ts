@@ -12,7 +12,8 @@ export type AtendimentoData = {
   foodBasketQuantity: number
   onlyClothes: boolean
   emergency: boolean
-  returned: boolean
+  representacao: boolean
+  devolvido: boolean
   repeat: boolean
   ministerio: boolean
   createdAt?: string
@@ -25,8 +26,8 @@ export function createAtendimento(
   const db = getDb()
   const stmt = db.prepare(`
     INSERT INTO atendimentos (
-      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, returned, repeat, ministerio, createdAt, updatedAt, prontuarioNumber
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, representacao, devolvido, repeat, ministerio, createdAt, updatedAt, prontuarioNumber
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
   `)
   const result = stmt.run(
     data.prontuarioId,
@@ -37,87 +38,69 @@ export function createAtendimento(
     data.foodBasketQuantity,
     data.onlyClothes ? 1 : 0,
     data.emergency ? 1 : 0,
-    data.returned ? 1 : 0,
+    data.representacao ? 1 : 0,
+    data.devolvido ? 1 : 0,
     data.repeat ? 1 : 0,
     data.ministerio ? 1 : 0,
     data.prontuarioNumber
   )
 
-  // Buscar o registro criado para retornar com timestamps
   const created = getAtendimentoById(result.lastInsertRowid as number)
   return created!
 }
 
-export function getAllAtendimentos(): AtendimentoData[] {
-  const db = getDb()
-  const stmt = db.prepare('SELECT * FROM atendimentos ORDER BY date DESC')
-  const rows = stmt.all() as AtendimentoData[]
-  return rows.map((r) => ({
-    ...r,
-    aprovedValue: Boolean(r.aprovedValue),
-    onlyClothes: Boolean(r.onlyClothes),
-    emergency: Boolean(r.emergency),
-    returned: Boolean(r.returned),
-    repeat: Boolean(r.repeat),
-    ministerio: Boolean(r.ministerio)
-  }))
-}
-
-export function getAtendimentosByReunion(reunionId: number): AtendimentoData[] {
-  const db = getDb()
-  const stmt = db.prepare('SELECT * FROM atendimentos WHERE reunionId = ? ORDER BY date DESC')
-  const rows = stmt.all(reunionId) as AtendimentoData[]
-  return rows.map((r) => ({
-    ...r,
-    aprovedValue: Boolean(r.aprovedValue),
-    onlyClothes: Boolean(r.onlyClothes),
-    emergency: Boolean(r.emergency),
-    returned: Boolean(r.returned),
-    repeat: Boolean(r.repeat),
-    ministerio: Boolean(r.ministerio)
-  }))
-}
-
-export function getAtendimentosByProntuario(prontuarioId: number): AtendimentoData[] {
-  const db = getDb()
-  const stmt = db.prepare('SELECT * FROM atendimentos WHERE prontuarioId = ? ORDER BY date DESC')
-  const rows = stmt.all(prontuarioId) as AtendimentoData[]
-  return rows.map((r) => ({
-    ...r,
-    aprovedValue: Boolean(r.aprovedValue),
-    onlyClothes: Boolean(r.onlyClothes),
-    emergency: Boolean(r.emergency),
-    returned: Boolean(r.returned),
-    repeat: Boolean(r.repeat),
-    ministerio: Boolean(r.ministerio)
-  }))
-}
-
-export function getAtendimentoById(id: number): AtendimentoData | undefined {
-  const db = getDb()
-  const stmt = db.prepare('SELECT * FROM atendimentos WHERE id = ?')
-  const r = stmt.get(id) as AtendimentoData
-  if (!r) return undefined
+function mapRow(r: AtendimentoData): AtendimentoData {
   return {
     ...r,
     aprovedValue: Boolean(r.aprovedValue),
     onlyClothes: Boolean(r.onlyClothes),
     emergency: Boolean(r.emergency),
-    returned: Boolean(r.returned),
+    representacao: Boolean(r.representacao),
+    devolvido: Boolean(r.devolvido),
     repeat: Boolean(r.repeat),
     ministerio: Boolean(r.ministerio)
   }
 }
 
+export function getAllAtendimentos(): AtendimentoData[] {
+  const db = getDb()
+  const rows = db.prepare('SELECT * FROM atendimentos ORDER BY date DESC').all() as AtendimentoData[]
+  return rows.map(mapRow)
+}
+
+export function getAtendimentosByReunion(reunionId: number): AtendimentoData[] {
+  const db = getDb()
+  const rows = db
+    .prepare('SELECT * FROM atendimentos WHERE reunionId = ? ORDER BY date DESC')
+    .all(reunionId) as AtendimentoData[]
+  return rows.map(mapRow)
+}
+
+export function getAtendimentosByProntuario(prontuarioId: number): AtendimentoData[] {
+  const db = getDb()
+  const rows = db
+    .prepare('SELECT * FROM atendimentos WHERE prontuarioId = ? ORDER BY date DESC')
+    .all(prontuarioId) as AtendimentoData[]
+  return rows.map(mapRow)
+}
+
+export function getAtendimentoById(id: number): AtendimentoData | undefined {
+  const db = getDb()
+  const r = db.prepare('SELECT * FROM atendimentos WHERE id = ?').get(id) as AtendimentoData
+  if (!r) return undefined
+  return mapRow(r)
+}
+
 export function updateAtendimento(data: AtendimentoData): AtendimentoData {
   const db = getDb()
   if (data.id === undefined) throw new Error('ID is required to update atendimento')
-  const stmt = db.prepare(`
+  db.prepare(`
     UPDATE atendimentos SET
-      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?, onlyClothes = ?, emergency = ?, returned = ?, repeat = ?, ministerio = ?, prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
+      prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?,
+      onlyClothes = ?, emergency = ?, representacao = ?, devolvido = ?, repeat = ?, ministerio = ?,
+      prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
     WHERE id = ?
-  `)
-  stmt.run(
+  `).run(
     data.prontuarioId,
     data.reunionId,
     data.date,
@@ -126,20 +109,25 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
     data.foodBasketQuantity,
     data.onlyClothes ? 1 : 0,
     data.emergency ? 1 : 0,
-    data.returned ? 1 : 0,
+    data.representacao ? 1 : 0,
+    data.devolvido ? 1 : 0,
     data.repeat ? 1 : 0,
     data.ministerio ? 1 : 0,
     data.prontuarioNumber,
     data.id
   )
+  return getAtendimentoById(data.id)!
+}
 
-  // Buscar o registro atualizado para retornar com novo timestamp
-  const updated = getAtendimentoById(data.id)
-  return updated!
+export function toggleAtendimentoDelivery(id: number, devolvido: boolean): void {
+  const db = getDb()
+  db.prepare('UPDATE atendimentos SET devolvido = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?').run(
+    devolvido ? 1 : 0,
+    id
+  )
 }
 
 export function deleteAtendimento(id: number): void {
   const db = getDb()
-  const stmt = db.prepare('DELETE FROM atendimentos WHERE id = ?')
-  stmt.run(id)
+  db.prepare('DELETE FROM atendimentos WHERE id = ?').run(id)
 }

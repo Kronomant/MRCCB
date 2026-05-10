@@ -17,21 +17,24 @@ import SearchInput from './SearchInput'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { useEffect } from 'react'
 
-type DeliverySummary = { pendente: number; entregue: number; devolvido: number }
 
-const buildColumns = (
-  deliverySummaries: Record<number, DeliverySummary>
-): Column<Reunion>[] => [
+const buildColumns = (): Column<Reunion>[] => [
   { header: 'Reunião', accessor: 'name' },
   {
     header: 'Status',
     accessor: 'status',
     customRender: (row) => {
       const status = statusMap[row.status] || { label: row.status, colorScheme: 'gray' }
-      const hasPending = (deliverySummaries[row.id]?.pendente ?? 0) > 0
+      const hasPending = row.deliveredQuantity !== row.treatmentQuantity
+      const colorScheme =
+        row.status === ReunionStatus.FINISHED
+          ? hasPending
+            ? 'orange'
+            : 'green'
+          : status.colorScheme
       return (
         <Flex gap={2} alignItems="center">
-          <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
+          <Tag.Root colorPalette={colorScheme}>{status.label}</Tag.Root>
           {hasPending && (
             <Text color="orange.400" title="Prontuários com entrega pendente">
               <FiAlertCircle />
@@ -63,7 +66,7 @@ const buildColumns = (
     header: 'Devoluções',
     accessor: 'deliveredQuantity',
     customRender: (row) => {
-      const total = deliverySummaries[row.id]?.devolvido ?? 0
+      const total = row.deliveredQuantity ?? 0
       return total > 0 ? (
         <Text fontWeight="medium">{total}</Text>
       ) : (
@@ -71,7 +74,12 @@ const buildColumns = (
       )
     }
   },
-  { header: 'Data Reunião', accessor: 'date' }
+  {
+    header: 'Data Reunião',
+    accessor: 'date',
+    customRender: (row) =>
+      new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(row.date))
+  }
 ]
 
 const ReunionManagerView = (props: ReunionManagerViewProps) => {
@@ -84,7 +92,6 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     errors,
     isSubmitting,
     reunions,
-    deliverySummaries,
     handleRowClick,
     handleAddNew,
     handleCloseDrawer,
@@ -99,10 +106,9 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     handleDelete
   } = props
 
-  const columns = buildColumns(deliverySummaries)
+  const columns = buildColumns()
 
   console.log(reunions)
-
   const headerActions = (
     <Flex gap={2}>
       {canShowEditButton && (
