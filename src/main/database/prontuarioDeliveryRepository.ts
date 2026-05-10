@@ -251,6 +251,30 @@ export function createAutomaticReturns(reunionId: number, processedBy: string): 
   return createdCount
 }
 
+// READ - busca resumo de entregas agrupado por reunião (bulk)
+export type DeliverySummary = {
+  reunionId: number
+  pendente: number
+  entregue: number
+  devolvido: number
+}
+
+export function getDeliverySummariesByReunions(reunionIds: number[]): DeliverySummary[] {
+  if (reunionIds.length === 0) return []
+  const db = getDb()
+  const placeholders = reunionIds.map(() => '?').join(', ')
+  const stmt = db.prepare(`
+    SELECT reunionId,
+           SUM(CASE WHEN status = 'pendente'  THEN 1 ELSE 0 END) AS pendente,
+           SUM(CASE WHEN status = 'entregue'  THEN 1 ELSE 0 END) AS entregue,
+           SUM(CASE WHEN status = 'devolvido' THEN 1 ELSE 0 END) AS devolvido
+    FROM prontuario_delivery_status
+    WHERE reunionId IN (${placeholders})
+    GROUP BY reunionId
+  `)
+  return stmt.all(...reunionIds) as DeliverySummary[]
+}
+
 // Function to mark prontuario as returned
 export function markProntuarioAsReturned(
   prontuarioId: number,

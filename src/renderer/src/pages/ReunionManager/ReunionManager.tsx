@@ -1,5 +1,5 @@
 import { Button, Flex, InputGroup, Tag, Box, NativeSelect, Text } from '@chakra-ui/react'
-import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
+import { FiEdit, FiTrash2, FiAlertCircle } from 'react-icons/fi'
 import {
   DrawerForm,
   BaseTable,
@@ -17,14 +17,28 @@ import SearchInput from './SearchInput'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { useEffect } from 'react'
 
-const columns: Column<Reunion>[] = [
+type DeliverySummary = { pendente: number; entregue: number; devolvido: number }
+
+const buildColumns = (
+  deliverySummaries: Record<number, DeliverySummary>
+): Column<Reunion>[] => [
   { header: 'Reunião', accessor: 'name' },
   {
     header: 'Status',
     accessor: 'status',
     customRender: (row) => {
       const status = statusMap[row.status] || { label: row.status, colorScheme: 'gray' }
-      return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
+      const hasPending = (deliverySummaries[row.id]?.pendente ?? 0) > 0
+      return (
+        <Flex gap={2} alignItems="center">
+          <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
+          {hasPending && (
+            <Text color="orange.400" title="Prontuários com entrega pendente">
+              <FiAlertCircle />
+            </Text>
+          )}
+        </Flex>
+      )
     }
   },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
@@ -45,7 +59,18 @@ const columns: Column<Reunion>[] = [
         row.totalBasketValue ?? 0
       )
   },
-  { header: 'Devoluções', accessor: 'deliveredQuantity' },
+  {
+    header: 'Devoluções',
+    accessor: 'deliveredQuantity',
+    customRender: (row) => {
+      const total = deliverySummaries[row.id]?.devolvido ?? 0
+      return total > 0 ? (
+        <Text fontWeight="medium">{total}</Text>
+      ) : (
+        <Text color="fg.subtle">—</Text>
+      )
+    }
+  },
   { header: 'Data Reunião', accessor: 'date' }
 ]
 
@@ -59,6 +84,7 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     errors,
     isSubmitting,
     reunions,
+    deliverySummaries,
     handleRowClick,
     handleAddNew,
     handleCloseDrawer,
@@ -72,6 +98,10 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     editError,
     handleDelete
   } = props
+
+  const columns = buildColumns(deliverySummaries)
+
+  console.log(reunions)
 
   const headerActions = (
     <Flex gap={2}>

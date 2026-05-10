@@ -8,6 +8,7 @@ declare global {
     basketValue: number
     treatmentQuantity: number
     foodBasketQuantity: number
+    returnedQuantity?: number
     date: string
     status: ReunionStatus
     totalAtendimentoValue?: number

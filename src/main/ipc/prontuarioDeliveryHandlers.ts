@@ -111,4 +111,14 @@ export function registerProntuarioDeliveryHandlers(): void {
       throw error
     }
   })
+
+  // Get delivery summaries for multiple reunions (bulk)
+  ipcMain.handle('prontuarioDelivery:getSummariesByReunions', async (_, reunionIds: number[]) => {
+    try {
+      return repository.getDeliverySummariesByReunions(reunionIds)
+    } catch (error) {
+      console.error('Error getting delivery summaries by reunions:', error)
+      throw error
+    }
+  })
 }
