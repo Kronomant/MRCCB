@@ -96,7 +96,7 @@ export const Reunion = () => {
                 checked={row.delivered}
                 onClick={(e) => {
                   e.stopPropagation()
-                  handlers.handleToggleDelivery(row.prontuarioId, row.delivered)
+                  handlers.handleToggleDelivery(row.id, row.delivered)
                 }}
               >
                 <Checkbox.HiddenInput />
@@ -230,7 +230,7 @@ export const Reunion = () => {
                       size="sm"
                       colorPalette={record.delivered ? 'gray' : 'orange'}
                       onClick={() =>
-                        handlers.handleToggleDelivery(record.prontuarioId, record.delivered)
+                        handlers.handleToggleDelivery(record.id, record.delivered)
                       }
                     >
                       {record.delivered ? 'DEVOLVIDO' : 'DEVOLVER'}
