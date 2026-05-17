@@ -1,4 +1,4 @@
-import { Button, Flex, InputGroup, Box, Stack, Text, Checkbox, Tag } from '@chakra-ui/react'
+import { Button, Flex, InputGroup, Box, Stack, Text, Checkbox, Tag, Tabs } from '@chakra-ui/react'
 import { PageHeader, DrawerForm, BaseTable, Input, PageContainer } from '../../components'
 import { Tooltip } from '../../components/ui/tooltip'
 import { FiSearch, FiFilter, FiPlus, FiFileText, FiEye, FiTrash2 } from 'react-icons/fi'
@@ -11,6 +11,7 @@ import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
 import { ReunionStatus } from '../../types/reunion-status'
 import { ProtocolModal } from '../../components/ProtocolPDF/ProtocolModal'
 import { useTutorialContext } from '../../contexts/TutorialContext'
+import { CashRegisterTab } from './components/CashRegisterTab'
 
 import { ReunionSummaryCards, ReunionRecordForm, ConfirmationDialog, ReunionCloseDialogBody } from './components'
 
@@ -39,7 +40,8 @@ export const Reunion = () => {
     reunionStatus,
     protocolModalOpen,
     setProtocolModalOpen,
-    reunion
+    reunion,
+    reunionId
   } = useReunionBehavior()
 
   useEffect(() => {
@@ -143,8 +145,8 @@ export const Reunion = () => {
     : ''
 
   return (
-    <PageContainer>
-      <Stack gap={8}>
+    <PageContainer isFixed>
+      <Stack gap={4} h="100%" flexDirection="column">
         <Box id="reunion-header">
           <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
             <Text color="fg.muted" fontSize="md" ml={4}>
@@ -178,83 +180,105 @@ export const Reunion = () => {
           <ReunionSummaryCards summary={summary} isClosed={isClosed} reunion={reunion} />
         </Box>
 
-        <Box>
-          <Flex id="reunion-search" mb={4} gap={3} align="center">
-            <InputGroup endElement={<FiSearch />} w="300px">
-              <Input
-                borderRadius="3xl"
-                label="Pesquisar"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </InputGroup>
-            <Button variant="outline">
-              <FiFilter />
-              Filtros
-            </Button>
-            {!isClosed && (
-              <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
-                <FiPlus />
-                Adicionar
+        <Tabs.Root defaultValue="atendimentos" variant="line" flex="1" display="flex" flexDirection="column" minH="0">
+          <Tabs.List mb={4}>
+            <Tabs.Trigger value="atendimentos">Atendimentos</Tabs.Trigger>
+            <Tabs.Trigger value="auditoria">Auditoria</Tabs.Trigger>
+          </Tabs.List>
+
+          <Tabs.Content value="atendimentos" flex="1" display="flex" flexDirection="column" minH="0">
+            <Flex id="reunion-search" mb={4} gap={3} align="center">
+              <InputGroup endElement={<FiSearch />} w="300px">
+                <Input
+                  borderRadius="3xl"
+                  label="Pesquisar"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </InputGroup>
+              <Button variant="outline">
+                <FiFilter />
+                Filtros
               </Button>
-            )}
-          </Flex>
-
-          <Flex w="100%" h="70vh" pb={10}>
-            <Flex w="100%" h="100%" position="relative" overflow="hidden">
-              <Box
-                id="reunion-table"
-                w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-                h="100%"
-                transition="width 0.4s cubic-bezier(.4,0,.2,1)"
-              >
-                <BaseTable
-                  drawerOpen={drawerOpen}
-                  data={filteredRecords}
-                  columns={columns as Column<RecordType>[]}
-                  isLoading={isLoading}
-                />
-              </Box>
-
-              <DrawerForm
-                isOpen={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
-                primaryLabel="Salvar"
-                secondaryLabel="Cancelar"
-                onPrimaryAction={handlers.handleSave}
-                headerActions={
-                  isClosed &&
-                  record.id !== 0 && (
-                    <Button
-                      size="sm"
-                      colorPalette={record.delivered ? 'gray' : 'orange'}
-                      onClick={() =>
-                        handlers.handleToggleDelivery(record.id, record.delivered)
-                      }
-                    >
-                      {record.delivered ? 'DEVOLVIDO' : 'DEVOLVER'}
-                    </Button>
-                  )
-                }
-              >
-                <ReunionRecordForm
-                  record={record}
-                  prontuarioSearch={prontuarioSearch}
-                  isNewProntuario={isNewProntuario}
-                  selectedUnityId={selectedUnityId}
-                  filteredProntuarios={filteredProntuarios}
-                  collection={handlers.collection}
-                  unities={unities}
-                  onRecordChange={handlers.updateRecord}
-                  onProntuarioSelect={handlers.handleProntuarioSelect}
-                  onProntuarioSearch={handlers.updateProntuarioSearch}
-                  onUnityChange={handlers.updateUnityId}
-                />
-              </DrawerForm>
+              {!isClosed && (
+                <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
+                  <FiPlus />
+                  Adicionar
+                </Button>
+              )}
             </Flex>
-          </Flex>
-        </Box>
+
+
+
+            <Flex w="100%" flex="1" minH="0" mt={4}>
+              <Flex w="100%" h="100%" position="relative" overflow="hidden">
+                <Box
+                  id="reunion-table"
+                  w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
+                  h="100%"
+                  transition="width 0.4s cubic-bezier(.4,0,.2,1)"
+                >
+                  <BaseTable
+                    drawerOpen={drawerOpen}
+                    data={filteredRecords}
+                    columns={columns as Column<RecordType>[]}
+                    isLoading={isLoading}
+                  />
+                </Box>
+
+                <DrawerForm
+                  isOpen={drawerOpen}
+                  onClose={() => setDrawerOpen(false)}
+                  title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
+                  primaryLabel="Salvar"
+                  secondaryLabel="Cancelar"
+                  onPrimaryAction={handlers.handleSave}
+                  headerActions={
+                    isClosed &&
+                    record.id !== 0 && (
+                      <Button
+                        size="sm"
+                        colorPalette={record.delivered ? 'gray' : 'orange'}
+                        onClick={() =>
+                          handlers.handleToggleDelivery(record.id, record.delivered)
+                        }
+                      >
+                        {record.delivered ? 'DEVOLVIDO' : 'DEVOLVER'}
+                      </Button>
+                    )
+                  }
+                >
+                  <ReunionRecordForm
+                    record={record}
+                    prontuarioSearch={prontuarioSearch}
+                    isNewProntuario={isNewProntuario}
+                    selectedUnityId={selectedUnityId}
+                    filteredProntuarios={filteredProntuarios}
+                    collection={handlers.collection}
+                    unities={unities}
+                    onRecordChange={handlers.updateRecord}
+                    onProntuarioSelect={handlers.handleProntuarioSelect}
+                    onProntuarioSearch={handlers.updateProntuarioSearch}
+                    onUnityChange={handlers.updateUnityId}
+                  />
+                </DrawerForm>
+              </Flex>
+            </Flex>
+          </Tabs.Content>
+
+          <Tabs.Content value="auditoria" flex="1" display="flex" flexDirection="column" minH="0" overflow="hidden">
+            <CashRegisterTab
+              reunionId={reunionId}
+              reunionStatus={reunionStatus}
+              summary={{
+                totalGasto: summary.totalGasto,
+                cestas: summary.cestas,
+                atendimentos: summary.atendimentos
+              }}
+              reunionDate={reunion?.date}
+            />
+          </Tabs.Content>
+        </Tabs.Root>
 
         <ConfirmationDialog
           open={reopenModalOpen}

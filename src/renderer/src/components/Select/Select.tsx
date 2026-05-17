@@ -16,13 +16,15 @@ export const Select: React.FC<ISelect> = ({ options, placeholder, value, onChang
     <ChakraSelect.Root
       collection={createListCollection({ items: [...options] })}
       size="sm"
-      width="320px"
+      width="100%"
+      value={[value]}
+      onValueChange={(d) => onChange(d.value[0])}
     >
       <ChakraSelect.HiddenSelect />
       <ChakraSelect.Label>{label}</ChakraSelect.Label>
       <ChakraSelect.Control>
         <ChakraSelect.Trigger>
-          <ChakraSelect.ValueText placeholder={placeholder}>{value}</ChakraSelect.ValueText>
+          <ChakraSelect.ValueText placeholder={placeholder} />
         </ChakraSelect.Trigger>
         <ChakraSelect.IndicatorGroup>
           <ChakraSelect.Indicator />

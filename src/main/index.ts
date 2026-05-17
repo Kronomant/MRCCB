@@ -10,6 +10,7 @@ import { initDb } from './database/db'
 
 import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHandlers'
 import { registerSettingsHandlers } from './ipc/settingsHandlers'
+import { registerCashRegisterHandlers } from './ipc/cashRegisterHandlers'
 
 app.whenReady().then(() => {
   // Set app user model id for windows
@@ -29,6 +30,7 @@ app.whenReady().then(() => {
   registerUnityHandlers()
   registerProntuarioDeliveryHandlers()
   registerSettingsHandlers()
+  registerCashRegisterHandlers()
   createWindow()
 
   app.on('activate', function () {
