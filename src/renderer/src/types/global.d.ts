@@ -121,13 +121,17 @@ declare global {
 
   // --- CASH REGISTER TYPES ---
 
+  type DenominationCounts = Record<number, number>
+
   interface CashRegister {
     id: number
     reunionId: number
     openingValue: number
     availableValue: number
+    openingCounts: DenominationCounts | null
     closingValue: number | null
     closingDifference: number | null
+    closingCounts: DenominationCounts | null
     status: 'open' | 'closed'
     createdAt: string
     updatedAt: string
@@ -155,7 +159,7 @@ declare global {
     createdAt: string
   }
 
-  type CreateCashRegister = Omit<CashRegister, 'id' | 'createdAt' | 'updatedAt' | 'closingValue' | 'closingDifference' | 'status'>
+  type CreateCashRegister = Omit<CashRegister, 'id' | 'createdAt' | 'updatedAt' | 'closingValue' | 'closingDifference' | 'closingCounts' | 'status'>
   type CreateCashTicket = Omit<CashTicket, 'id' | 'createdAt'>
   type CreateCashExpense = Omit<CashExpense, 'id' | 'createdAt'>
 }

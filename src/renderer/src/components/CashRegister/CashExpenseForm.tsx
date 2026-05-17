@@ -137,7 +137,9 @@ export const CashExpenseForm: React.FC<CashExpenseFormProps> = ({
 
       {expenses.length > 0 && (
         <Box>
-          <Heading size="sm" mb={3}>Resumo por Categoria</Heading>
+          <Box borderLeft="3px solid" borderLeftColor="orange.500" pl={3} mb={3}>
+            <Heading size="sm">Resumo por Categoria</Heading>
+          </Box>
           <Flex gap={4} wrap="wrap" mb={6}>
             {Object.entries(subtotals).map(([cat, val]) => (
               <Box key={cat} p={3} rounded="md" bg="bg.muted" border="1px solid" borderColor="border" minW="150px">
@@ -153,7 +155,7 @@ export const CashExpenseForm: React.FC<CashExpenseFormProps> = ({
             <Heading size="sm">Registros</Heading>
             <Text fontWeight="bold">Total Geral: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
           </Flex>
-          
+
           <VStack gap={2} align="stretch">
             {expenses.map((e, index) => (
               <Flex

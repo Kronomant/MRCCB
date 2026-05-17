@@ -39,70 +39,70 @@ export const CashClosingSummary: React.FC<CashClosingSummaryProps> = ({
   const status = getDifferenceStatus()
 
   return (
-    <Box p={6} border="1px solid" borderColor="border" rounded="lg" bg="bg.subtle">
-      <Heading size="md" mb={6}>Resumo de Fechamento</Heading>
-      
-      <Stack gap={4}>
+    <Box p={4} border="1px solid" borderColor="border" rounded="lg" bg="bg.subtle">
+      <Heading size="sm" mb={3}>Resumo de Fechamento</Heading>
+
+      <Stack gap={2}>
         <Box>
-          <Text fontSize="xs" fontWeight="bold" color="fg.muted" mb={2} textTransform="uppercase">Entradas</Text>
+          <Text fontSize="xs" fontWeight="bold" color="fg.muted" mb={1} textTransform="uppercase">Entradas</Text>
           <Flex justify="space-between">
-            <Text>Valor Disponibilizado</Text>
-            <Text fontWeight="semibold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+            <Text fontSize="sm">Valor Disponibilizado</Text>
+            <Text fontSize="sm" fontWeight="semibold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
           </Flex>
         </Box>
 
         <Separator />
 
         <Box>
-          <Text fontSize="xs" fontWeight="bold" color="fg.muted" mb={2} textTransform="uppercase">Saídas</Text>
-          <Stack gap={2}>
+          <Text fontSize="xs" fontWeight="bold" color="fg.muted" mb={1} textTransform="uppercase">Saídas</Text>
+          <Stack gap={1}>
             <Flex justify="space-between">
-              <Text>Total de Atendimentos</Text>
-              <Text>R$ {totalAttendances.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+              <Text fontSize="sm">Total de Atendimentos</Text>
+              <Text fontSize="sm">R$ {totalAttendances.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+            </Flex>
+            {totalBasketsValue > 0 && (
+              <Flex justify="space-between">
+                <Text fontSize="sm">Total de Cestas Básicas</Text>
+                <Text fontSize="sm">R$ {totalBasketsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+              </Flex>
+            )}
+            <Flex justify="space-between">
+              <Text fontSize="sm">Total de Passagens</Text>
+              <Text fontSize="sm">R$ {totalTickets.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
             </Flex>
             <Flex justify="space-between">
-              <Text>Total de Cestas Básicas</Text>
-              <Text>R$ {totalBasketsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+              <Text fontSize="sm">Total de Notas de Gasto</Text>
+              <Text fontSize="sm">R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
             </Flex>
-            <Flex justify="space-between">
-              <Text>Total de Passagens</Text>
-              <Text>R$ {totalTickets.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-            </Flex>
-            <Flex justify="space-between">
-              <Text>Total de Notas de Gasto</Text>
-              <Text>R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-            </Flex>
-            <Separator borderStyle="dashed" my={1} />
+            <Separator borderStyle="dashed" />
             <Flex justify="space-between" fontWeight="bold">
-              <Text>Total de Saídas</Text>
-              <Text>R$ {totalOut.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+              <Text fontSize="sm">Total de Saídas</Text>
+              <Text fontSize="sm">R$ {totalOut.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
             </Flex>
           </Stack>
         </Box>
 
-        <Box pt={4} borderTop="2px solid" borderColor="border">
+        <Box pt={2} borderTop="2px solid" borderColor="border">
+          <Flex justify="space-between" mb={1}>
+            <Text fontSize="sm">Saldo Esperado</Text>
+            <Text fontSize="sm" fontWeight="bold">R$ {expectedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+          </Flex>
           <Flex justify="space-between" mb={2}>
-            <Text fontSize="lg">Saldo Esperado</Text>
-            <Text fontSize="lg" fontWeight="bold">R$ {expectedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+            <Text fontSize="sm">Saldo Físico Contado</Text>
+            <Text fontSize="sm" fontWeight="bold">R$ {physicalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
           </Flex>
-          <Flex justify="space-between" mb={4}>
-            <Text fontSize="lg">Saldo Físico Contado</Text>
-            <Text fontSize="lg" fontWeight="bold">R$ {physicalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-          </Flex>
-          
-          <Separator mb={4} />
 
-          <Flex justify="space-between" align="center" p={4} rounded="md" bg={status.color} color="white">
+          <Flex justify="space-between" align="center" px={3} py={2} rounded="md" bg={status.color} color="white">
             <Stack gap={0}>
-              <Text fontSize="sm" fontWeight="bold" textTransform="uppercase">Diferença</Text>
-              <Flex align="center" gap={2}>
+              <Text fontSize="xs" fontWeight="bold" textTransform="uppercase">Diferença</Text>
+              <Flex align="center" gap={1}>
                 {status.icon}
-                <Text fontSize="xl" fontWeight="bold">
+                <Text fontSize="md" fontWeight="bold">
                   R$ {difference.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Text>
               </Flex>
             </Stack>
-            <Text fontWeight="bold">{status.label}</Text>
+            <Text fontSize="sm" fontWeight="bold">{status.label}</Text>
           </Flex>
         </Box>
       </Stack>

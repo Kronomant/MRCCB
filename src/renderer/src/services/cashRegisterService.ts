@@ -6,12 +6,16 @@ export async function getCashRegisterByReunion(reunionId: number): Promise<CashR
   return await window.electron.ipcRenderer.invoke('cashRegister:getByReunion', reunionId)
 }
 
-export async function updateCashRegisterOpening(id: number, data: { openingValue: number; availableValue: number }): Promise<void> {
+export async function updateCashRegisterOpening(id: number, data: { openingValue: number; availableValue: number; openingCounts?: DenominationCounts | null }): Promise<void> {
   return await window.electron.ipcRenderer.invoke('cashRegister:updateOpening', { id, data })
 }
 
-export async function closeCashRegister(id: number, closingValue: number, difference: number): Promise<void> {
-  return await window.electron.ipcRenderer.invoke('cashRegister:close', { id, closingValue, difference })
+export async function closeCashRegister(id: number, closingValue: number, difference: number, closingCounts?: DenominationCounts | null): Promise<void> {
+  return await window.electron.ipcRenderer.invoke('cashRegister:close', { id, closingValue, difference, closingCounts })
+}
+
+export async function reopenCashRegister(id: number): Promise<void> {
+  return await window.electron.ipcRenderer.invoke('cashRegister:reopen', id)
 }
 
 // Tickets

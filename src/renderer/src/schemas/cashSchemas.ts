@@ -5,8 +5,10 @@ export const cashRegisterSchema = z.object({
   reunionId: z.number(),
   openingValue: z.number().min(0, 'Valor deve ser positivo'),
   availableValue: z.number().min(0, 'Valor deve ser positivo'),
+  openingCounts: z.record(z.number(), z.number()).nullable().default(null),
   closingValue: z.number().nullable(),
   closingDifference: z.number().nullable(),
+  closingCounts: z.record(z.number(), z.number()).nullable().default(null),
   status: z.enum(['open', 'closed']),
   createdAt: z.string(),
   updatedAt: z.string()
@@ -18,17 +20,20 @@ export const createCashRegisterSchema = cashRegisterSchema.omit({
   updatedAt: true,
   closingValue: true,
   closingDifference: true,
+  closingCounts: true,
   status: true
 })
 
 export const updateOpeningSchema = z.object({
   openingValue: z.number().min(0, 'Valor deve ser positivo'),
-  availableValue: z.number().min(0, 'Valor deve ser positivo')
+  availableValue: z.number().min(0, 'Valor deve ser positivo'),
+  openingCounts: z.record(z.number(), z.number()).nullable().default(null)
 })
 
 export const closeCashRegisterSchema = z.object({
   closingValue: z.number(),
-  difference: z.number()
+  difference: z.number(),
+  closingCounts: z.record(z.number(), z.number()).nullable().default(null)
 })
 
 // Tickets

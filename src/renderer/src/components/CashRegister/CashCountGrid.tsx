@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Text,
-  Stack,
   Flex,
-  Heading,
+  Grid,
 } from '@chakra-ui/react'
 import { Input } from '../Input'
 
@@ -31,21 +30,33 @@ const DENOMINATIONS: Denomination[] = [
 
 interface CashCountGridProps {
   onTotalChange: (total: number) => void
+  onCountsChange?: (counts: Record<number, number>) => void
+  initialCounts?: Record<number, number> | null
 }
 
-export const CashCountGrid: React.FC<CashCountGridProps> = ({ onTotalChange }) => {
-  const [counts, setCounts] = useState<Record<number, number>>({})
+export const CashCountGrid: React.FC<CashCountGridProps> = ({ onTotalChange, onCountsChange, initialCounts }) => {
+  const [counts, setCounts] = useState<Record<number, number>>(initialCounts ?? {})
+
+  useEffect(() => {
+    if (initialCounts && Object.keys(initialCounts).length > 0) {
+      setCounts(initialCounts)
+      const total = Object.entries(initialCounts).reduce((acc, [val, cnt]) => acc + Number(val) * cnt, 0)
+      onTotalChange(total)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleCountChange = (value: number, countInput: string) => {
     const count = countInput === '' ? 0 : parseInt(countInput, 10)
     const newCounts = { ...counts, [value]: count }
     setCounts(newCounts)
-    
+
     const total = Object.entries(newCounts).reduce((acc, [val, cnt]) => {
       return acc + Number(val) * cnt
     }, 0)
-    
+
     onTotalChange(total)
+    onCountsChange?.(newCounts)
   }
 
   const renderDenominationRow = (denom: Denomination) => {
@@ -54,38 +65,49 @@ export const CashCountGrid: React.FC<CashCountGridProps> = ({ onTotalChange }) =
     const subtotal = denom.value * (countValue || 0)
 
     return (
-      <Flex key={denom.value} align="center" justify="space-between" py={1}>
-        <Text fontWeight="medium" w="80px">{denom.label}</Text>
-        <Box w="80px">
+      <Flex key={denom.value} align="center" gap={1.5} py="1px">
+        <Text fontWeight="medium" fontSize="xs" w="50px" flexShrink={0}>{denom.label}</Text>
+        <Box w="52px" flexShrink={0}>
           <Input
             type="number"
             value={countDisplay}
             onChange={(e) => handleCountChange(denom.value, e.target.value)}
             placeholder="0"
-            size="sm"
+            size="xs"
             onFocus={(e) => e.target.select()}
           />
         </Box>
-        <Text w="120px" textAlign="right" color="fg.muted" fontSize="sm">
-          = R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <Text flex="1" textAlign="right" color={subtotal > 0 ? 'fg' : 'fg.subtle'} fontSize="xs" fontVariantNumeric="tabular-nums">
+          {subtotal > 0
+            ? subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '—'}
         </Text>
       </Flex>
     )
   }
 
+  const notes = DENOMINATIONS.filter(d => d.type === 'note')
+  const coins = DENOMINATIONS.filter(d => d.type === 'coin')
+
   return (
-    <Box bg="bg.subtle" p={5} rounded="md" border="1px solid" borderColor="border">
-      <Heading size="sm" mb={4}>Calculadora de Notas e Moedas</Heading>
-      <Stack gap={3}>
+    <Box bg="bg.subtle" px={3} py={2} rounded="md" border="1px solid" borderColor="border">
+      <Text fontWeight="bold" fontSize="xs" color="fg.muted" mb={1.5} textTransform="uppercase" letterSpacing="wide">
+        Notas e Moedas
+      </Text>
+      <Grid templateColumns="1fr 1fr" gap={3}>
         <Box>
-          <Text fontWeight="bold" fontSize="xs" color="blue.500" mb={1} textTransform="uppercase">Cédulas</Text>
-          {DENOMINATIONS.filter(d => d.type === 'note').map(renderDenominationRow)}
+          <Text fontWeight="bold" fontSize="2xs" color="blue.500" mb={1} textTransform="uppercase" letterSpacing="wide">
+            Cédulas
+          </Text>
+          {notes.map(renderDenominationRow)}
         </Box>
-        <Box pt={2} borderTop="1px solid" borderColor="border">
-          <Text fontWeight="bold" fontSize="xs" color="orange.500" mb={1} textTransform="uppercase">Moedas</Text>
-          {DENOMINATIONS.filter(d => d.type === 'coin').map(renderDenominationRow)}
+        <Box borderLeft="1px solid" borderColor="border" pl={3}>
+          <Text fontWeight="bold" fontSize="2xs" color="orange.500" mb={1} textTransform="uppercase" letterSpacing="wide">
+            Moedas
+          </Text>
+          {coins.map(renderDenominationRow)}
         </Box>
-      </Stack>
+      </Grid>
     </Box>
   )
 }

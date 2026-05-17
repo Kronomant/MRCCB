@@ -4,8 +4,10 @@ import {
   getCashRegisterByReunion,
   updateCashRegisterOpening,
   closeCashRegister,
+  reopenCashRegister,
   getCashRegisterById,
-  type CashRegister
+  type CashRegister,
+  type DenominationCounts
 } from '../database/cashRegisterRepository'
 
 import {
@@ -30,7 +32,7 @@ import {
 export function registerCashRegisterHandlers() {
   // --- CASH REGISTER ---
   
-  ipcMain.handle('cashRegister:create', (_, data: Omit<CashRegister, 'id' | 'createdAt' | 'updatedAt' | 'closingValue' | 'closingDifference' | 'status'>) => {
+  ipcMain.handle('cashRegister:create', (_, data: { reunionId: number; openingValue: number; availableValue: number; openingCounts?: DenominationCounts | null }) => {
     return createCashRegister(data)
   })
 
@@ -42,13 +44,18 @@ export function registerCashRegisterHandlers() {
     return getCashRegisterById(id)
   })
 
-  ipcMain.handle('cashRegister:updateOpening', (_, { id, data }: { id: number; data: { openingValue: number; availableValue: number } }) => {
+  ipcMain.handle('cashRegister:updateOpening', (_, { id, data }: { id: number; data: { openingValue: number; availableValue: number; openingCounts?: DenominationCounts | null } }) => {
     updateCashRegisterOpening(id, data)
     return { success: true }
   })
 
-  ipcMain.handle('cashRegister:close', (_, { id, closingValue, difference }: { id: number; closingValue: number; difference: number }) => {
-    closeCashRegister(id, closingValue, difference)
+  ipcMain.handle('cashRegister:close', (_, { id, closingValue, difference, closingCounts }: { id: number; closingValue: number; difference: number; closingCounts?: DenominationCounts | null }) => {
+    closeCashRegister(id, closingValue, difference, closingCounts)
+    return { success: true }
+  })
+
+  ipcMain.handle('cashRegister:reopen', (_, id: number) => {
+    reopenCashRegister(id)
     return { success: true }
   })
 

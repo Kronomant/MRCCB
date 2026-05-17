@@ -6,6 +6,7 @@ import { createUnitiesTable } from './migrations/002_create_unities_table'
 import { createDeliveryTables } from './migrations/003_create_delivery_tables'
 import { createCashRegisterTables } from './migrations/004_create_cash_register_tables'
 import { migrateDeliveryStatus } from './migrations/004_migrate_delivery_status'
+import { addDenominationCounts } from './migrations/005_add_denomination_counts'
 import { loadConfig } from '../config'
 
 let db: Database.Database | null = null
@@ -28,6 +29,7 @@ export function initDb(): void {
   createUnitiesTable()
   createDeliveryTables()
   createCashRegisterTables()
+  addDenominationCounts()
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS reunions (
