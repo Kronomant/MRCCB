@@ -8,6 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectItemText,
+  SelectPositioner,
   ComboboxRoot,
   ComboboxInput,
   ComboboxTrigger,
@@ -110,13 +111,17 @@ export const ReunionRecordForm = ({
       <SelectTrigger>
         <SelectValueText placeholder="Selecione a unidade" />
       </SelectTrigger>
-      <SelectContent>
-        {(unities || []).map((u) => (
-          <SelectItem key={u.id} item={String(u.id)}>
-            <SelectItemText>{u.name}</SelectItemText>
-          </SelectItem>
-        ))}
-      </SelectContent>
+      <Portal>
+        <SelectPositioner>
+          <SelectContent>
+            {(unities || []).map((u) => (
+              <SelectItem key={u.id} item={String(u.id)}>
+                <SelectItemText>{u.name}</SelectItemText>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </SelectPositioner>
+      </Portal>
     </SelectRoot>
 
     <CurrencyInput

@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react'
 import { PDFViewer, PDFDownloadLink, usePDF } from '@react-pdf/renderer'
 import { ProtocolDocument } from './ProtocolDocument'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { FiExternalLink } from 'react-icons/fi'
 
 interface ProtocolModalProps {
@@ -36,7 +36,7 @@ export const ProtocolModal: React.FC<ProtocolModalProps> = ({
   prontuarios,
   date
 }) => {
-  const fileName = `Protocolo_${date ? format(new Date(date), 'yyyy-MM-dd') : 'Reuniao'}.pdf`
+  const fileName = `Protocolo_${date ? format(parseISO(date), 'yyyy-MM-dd') : 'Reuniao'}.pdf`
   const document = (
     <ProtocolDocument records={records} unities={unities} prontuarios={prontuarios} date={date} />
   )

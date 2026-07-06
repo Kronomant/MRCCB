@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { createWindow } from './windows/mainWindows'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerReunionHandlers } from './ipc/reunionHandlers'
@@ -11,6 +11,7 @@ import { initDb } from './database/db'
 import { registerProntuarioDeliveryHandlers } from './ipc/prontuarioDeliveryHandlers'
 import { registerSettingsHandlers } from './ipc/settingsHandlers'
 import { registerCashRegisterHandlers } from './ipc/cashRegisterHandlers'
+import { startHttpServer, getServerUrl } from './server/httpServer'
 
 app.whenReady().then(() => {
   // Set app user model id for windows
@@ -31,6 +32,17 @@ app.whenReady().then(() => {
   registerProntuarioDeliveryHandlers()
   registerSettingsHandlers()
   registerCashRegisterHandlers()
+
+  startHttpServer()
+
+  ipcMain.handle('server:getUrl', () => {
+    return getServerUrl()
+  })
+
+  ipcMain.handle('server:isDev', () => {
+    return is.dev
+  })
+
   createWindow()
 
   app.on('activate', function () {

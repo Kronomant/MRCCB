@@ -78,7 +78,7 @@ const buildColumns = (): Column<Reunion>[] => [
     header: 'Data Reunião',
     accessor: 'date',
     customRender: (row) =>
-      new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(row.date))
+      new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: 'UTC' }).format(new Date(row.date))
   }
 ]
 

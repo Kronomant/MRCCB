@@ -1,7 +1,7 @@
 import { Button, Flex, InputGroup, Box, Stack, Text, Checkbox, Tag, Tabs } from '@chakra-ui/react'
 import { PageHeader, DrawerForm, BaseTable, Input, PageContainer } from '../../components'
 import { Tooltip } from '../../components/ui/tooltip'
-import { FiSearch, FiFilter, FiPlus, FiFileText, FiEye, FiTrash2 } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiPlus, FiFileText, FiEye, FiTrash2, FiUsers, FiDollarSign } from 'react-icons/fi'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useEffect } from 'react'
@@ -176,17 +176,69 @@ export const Reunion = () => {
           </PageHeader>
         </Box>
 
-        <Box id="reunion-summary">
-          <ReunionSummaryCards summary={summary} isClosed={isClosed} reunion={reunion} />
-        </Box>
-
-        <Tabs.Root defaultValue="atendimentos" variant="line" flex="1" display="flex" flexDirection="column" minH="0">
-          <Tabs.List mb={4}>
-            <Tabs.Trigger value="atendimentos">Atendimentos</Tabs.Trigger>
-            <Tabs.Trigger value="auditoria">Auditoria</Tabs.Trigger>
+        <Tabs.Root defaultValue="atendimentos" variant="plain" flex="1" display="flex" flexDirection="column" minH="0">
+          <Tabs.List
+            mb={4}
+            bg="bg.muted"
+            p="1"
+            borderRadius="xl"
+            display="inline-flex"
+            w="fit-content"
+            borderWidth="1px"
+            borderColor="border"
+          >
+            <Tabs.Trigger
+              value="atendimentos"
+              px={6}
+              py={2.5}
+              borderRadius="lg"
+              fontSize="md"
+              fontWeight="semibold"
+              display="flex"
+              alignItems="center"
+              gap={2.5}
+              _selected={{
+                bg: 'bg',
+                color: 'cyan.600',
+                shadow: 'sm',
+              }}
+              _hover={{
+                cursor: 'pointer',
+                color: 'cyan.400',
+              }}
+            >
+              <FiUsers size={18} />
+              Atendimentos
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              value="auditoria"
+              px={6}
+              py={2.5}
+              borderRadius="lg"
+              fontSize="md"
+              fontWeight="semibold"
+              display="flex"
+              alignItems="center"
+              gap={2.5}
+              _selected={{
+                bg: 'bg',
+                color: 'pink.600',
+                shadow: 'sm',
+              }}
+              _hover={{
+                cursor: 'pointer',
+                color: 'pink.400',
+              }}
+            >
+              <FiDollarSign size={18} />
+              Auditoria
+            </Tabs.Trigger>
           </Tabs.List>
 
           <Tabs.Content value="atendimentos" flex="1" display="flex" flexDirection="column" minH="0">
+            <Box id="reunion-summary" mb={8}>
+              <ReunionSummaryCards summary={summary} isClosed={isClosed} reunion={reunion} />
+            </Box>
             <Flex id="reunion-search" mb={4} gap={3} align="center">
               <InputGroup endElement={<FiSearch />} w="300px">
                 <Input
@@ -207,15 +259,12 @@ export const Reunion = () => {
                 </Button>
               )}
             </Flex>
-
-
-
-            <Flex w="100%" flex="1" minH="0" mt={4}>
+            <Flex w="100%" flex="1" minH="0">
               <Flex w="100%" h="100%" position="relative" overflow="hidden">
                 <Box
                   id="reunion-table"
                   w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-                  h="100%"
+                  h="95%"
                   transition="width 0.4s cubic-bezier(.4,0,.2,1)"
                 >
                   <BaseTable
@@ -276,6 +325,10 @@ export const Reunion = () => {
                 atendimentos: summary.atendimentos
               }}
               reunionDate={reunion?.date}
+              records={records}
+              unities={unities}
+              prontuarios={prontuarios}
+              basketValue={reunion?.basketValue}
             />
           </Tabs.Content>
         </Tabs.Root>

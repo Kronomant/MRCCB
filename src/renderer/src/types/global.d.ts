@@ -31,6 +31,7 @@ declare global {
     createdAt: string
     updatedAt: string
     status: 'active' | 'inactive'
+    hasPendingDelivery?: boolean
   }
 
   interface Atendimento {

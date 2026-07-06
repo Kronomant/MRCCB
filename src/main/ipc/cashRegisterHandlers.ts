@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 import {
   createCashRegister,
   getCashRegisterByReunion,
@@ -33,7 +34,9 @@ export function registerCashRegisterHandlers() {
   // --- CASH REGISTER ---
   
   ipcMain.handle('cashRegister:create', (_, data: { reunionId: number; openingValue: number; availableValue: number; openingCounts?: DenominationCounts | null }) => {
-    return createCashRegister(data)
+    const result = createCashRegister(data)
+    broadcast({ entity: 'cashRegister' })
+    return result
   })
 
   ipcMain.handle('cashRegister:getByReunion', (_, reunionId: number) => {
@@ -46,23 +49,28 @@ export function registerCashRegisterHandlers() {
 
   ipcMain.handle('cashRegister:updateOpening', (_, { id, data }: { id: number; data: { openingValue: number; availableValue: number; openingCounts?: DenominationCounts | null } }) => {
     updateCashRegisterOpening(id, data)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 
   ipcMain.handle('cashRegister:close', (_, { id, closingValue, difference, closingCounts }: { id: number; closingValue: number; difference: number; closingCounts?: DenominationCounts | null }) => {
     closeCashRegister(id, closingValue, difference, closingCounts)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 
   ipcMain.handle('cashRegister:reopen', (_, id: number) => {
     reopenCashRegister(id)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 
   // --- TICKETS (PASSAGENS) ---
 
   ipcMain.handle('cashTicket:create', (_, data: Omit<CashTicket, 'id' | 'createdAt'>) => {
-    return createTicket(data)
+    const result = createTicket(data)
+    broadcast({ entity: 'cashRegister' })
+    return result
   })
 
   ipcMain.handle('cashTicket:listByReunion', (_, reunionId: number) => {
@@ -71,11 +79,13 @@ export function registerCashRegisterHandlers() {
 
   ipcMain.handle('cashTicket:update', (_, { id, data }: { id: number; data: Partial<CashTicket> }) => {
     updateTicket(id, data)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 
   ipcMain.handle('cashTicket:delete', (_, id: number) => {
     deleteTicket(id)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
   
@@ -86,7 +96,9 @@ export function registerCashRegisterHandlers() {
   // --- EXPENSES (NOTAS DE GASTO) ---
 
   ipcMain.handle('cashExpense:create', (_, data: Omit<CashExpense, 'id' | 'createdAt'>) => {
-    return createExpense(data)
+    const result = createExpense(data)
+    broadcast({ entity: 'cashRegister' })
+    return result
   })
 
   ipcMain.handle('cashExpense:listByReunion', (_, reunionId: number) => {
@@ -95,11 +107,13 @@ export function registerCashRegisterHandlers() {
 
   ipcMain.handle('cashExpense:update', (_, { id, data }: { id: number; data: Partial<CashExpense> }) => {
     updateExpense(id, data)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 
   ipcMain.handle('cashExpense:delete', (_, id: number) => {
     deleteExpense(id)
+    broadcast({ entity: 'cashRegister' })
     return { success: true }
   })
 

@@ -36,6 +36,8 @@ import {
 } from 'react-icons/fi'
 import { useTutorialContext } from '../../../contexts/TutorialContext'
 
+import { RecordType } from '../../../hooks/records/useRecords'
+
 interface CashRegisterTabProps {
   reunionId: number
   reunionStatus?: string
@@ -45,6 +47,10 @@ interface CashRegisterTabProps {
     atendimentos: number
   }
   reunionDate?: string
+  records?: RecordType[]
+  unities?: Unity[]
+  prontuarios?: Prontuario[]
+  basketValue?: number
 }
 
 type TabView = 'opening' | 'transactions' | 'closing' | 'summary'
@@ -182,6 +188,10 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
   reunionId,
   summary,
   reunionDate,
+  records = [],
+  unities = [],
+  prontuarios = [],
+  basketValue = 0,
 }) => {
   const {
     cashRegister,
@@ -552,6 +562,10 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
             expenses={expenses}
             summary={summary}
             reunionDate={reunionDate}
+            records={records}
+            unities={unities}
+            prontuarios={prontuarios}
+            basketValue={basketValue}
           />
         )}
       </Stack>

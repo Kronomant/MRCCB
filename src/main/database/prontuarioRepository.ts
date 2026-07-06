@@ -9,6 +9,7 @@ export type ProntuarioData = {
   status: 'active' | 'inactive'
   createdAt?: string
   updatedAt?: string
+  hasPendingDelivery?: boolean
 }
 
 export function createProntuario(
@@ -35,25 +36,83 @@ export function createProntuario(
 
 export function getAllProntuarios(): ProntuarioData[] {
   const db = getDb()
-  const stmt = db.prepare('SELECT * FROM prontuarios ORDER BY number ASC')
-  const rows = stmt.all() as ProntuarioData[]
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    ORDER BY p.number ASC
+  `)
+  const rows = stmt.all() as any[]
 
   return rows.map((r) => ({
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }))
 }
 
 export function getProntuarioById(id: number): ProntuarioData | undefined {
   const db = getDb()
-  const stmt = db.prepare('SELECT * FROM prontuarios WHERE id = ?')
-  const r = stmt.get(id) as ProntuarioData
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    WHERE p.id = ?
+  `)
+  const r = stmt.get(id) as any
 
   if (!r) return undefined
 
   return {
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }
 }
 
@@ -61,25 +120,83 @@ export function getProntuariosByIds(ids: number[]): ProntuarioData[] {
   if (ids.length === 0) return []
   const db = getDb()
   const placeholders = ids.map(() => '?').join(',')
-  const stmt = db.prepare(`SELECT * FROM prontuarios WHERE id IN (${placeholders})`)
-  const rows = stmt.all(ids) as ProntuarioData[]
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    WHERE p.id IN (${placeholders})
+  `)
+  const rows = stmt.all(ids) as any[]
 
   return rows.map((r) => ({
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }))
 }
 
 export function getProntuarioByNumber(number: number): ProntuarioData | undefined {
   const db = getDb()
-  const stmt = db.prepare('SELECT * FROM prontuarios WHERE number = ?')
-  const r = stmt.get(number) as ProntuarioData
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    WHERE p.number = ?
+  `)
+  const r = stmt.get(number) as any
 
   if (!r) return undefined
 
   return {
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }
 }
 
@@ -108,22 +225,82 @@ export function deleteProntuario(id: number): void {
 
 export function getProntuariosByUnity(unityId: number): ProntuarioData[] {
   const db = getDb()
-  const stmt = db.prepare('SELECT * FROM prontuarios WHERE unityId = ? ORDER BY number ASC')
-  const rows = stmt.all(unityId) as ProntuarioData[]
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    WHERE p.unityId = ?
+    ORDER BY p.number ASC
+  `)
+  const rows = stmt.all(unityId) as any[]
 
   return rows.map((r) => ({
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }))
 }
 
 export function getActiveProntuarios(): ProntuarioData[] {
   const db = getDb()
-  const stmt = db.prepare('SELECT * FROM prontuarios WHERE status = ? ORDER BY number ASC')
-  const rows = stmt.all('active') as ProntuarioData[]
+  const stmt = db.prepare(`
+    SELECT p.*,
+           (
+             EXISTS (
+               SELECT 1 
+               FROM atendimentos a
+               LEFT JOIN prontuario_delivery_status pds 
+                 ON pds.prontuarioId = a.prontuarioId AND pds.reunionId = a.reunionId
+               WHERE a.prontuarioId = p.id 
+                 AND a.devolvido = 0
+                 AND (pds.status IS NULL OR (pds.status <> 'entregue' AND pds.status <> 'devolvido'))
+             )
+             OR EXISTS (
+               SELECT 1 
+               FROM prontuario_delivery_status pds
+               WHERE pds.prontuarioId = p.id 
+                 AND pds.status = 'pendente'
+                 AND NOT EXISTS (
+                   SELECT 1 
+                   FROM atendimentos a 
+                   WHERE a.prontuarioId = p.id 
+                     AND a.reunionId = pds.reunionId 
+                     AND a.devolvido = 1
+                 )
+             )
+           ) AS hasPendingDelivery
+    FROM prontuarios p
+    WHERE p.status = ?
+    ORDER BY p.number ASC
+  `)
+  const rows = stmt.all('active') as any[]
 
   return rows.map((r) => ({
     ...r,
-    ministry: !!r.ministry
+    ministry: !!r.ministry,
+    hasPendingDelivery: !!r.hasPendingDelivery
   }))
 }

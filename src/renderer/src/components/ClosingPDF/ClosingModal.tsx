@@ -14,7 +14,8 @@ import {
 } from '@chakra-ui/react'
 import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
 import { ClosingDocument } from './ClosingDocument'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
+import { RecordType } from '../../hooks/records/useRecords'
 
 interface ClosingModalProps {
   isOpen: boolean
@@ -29,6 +30,10 @@ interface ClosingModalProps {
   }
   reunionDate?: string
   institutionName?: string
+  records?: RecordType[]
+  unities?: Unity[]
+  prontuarios?: Prontuario[]
+  basketValue?: number
 }
 
 export const ClosingModal: React.FC<ClosingModalProps> = ({
@@ -40,9 +45,13 @@ export const ClosingModal: React.FC<ClosingModalProps> = ({
   summary,
   reunionDate,
   institutionName = 'Congregação Cristã no Brasil - Obra da Piedade',
+  records = [],
+  unities = [],
+  prontuarios = [],
+  basketValue = 0,
 }) => {
   const date = reunionDate ?? cashRegister.createdAt ?? ''
-  const fileName = `Fechamento_${date ? format(new Date(date), 'yyyy-MM-dd') : 'Reuniao'}.pdf`
+  const fileName = `Fechamento_${date ? format(parseISO(date), 'yyyy-MM-dd') : 'Reuniao'}.pdf`
 
   const totalTickets = tickets.reduce((s, t) => s + t.value, 0)
   const totalExpenses = expenses.reduce((s, e) => s + e.value, 0)
@@ -64,6 +73,10 @@ export const ClosingModal: React.FC<ClosingModalProps> = ({
       cestasCount={summary.cestas}
       totalTickets={totalTickets}
       totalExpenses={totalExpenses}
+      records={records}
+      unities={unities}
+      prontuarios={prontuarios}
+      basketValue={basketValue}
     />
   )
 

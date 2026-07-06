@@ -5,11 +5,21 @@ import {
   Text,
   Tag,
   Button,
-  Heading,
   Card,
   Badge,
   Separator,
-  Table
+  Table,
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogCloseTrigger,
+  DialogBackdrop,
+  DialogPositioner,
+  Portal,
+  SimpleGrid
 } from '@chakra-ui/react'
 import {
   FiCalendar,
@@ -26,10 +36,10 @@ import {
 import { useState, useEffect } from 'react'
 import { useProntuario } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
-import { PageContainer } from '../../components'
 
 interface ProntuarioDetailProps {
-  prontuarioId: number
+  prontuarioId: number | null
+  open: boolean
   onClose: () => void
   onEdit: (prontuario: Prontuario) => void
 }
@@ -38,7 +48,8 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'UTC'
   })
 }
 
@@ -61,8 +72,10 @@ const formatCurrency = (value: number) => {
 
 const getStatusInfo = (status: string) => {
   switch (status) {
+    case 'active':
     case 'ativo':
       return { label: 'Ativo', color: 'green', icon: <FiCheck /> }
+    case 'inactive':
     case 'inativo':
       return { label: 'Inativo', color: 'gray', icon: <FiClock /> }
     case 'arquivado':
@@ -78,29 +91,42 @@ const InfoItem: React.FC<{
   value: string | number
   highlight?: boolean
 }> = ({ icon, label, value, highlight = false }) => (
-  <Flex align="center" gap={3} p={3} bg={highlight ? 'blue.50' : 'gray.50'} borderRadius="md">
-    <Box color={highlight ? 'blue.500' : 'gray.500'}>{icon}</Box>
+  <Flex
+    align="center"
+    gap={3}
+    p={2.5}
+    bg={highlight ? { base: 'blue.50', _dark: 'blue.950' } : 'bg.subtle'}
+    borderRadius="md"
+  >
+    <Box color={highlight ? { base: 'blue.600', _dark: 'blue.300' } : { base: 'gray.500', _dark: 'gray.400' }}>
+      {icon}
+    </Box>
     <Box flex={1}>
-      <Text fontSize="sm" color="gray.600">
+      <Text fontSize="xs" color="fg.muted">
         {label}
       </Text>
-      <Text fontWeight="medium" color={highlight ? 'blue.700' : 'gray.900'}>
+      <Text
+        fontSize="sm"
+        fontWeight="semibold"
+        color={highlight ? { base: 'blue.800', _dark: 'blue.200' } : 'fg'}
+      >
         {value}
       </Text>
     </Box>
   </Flex>
 )
 
-
 export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
   prontuarioId,
+  open,
   onClose,
   onEdit
 }) => {
+  const resolvedId = prontuarioId ?? 0
   const {
     prontuario: { data: prontuario },
     isLoading
-  } = useProntuario(prontuarioId)
+  } = useProntuario(resolvedId)
   const { unities } = useUnities()
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
   const [deliveries, setDeliveries] = useState<ProntuarioDeliveryData[]>([])
@@ -110,17 +136,15 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
     const fetchAtendimentos = async () => {
       try {
         setLoadingAtendimentos(true)
-        // Buscar atendimentos relacionados ao prontuário
         const atendimentosData = (await window.electron.ipcRenderer.invoke(
           'atendimento:getByProntuarioId',
-          prontuarioId
+          resolvedId
         )) as Atendimento[]
         setAtendimentos(atendimentosData ?? [])
 
-        // Buscar status de entrega
         const deliveryData = (await window.electron.ipcRenderer.invoke(
           'prontuarioDelivery:getByProntuario',
-          prontuarioId
+          resolvedId
         )) as ProntuarioDeliveryData[]
         setDeliveries(deliveryData ?? [])
       } catch (error) {
@@ -132,261 +156,321 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
       }
     }
 
-    if (prontuarioId) {
+    if (resolvedId && open) {
       fetchAtendimentos()
     }
-  }, [prontuarioId])
+  }, [resolvedId, open])
 
-  if (isLoading) {
-    return (
-      <Box p={6}>
-        <Text>Carregando prontuário...</Text>
-      </Box>
-    )
-  }
-
-  if (!prontuario) {
-    return (
-      <Box p={6}>
-        <Text>Prontuário não encontrado</Text>
-        <Button mt={4} onClick={onClose}>
-          Voltar
-        </Button>
-      </Box>
-    )
-  }
-
-  const getDeliveryStatus = (reunionId: number) => {
+  const getDeliveryStatus = (reunionId: number, atendimentoDevolvido?: boolean) => {
+    if (atendimentoDevolvido) return 'devolvido'
     const delivery = deliveries.find((d) => d.reunionId === reunionId)
     return delivery?.status || 'pendente'
   }
 
-  const statusInfo = getStatusInfo(prontuario.status)
+  const statusInfo = prontuario ? getStatusInfo(prontuario.status) : null
   const totalAtendimentos = atendimentos.length
-  // Count as pending if not explicitly delivered or returned
   const atendimentosPendentes = atendimentos.filter((a) => {
-    const status = getDeliveryStatus(a.reunionId)
+    const status = getDeliveryStatus(a.reunionId, a.devolvido)
     return status !== 'entregue' && status !== 'devolvido'
   }).length
 
   const valorTotalRecebido = atendimentos.reduce((total, a) => total + (a.value || 0), 0)
 
   return (
-    <PageContainer>
-      <Card.Root mb={6}>
-        <Card.Body>
-          <Flex justify="space-between" align="center">
-            <Box>
-              <Heading size="xl" color="blue.600">
-                Prontuário #{prontuario.number}
-              </Heading>
-              <Text color="gray.600" fontSize="lg">
-                ID: {prontuario.id}
-              </Text>
-            </Box>
-            <Flex gap={3}>
-              <Button variant="outline" colorPalette="blue" onClick={() => onEdit(prontuario)}>
-                Editar
-              </Button>
-              <Button variant="solid" onClick={onClose}>
+    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="lg" placement="center">
+      <DialogBackdrop />
+      <Portal>
+        <DialogPositioner>
+          <DialogContent
+            maxH="90vh"
+            overflowY="auto"
+            bg="bg"
+            border="1px solid"
+            borderColor="border"
+          >
+            <DialogHeader borderBottom="1px solid" borderColor="border" pb={4}>
+              <Flex justify="space-between" align="center" w="100%" pr={6}>
+                <Box>
+                  <DialogTitle fontSize="xl" fontWeight="bold" color={{ base: 'blue.600', _dark: 'blue.300' }}>
+                    {prontuario ? `Prontuário #${prontuario.number}` : 'Detalhes do Prontuário'}
+                  </DialogTitle>
+                  {prontuario && (
+                    <Text color="fg.muted" fontSize="xs">
+                      ID Interno: {prontuario.id}
+                    </Text>
+                  )}
+                </Box>
+                {prontuario && statusInfo && (
+                  <Tag.Root colorPalette={statusInfo.color} size="md">
+                    <Flex align="center" gap={1.5}>
+                      {statusInfo.icon}
+                      {statusInfo.label}
+                    </Flex>
+                  </Tag.Root>
+                )}
+              </Flex>
+              <DialogCloseTrigger />
+            </DialogHeader>
+
+            <DialogBody py={6}>
+              {isLoading ? (
+                <Flex justify="center" align="center" py={10}>
+                  <Text>Carregando prontuário...</Text>
+                </Flex>
+              ) : !prontuario ? (
+                <Box py={10} textAlign="center">
+                  <Text color="fg.muted">Selecione um prontuário válido para visualizar os detalhes.</Text>
+                </Box>
+              ) : (
+                <Stack gap={6}>
+                  {/* Grid das Informações Básicas e Resumo */}
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                    {/* Informações Básicas */}
+                    <Card.Root
+                      variant="subtle"
+                      size="sm"
+                      bg="bg.subtle"
+                      border="1px solid"
+                      borderColor="border"
+                    >
+                      <Card.Body>
+                        <Stack gap={3}>
+                          <Text fontWeight="bold" fontSize="sm" color={{ base: 'blue.700', _dark: 'blue.300' }}>
+                            Informações Gerais
+                          </Text>
+                          <Separator borderColor="border" />
+                          <Stack gap={2}>
+                            <InfoItem
+                              icon={<FiUser />}
+                              label="Número do Prontuário"
+                              value={prontuario.number}
+                              highlight
+                            />
+                            <InfoItem
+                              icon={<FiMapPin />}
+                              label="Unidade vinculada"
+                              value={
+                                unities.find((u) => u.id === prontuario.unityId)?.name ||
+                                `Unidade ${prontuario.unityId}`
+                              }
+                            />
+                            <InfoItem
+                              icon={prontuario.ministry ? <FiCheck /> : <FiClock />}
+                              label="Ministério"
+                              value={prontuario.ministry ? 'Sim' : 'Não'}
+                            />
+                            <InfoItem
+                              icon={<FiCalendar />}
+                              label="Data de Cadastro"
+                              value={formatDateTime(prontuario.createdAt)}
+                            />
+                            {prontuario.updatedAt && (
+                              <InfoItem
+                                icon={<FiClock />}
+                                label="Última Atualização"
+                                value={formatDateTime(prontuario.updatedAt)}
+                              />
+                            )}
+                          </Stack>
+                        </Stack>
+                      </Card.Body>
+                    </Card.Root>
+
+                    {/* Resumo de Atendimentos */}
+                    <Card.Root
+                      variant="subtle"
+                      size="sm"
+                      bg="bg.subtle"
+                      border="1px solid"
+                      borderColor="border"
+                    >
+                      <Card.Body>
+                        <Stack gap={3} h="100%">
+                          <Text fontWeight="bold" fontSize="sm" color={{ base: 'blue.700', _dark: 'blue.300' }}>
+                            Resumo financeiro / cestas
+                          </Text>
+                          <Separator borderColor="border" />
+                          <Stack gap={3} justify="center" flex={1}>
+                            <Flex
+                              justify="space-between"
+                              align="center"
+                              p={2.5}
+                              bg={{ base: 'blue.50', _dark: 'blue.950' }}
+                              borderRadius="md"
+                            >
+                              <Text
+                                fontSize="xs"
+                                color={{ base: 'blue.700', _dark: 'blue.300' }}
+                                fontWeight="medium"
+                              >
+                                Total de Atendimentos
+                              </Text>
+                              <Text
+                                fontSize="lg"
+                                fontWeight="bold"
+                                color={{ base: 'blue.800', _dark: 'blue.200' }}
+                              >
+                                {totalAtendimentos}
+                              </Text>
+                            </Flex>
+
+                            <Flex
+                              justify="space-between"
+                              align="center"
+                              p={2.5}
+                              bg={{ base: 'orange.50', _dark: 'orange.950' }}
+                              borderRadius="md"
+                            >
+                              <Text
+                                fontSize="xs"
+                                color={{ base: 'orange.700', _dark: 'orange.300' }}
+                                fontWeight="medium"
+                              >
+                                Entregas Pendentes
+                              </Text>
+                              <Text
+                                fontSize="lg"
+                                fontWeight="bold"
+                                color={{ base: 'orange.800', _dark: 'orange.200' }}
+                              >
+                                {atendimentosPendentes}
+                              </Text>
+                            </Flex>
+
+                            <Flex
+                              justify="space-between"
+                              align="center"
+                              p={2.5}
+                              bg={{ base: 'green.50', _dark: 'green.950' }}
+                              borderRadius="md"
+                            >
+                              <Text
+                                fontSize="xs"
+                                color={{ base: 'green.700', _dark: 'green.300' }}
+                                fontWeight="medium"
+                              >
+                                Valor Total Recebido
+                              </Text>
+                              <Text
+                                fontSize="lg"
+                                fontWeight="bold"
+                                color={{ base: 'green.800', _dark: 'green.200' }}
+                              >
+                                {formatCurrency(valorTotalRecebido)}
+                              </Text>
+                            </Flex>
+                          </Stack>
+                        </Stack>
+                      </Card.Body>
+                    </Card.Root>
+                  </SimpleGrid>
+
+                  {/* Histórico de Atendimentos */}
+                  <Stack gap={3}>
+                    <Text fontWeight="bold" fontSize="sm" color={{ base: 'blue.700', _dark: 'blue.300' }}>
+                      Histórico de Atendimentos
+                    </Text>
+                    <Separator borderColor="border" />
+
+                    {loadingAtendimentos ? (
+                      <Text py={4} textAlign="center" fontSize="sm">Carregando histórico...</Text>
+                    ) : atendimentos.length === 0 ? (
+                      <Text py={6} textAlign="center" color="fg.muted" fontStyle="italic" fontSize="sm">
+                        Nenhum atendimento registrado para este prontuário.
+                      </Text>
+                    ) : (
+                      <Box overflowY="auto" maxH="220px" border="1px solid" borderColor="border" borderRadius="md">
+                        <Table.Root w="100%" variant="line" size="sm">
+                          <Table.Header bg="bg.muted" position="sticky" top={0} zIndex={1}>
+                            <Table.Row>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" whiteSpace="nowrap">Data</Table.ColumnHeader>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" whiteSpace="nowrap">Reunião</Table.ColumnHeader>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" whiteSpace="nowrap">Valor</Table.ColumnHeader>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" whiteSpace="nowrap">Cestas</Table.ColumnHeader>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" whiteSpace="nowrap">Status</Table.ColumnHeader>
+                              <Table.ColumnHeader fontSize="xs" color="fg.muted" minW="90px">Tags</Table.ColumnHeader>
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {atendimentos.map((atendimento) => {
+                              const status = getDeliveryStatus(atendimento.reunionId, atendimento.devolvido)
+                              const statusColor =
+                                status === 'entregue'
+                                  ? 'green'
+                                  : status === 'devolvido'
+                                    ? 'blue'
+                                    : 'orange'
+                              const statusLabel =
+                                status === 'entregue'
+                                  ? 'Entregue'
+                                  : status === 'devolvido'
+                                    ? 'Devolvido'
+                                    : 'Pendente'
+
+                              return (
+                                <Table.Row key={atendimento.id}>
+                                  <Table.Cell fontSize="xs" whiteSpace="nowrap">
+                                    {formatDate(atendimento.date)}
+                                  </Table.Cell>
+                                  <Table.Cell fontSize="xs" whiteSpace="nowrap">#{atendimento.reunionId}</Table.Cell>
+                                  <Table.Cell fontSize="xs" whiteSpace="nowrap">
+                                    {atendimento.value ? formatCurrency(atendimento.value) : '-'}
+                                  </Table.Cell>
+                                  <Table.Cell fontSize="xs">{atendimento.foodBasketQuantity || '-'}</Table.Cell>
+                                  <Table.Cell fontSize="xs" whiteSpace="nowrap">
+                                    <Badge colorPalette={statusColor} variant="solid" size="xs">
+                                      {statusLabel}
+                                    </Badge>
+                                  </Table.Cell>
+                                  <Table.Cell>
+                                    <Flex gap={1} wrap="wrap">
+                                      {atendimento.emergency && (
+                                        <Badge colorPalette="red" size="xs">
+                                          <FiAlertTriangle size={8} />
+                                        </Badge>
+                                      )}
+                                      {atendimento.aprovedValue && (
+                                        <Badge colorPalette="green" size="xs">
+                                          <FiCheck size={8} />
+                                        </Badge>
+                                      )}
+                                      {atendimento.repeat && (
+                                        <Badge colorPalette="orange" size="xs">
+                                          <FiRepeat size={8} />
+                                        </Badge>
+                                      )}
+                                      {atendimento.onlyClothes && (
+                                        <Badge colorPalette="purple" size="xs">
+                                          <FiPackage size={8} />
+                                        </Badge>
+                                      )}
+                                    </Flex>
+                                  </Table.Cell>
+                                </Table.Row>
+                              )
+                            })}
+                          </Table.Body>
+                        </Table.Root>
+                      </Box>
+                    )}
+                  </Stack>
+                </Stack>
+              )}
+            </DialogBody>
+
+            <DialogFooter borderTop="1px solid" borderColor="border" pt={3}>
+              {prontuario && (
+                <Button variant="outline" colorPalette="blue" size="sm" onClick={() => onEdit(prontuario)}>
+                  Editar Prontuário
+                </Button>
+              )}
+              <Button size="sm" onClick={onClose}>
                 Fechar
               </Button>
-            </Flex>
-          </Flex>
-        </Card.Body>
-      </Card.Root>
-      <Flex>
-        {/* Status e Informações Básicas */}
-        <Card.Root mb={6}>
-          <Card.Body>
-            <Stack gap={4}>
-              <Flex justify="space-between" align="center">
-                <Text fontSize="lg" fontWeight="medium">
-                  Status do Prontuário
-                </Text>
-                <Tag.Root colorPalette={statusInfo.color}>
-                  <Flex align="center" gap={2}>
-                    {statusInfo.icon}
-                    {statusInfo.label}
-                  </Flex>
-                </Tag.Root>
-              </Flex>
-
-              <Separator />
-
-              <Stack gap={3}>
-                <Text fontWeight="medium">Informações Básicas</Text>
-                <Stack gap={3}>
-                  <InfoItem
-                    icon={<FiUser />}
-                    label="Número do Prontuário"
-                    value={prontuario.number}
-                    highlight
-                  />
-                  <InfoItem
-                    icon={<FiMapPin />}
-                    label="Unidade"
-                    value={
-                      unities.find((u) => u.id === prontuario.unityId)?.name ||
-                      `Unidade ${prontuario.unityId}`
-                    }
-                  />
-                  <InfoItem
-                    icon={prontuario.ministry ? <FiCheck /> : <FiClock />}
-                    label="Ministério"
-                    value={prontuario.ministry ? 'Sim' : 'Não'}
-                  />
-                  <InfoItem
-                    icon={<FiCalendar />}
-                    label="Criado em"
-                    value={formatDateTime(prontuario.createdAt)}
-                  />
-                  {prontuario.updatedAt && (
-                    <InfoItem
-                      icon={<FiClock />}
-                      label="Última atualização"
-                      value={formatDateTime(prontuario.updatedAt)}
-                    />
-                  )}
-                </Stack>
-              </Stack>
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-
-        {/* Resumo de Atendimentos */}
-        <Card.Root mb={6}>
-          <Card.Body>
-            <Stack gap={4}>
-              <Text fontSize="lg" fontWeight="medium">
-                Resumo de Atendimentos
-              </Text>
-
-              <Flex gap={4} wrap="wrap">
-                <Box p={4} bg="blue.50" borderRadius="md" flex="1" minW="200px">
-                  <Text fontSize="sm" color="blue.600">
-                    Total de Atendimentos
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="blue.700">
-                    {totalAtendimentos}
-                  </Text>
-                </Box>
-
-                <Box p={4} bg="orange.50" borderRadius="md" flex="1" minW="200px">
-                  <Text fontSize="sm" color="orange.600">
-                    Pendentes
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="orange.700">
-                    {atendimentosPendentes}
-                  </Text>
-                </Box>
-
-                <Box p={4} bg="green.50" borderRadius="md" flex="1" minW="200px">
-                  <Text fontSize="sm" color="green.600">
-                    Valor Total Recebido
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="green.700">
-                    {formatCurrency(valorTotalRecebido)}
-                  </Text>
-                </Box>
-              </Flex>
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-
-        {/* Histórico de Atendimentos */}
-        <Card.Root mb={6}>
-          <Card.Body>
-            <Stack gap={4}>
-              <Text fontSize="lg" fontWeight="medium">
-                Histórico de Atendimentos
-              </Text>
-
-              {loadingAtendimentos ? (
-                <Text>Carregando histórico...</Text>
-              ) : atendimentos.length === 0 ? (
-                <Text color="gray.500" fontStyle="italic">
-                  Nenhum atendimento registrado para este prontuário
-                </Text>
-              ) : (
-                <Box overflowX="auto" w="100%">
-                  <Table.Root w="100%" minW={{ base: '800px', md: '100%' }}>
-                    <Table.Header>
-                      <Table.Row>
-                        <Table.ColumnHeader whiteSpace="nowrap">Data</Table.ColumnHeader>
-                        <Table.ColumnHeader whiteSpace="nowrap">Reunião</Table.ColumnHeader>
-                        <Table.ColumnHeader whiteSpace="nowrap">Valor</Table.ColumnHeader>
-                        <Table.ColumnHeader whiteSpace="nowrap">Cestas</Table.ColumnHeader>
-                        <Table.ColumnHeader whiteSpace="nowrap">Status</Table.ColumnHeader>
-                        <Table.ColumnHeader minW="150px">Características</Table.ColumnHeader>
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                      {atendimentos.map((atendimento) => {
-                        const status = getDeliveryStatus(atendimento.reunionId)
-                        const statusColor =
-                          status === 'entregue'
-                            ? 'green'
-                            : status === 'devolvido'
-                              ? 'blue'
-                              : 'orange'
-                        const statusLabel =
-                          status === 'entregue'
-                            ? 'Entregue'
-                            : status === 'devolvido'
-                              ? 'Devolvido'
-                              : 'Pendente'
-
-                        return (
-                          <Table.Row key={atendimento.id}>
-                            <Table.Cell whiteSpace="nowrap">
-                              {formatDate(atendimento.date)}
-                            </Table.Cell>
-                            <Table.Cell whiteSpace="nowrap">#{atendimento.reunionId}</Table.Cell>
-                            <Table.Cell whiteSpace="nowrap">
-                              {atendimento.value ? formatCurrency(atendimento.value) : '-'}
-                            </Table.Cell>
-                            <Table.Cell>{atendimento.foodBasketQuantity || '-'}</Table.Cell>
-                            <Table.Cell whiteSpace="nowrap">
-                              <Badge colorPalette={statusColor} variant="solid">
-                                {statusLabel}
-                              </Badge>
-                            </Table.Cell>
-                            <Table.Cell>
-                              <Flex gap={1} wrap="wrap">
-                                {atendimento.emergency && (
-                                  <Badge colorPalette="red" size="sm">
-                                    <FiAlertTriangle size={10} />
-                                  </Badge>
-                                )}
-                                {atendimento.aprovedValue && (
-                                  <Badge colorPalette="green" size="sm">
-                                    <FiCheck size={10} />
-                                  </Badge>
-                                )}
-                                {atendimento.repeat && (
-                                  <Badge colorPalette="orange" size="sm">
-                                    <FiRepeat size={10} />
-                                  </Badge>
-                                )}
-                                {atendimento.onlyClothes && (
-                                  <Badge colorPalette="purple" size="sm">
-                                    <FiPackage size={10} />
-                                  </Badge>
-                                )}
-                              </Flex>
-                            </Table.Cell>
-                          </Table.Row>
-                        )
-                      })}
-                    </Table.Body>
-                  </Table.Root>
-                </Box>
-              )}
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-      </Flex>
-    </PageContainer>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </Portal>
+    </DialogRoot>
   )
 }

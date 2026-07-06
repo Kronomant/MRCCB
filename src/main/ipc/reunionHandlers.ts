@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 
 // CRUD de reuniões via IPC
 
@@ -14,7 +15,9 @@ import {
 export function registerReunionHandlers() {
   // CREATE
   ipcMain.handle('reunion:create', (event, data: Omit<ReunionData, 'id'>) => {
-    return createReunion(data)
+    const result = createReunion(data)
+    broadcast({ entity: 'reunion' })
+    return result
   })
 
   ipcMain.handle('reunion:getById', (event, id: number) => {
@@ -28,12 +31,15 @@ export function registerReunionHandlers() {
 
   // UPDATE
   ipcMain.handle('reunion:update', (event, data: ReunionData) => {
-    return updateReunion(data)
+    const result = updateReunion(data)
+    broadcast({ entity: 'reunion' })
+    return result
   })
 
   // DELETE
   ipcMain.handle('reunion:delete', (event, id: number) => {
     deleteReunion(id)
+    broadcast({ entity: 'reunion' })
     return { success: true }
   })
 }

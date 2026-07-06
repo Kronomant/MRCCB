@@ -1,5 +1,6 @@
 // src/main/ipc/atendimentoHandlers.ts
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 import {
   createAtendimento,
   deleteAtendimento,
@@ -17,6 +18,7 @@ export function registerAtendimentoHandlers() {
     'atendimento:create',
     async (_event, payload: Omit<AtendimentoData, 'id' | 'createdAt' | 'updatedAt'>) => {
       const result = createAtendimento(payload)
+      broadcast({ entity: 'atendimento' })
       return result
     }
   )
@@ -38,15 +40,19 @@ export function registerAtendimentoHandlers() {
   })
 
   ipcMain.handle('atendimento:update', async (_event, payload: AtendimentoData) => {
-    return updateAtendimento(payload)
+    const result = updateAtendimento(payload)
+    broadcast({ entity: 'atendimento' })
+    return result
   })
 
   ipcMain.handle('atendimento:delete', async (_event, id: number) => {
     deleteAtendimento(id)
+    broadcast({ entity: 'atendimento' })
     return true
   })
 
   ipcMain.handle('atendimento:toggleDelivery', async (_event, id: number, devolvido: boolean) => {
     toggleAtendimentoDelivery(id, devolvido)
+    broadcast({ entity: 'atendimento' })
   })
 }

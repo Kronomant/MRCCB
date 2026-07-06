@@ -40,6 +40,7 @@ export const useRecords = (reunionId: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atendimentos', reunionId] })
       queryClient.invalidateQueries({ queryKey: ['reunions'] })
+      queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     }
   })
 
