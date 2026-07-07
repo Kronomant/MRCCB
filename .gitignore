@@ -6,3 +6,7 @@ out
 *.log*
 database.sqlite
 .ai
+.windsurf
+.cursor
+.claude
+.agents

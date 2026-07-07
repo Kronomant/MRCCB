@@ -13,6 +13,7 @@ import { PageHeader, PageContainer } from '../../components'
 import { useColorModeValue } from '../../components/ui/color-mode'
 import { useEffect, useState } from 'react'
 import { useTutorialContext } from '../../contexts/TutorialContext'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface SettingsConfig {
   dbPath?: string
@@ -27,10 +28,12 @@ export const Settings = () => {
   const bg = useColorModeValue('white', 'gray.800')
   const [currentPath, setCurrentPath] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [serverUrl, setServerUrl] = useState<string | null>(null)
   const { startTutorial, hasSeenTutorial } = useTutorialContext()
 
   useEffect(() => {
     loadSettings()
+    loadServerUrl()
     if (!hasSeenTutorial('settings')) {
       startTutorial('settings')
     }
@@ -44,6 +47,15 @@ export const Settings = () => {
       }
     } catch (error) {
       console.error('Failed to load settings', error)
+    }
+  }
+
+  const loadServerUrl = async () => {
+    try {
+      const url = (await window.electron.ipcRenderer.invoke('server:getUrl')) as string
+      setServerUrl(url)
+    } catch {
+      // server not available
     }
   }
 
@@ -114,7 +126,43 @@ export const Settings = () => {
           </Alert.Root>
         </VStack>
       </Box>
+
+      {serverUrl && (
+        <Box bg={bg} p={6} borderRadius="lg" shadow="sm" borderWidth="1px" mt={4}>
+          <Heading size="md" mb={4}>
+            Acesso Mobile (PWA)
+          </Heading>
+          <Text fontSize="sm" color="gray.600" mb={4}>
+            Usuários na mesma rede Wi-Fi podem escanear o QR Code abaixo para visualizar os dados
+            em tempo real pelo celular.
+          </Text>
+          <Flex gap={6} align="start" direction={{ base: 'column', md: 'row' }}>
+            <Box p={3} bg="white" borderRadius="md" borderWidth="1px" borderColor="gray.200" flexShrink={0}>
+              <QRCodeSVG value={serverUrl} size={160} />
+            </Box>
+            <VStack align="start" gap={3}>
+              <Box>
+                <Text fontSize="xs" color="gray.500" mb={1}>
+                  URL do servidor:
+                </Text>
+                <Input
+                  value={serverUrl}
+                  readOnly
+                  size="sm"
+                  fontFamily="mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+              </Box>
+              <Alert.Root status="warning" variant="subtle" size="sm">
+                <Alert.Indicator />
+                <Alert.Description fontSize="xs">
+                  O celular deve estar conectado à mesma rede Wi-Fi que este computador.
+                </Alert.Description>
+              </Alert.Root>
+            </VStack>
+          </Flex>
+        </Box>
+      )}
     </PageContainer>
   )
 }
-

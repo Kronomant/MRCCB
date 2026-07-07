@@ -1,5 +1,5 @@
-import { Button, Flex, InputGroup, Tag, Box, NativeSelect, Text } from '@chakra-ui/react'
-import { FiSearch, FiEdit, FiTrash2 } from 'react-icons/fi'
+import { Button, Flex, Tag, Box, NativeSelect, Text, SimpleGrid } from '@chakra-ui/react'
+import { FiEdit, FiTrash2, FiAlertCircle } from 'react-icons/fi'
 import {
   DrawerForm,
   BaseTable,
@@ -17,28 +17,69 @@ import SearchInput from './SearchInput'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { useEffect } from 'react'
 
-const columns: Column<Reunion>[] = [
+
+const buildColumns = (): Column<Reunion>[] => [
   { header: 'Reunião', accessor: 'name' },
   {
     header: 'Status',
     accessor: 'status',
     customRender: (row) => {
       const status = statusMap[row.status] || { label: row.status, colorScheme: 'gray' }
-      return <Tag.Root colorPalette={status.colorScheme}>{status.label}</Tag.Root>
+      const hasPending = row.deliveredQuantity !== row.treatmentQuantity
+      const colorScheme =
+        row.status === ReunionStatus.FINISHED
+          ? hasPending
+            ? 'orange'
+            : 'green'
+          : status.colorScheme
+      return (
+        <Flex gap={2} alignItems="center">
+          <Tag.Root colorPalette={colorScheme}>{status.label}</Tag.Root>
+          {hasPending && (
+            <Text color="orange.400" title="Prontuários com entrega pendente">
+              <FiAlertCircle />
+            </Text>
+          )}
+        </Flex>
+      )
     }
-  },
-  {
-    header: 'Total',
-    accessor: 'value',
-    customRender: (row) =>
-      new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(row.value)
   },
   { header: 'Qtd. Atendimentos', accessor: 'treatmentQuantity' },
   { header: 'Qtd. Cestas', accessor: 'foodBasketQuantity' },
-  { header: 'Data Reunião', accessor: 'date' }
+  {
+    header: 'Valor Atendimentos',
+    accessor: 'totalAtendimentoValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalAtendimentoValue ?? 0
+      )
+  },
+  {
+    header: 'Valor Cestas',
+    accessor: 'totalBasketValue',
+    customRender: (row) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        row.totalBasketValue ?? 0
+      )
+  },
+  {
+    header: 'Devoluções',
+    accessor: 'deliveredQuantity',
+    customRender: (row) => {
+      const total = row.deliveredQuantity ?? 0
+      return total > 0 ? (
+        <Text fontWeight="medium">{total}</Text>
+      ) : (
+        <Text color="fg.subtle">—</Text>
+      )
+    }
+  },
+  {
+    header: 'Data Reunião',
+    accessor: 'date',
+    customRender: (row) =>
+      new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: 'UTC' }).format(new Date(row.date))
+  }
 ]
 
 const ReunionManagerView = (props: ReunionManagerViewProps) => {
@@ -65,18 +106,18 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
     handleDelete
   } = props
 
+  const columns = buildColumns()
+
   const headerActions = (
-    <Flex gap={2}>
+    <Flex gap={1}>
       {canShowEditButton && (
-        <Button size="sm" variant="outline" onClick={handleEditToggle} colorPalette="blue">
+        <Button size="sm" variant="ghost" onClick={handleEditToggle} colorPalette="blue" title="Editar">
           <FiEdit />
-          Editar
         </Button>
       )}
       {selectedReunion.id !== 0 && (
-        <Button size="sm" variant="outline" onClick={handleDelete} colorPalette="red">
+        <Button size="sm" variant="ghost" onClick={handleDelete} colorPalette="red" title="Excluir">
           <FiTrash2 />
-          Excluir
         </Button>
       )}
     </Flex>
@@ -213,22 +254,71 @@ const ReunionManagerView = (props: ReunionManagerViewProps) => {
               )}
             />
 
-            {selectedReunion.status !== ReunionStatus.NEW && (
-              <Flex justifyContent="space-around" my={4}>
-                <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold">
-                    {selectedReunion.treatmentQuantity}
-                  </Text>
-                  <Text>Atendimentos</Text>
-                </Box>
-                <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold">
-                    {selectedReunion.foodBasketQuantity}
-                  </Text>
-                  <Text>Cestas</Text>
-                </Box>
-              </Flex>
-            )}
+            {selectedReunion.status !== ReunionStatus.NEW && (() => {
+              const pending = selectedReunion.treatmentQuantity - (selectedReunion.deliveredQuantity ?? 0)
+              return (
+                <>
+                  <Box my={4} p={4} borderRadius="lg" bg="bg.subtle" border="1px solid" borderColor="border">
+                    <Text
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      color="fg.muted"
+                      textTransform="uppercase"
+                      letterSpacing="wider"
+                      mb={3}
+                    >
+                      Resumo
+                    </Text>
+                    <SimpleGrid columns={3} gap={3}>
+                      <Box textAlign="center">
+                        <Text fontSize="2xl" fontWeight="bold" color="blue.500">
+                          {selectedReunion.treatmentQuantity}
+                        </Text>
+                        <Text fontSize="xs" color="fg.muted">Atendimentos</Text>
+                      </Box>
+                      <Box textAlign="center">
+                        <Text fontSize="2xl" fontWeight="bold" color="green.500">
+                          {selectedReunion.foodBasketQuantity}
+                        </Text>
+                        <Text fontSize="xs" color="fg.muted">Cestas</Text>
+                      </Box>
+                      <Box textAlign="center">
+                        <Text
+                          fontSize="2xl"
+                          fontWeight="bold"
+                          color={(selectedReunion.deliveredQuantity ?? 0) > 0 ? 'orange.500' : 'fg.muted'}
+                        >
+                          {selectedReunion.deliveredQuantity ?? 0}
+                        </Text>
+                        <Text fontSize="xs" color="fg.muted">Devoluções</Text>
+                      </Box>
+                    </SimpleGrid>
+                  </Box>
+                  {pending > 0 && (
+                    <Flex
+                      align="center"
+                      gap={2}
+                      px={4}
+                      py={3}
+                      borderRadius="lg"
+                      bg="orange.subtle"
+                      border="1px solid"
+                      borderColor="orange.emphasized"
+                      mb={4}
+                    >
+                      <Text color="orange.400" flexShrink={0}>
+                        <FiAlertCircle />
+                      </Text>
+                      <Text fontSize="sm" color="orange.fg" fontWeight="medium">
+                        {pending === 1
+                          ? '1 prontuário com devolução pendente'
+                          : `${pending} prontuários com devolução pendente`}
+                      </Text>
+                    </Flex>
+                  )}
+                </>
+              )
+            })()}
           </DrawerForm>
         </Flex>
       </Flex>

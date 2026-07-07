@@ -98,7 +98,9 @@ export const Sidebar = () => {
           >
             <FiHelpCircle />
           </IconButton>
+          <Text>Ajuda e Tutorial</Text>
         </Flex>
+        <Text fontSize="xs" color="fg.muted" textAlign="center" w="100%">v{import.meta.env.VITE_APP_VERSION}</Text>
       </VStack>
     </Box>
   )

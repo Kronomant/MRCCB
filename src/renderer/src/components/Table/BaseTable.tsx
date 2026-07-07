@@ -73,7 +73,7 @@ export const BaseTable = <T extends { id: number }>({
     <Box
       height="100%"
       transition="width 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s cubic-bezier(.4,0,.2,1)"
-      width="100%"
+      width="99%"
     >
       <Flex w="100%" h="100%" flexDir="column">
         {isLoading ? (

@@ -42,6 +42,7 @@ export function useMarkProntuarioAsDelivered() {
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'prontuario', variables.prontuarioId] })
       queryClient.invalidateQueries({ queryKey: ['atendimentos', variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['records', variables.reunionId] })
+      queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     }
   })
 }
@@ -60,6 +61,7 @@ export function useMarkProntuarioAsReturned() {
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'prontuario', variables.prontuarioId] })
       queryClient.invalidateQueries({ queryKey: ['atendimentos', variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['records', variables.reunionId] })
+      queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     }
   })
 }
@@ -83,6 +85,7 @@ export function useCreateAutomaticReturns() {
     onSuccess: (_, variables) => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'reunion', variables.reunionId] })
+      queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     }
   })
 }

@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 import {
   createUnity,
   createUnitiesBulk,
@@ -11,11 +12,15 @@ import {
 
 export function registerUnityHandlers() {
   ipcMain.handle('unity:create', (_event, payload: Omit<UnityData, 'id' | 'createdAt' | 'updatedAt'>) => {
-    return createUnity(payload)
+    const result = createUnity(payload)
+    broadcast({ entity: 'unity' })
+    return result
   })
 
   ipcMain.handle('unity:createBulk', (_event, names: string[]) => {
-    return createUnitiesBulk(names)
+    const result = createUnitiesBulk(names)
+    broadcast({ entity: 'unity' })
+    return result
   })
 
   ipcMain.handle('unity:all', () => {
@@ -27,11 +32,14 @@ export function registerUnityHandlers() {
   })
 
   ipcMain.handle('unity:update', (_event, payload: UnityData) => {
-    return updateUnity(payload)
+    const result = updateUnity(payload)
+    broadcast({ entity: 'unity' })
+    return result
   })
 
   ipcMain.handle('unity:delete', (_event, id: number) => {
     deleteUnity(id)
+    broadcast({ entity: 'unity' })
     return { success: true }
   })
 }

@@ -36,7 +36,7 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       onPrimaryAction?.()
     }}
     position="absolute"
-    right={-5}
+    right={0}
     top={0}
     height="100%"
     width={drawerWidth}
@@ -63,13 +63,14 @@ export const DrawerForm: React.FC<DrawerFormProps> = ({
       py={2}
       borderBottom="1px solid"
       borderColor="border"
+      gap={2}
     >
       {title && (
-        <Text fontWeight="bold" color="fg" fontSize="lg">
+        <Text fontWeight="bold" color="fg" fontSize="lg" flex={1} minW={0} truncate>
           {title}
         </Text>
       )}
-      <Flex align="center" gap={2}>
+      <Flex align="center" gap={2} flexShrink={0}>
         {headerActions}
         <Button variant="outline" onClick={onClose} size="sm" type="button">
           <FiX />

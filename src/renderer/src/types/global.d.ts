@@ -8,8 +8,12 @@ declare global {
     basketValue: number
     treatmentQuantity: number
     foodBasketQuantity: number
+    returnedQuantity?: number
     date: string
     status: ReunionStatus
+    totalAtendimentoValue?: number
+    totalBasketValue?: number
+    deliveredQuantity?: number
   }
 
   interface Unity {
@@ -27,6 +31,7 @@ declare global {
     createdAt: string
     updatedAt: string
     status: 'active' | 'inactive'
+    hasPendingDelivery?: boolean
   }
 
   interface Atendimento {
@@ -40,7 +45,8 @@ declare global {
     foodBasketQuantity: number
     onlyClothes: boolean
     emergency: boolean
-    returned: boolean
+    representacao: boolean
+    devolvido: boolean
     repeat: boolean
     ministerio: boolean
     createdAt: string
@@ -113,6 +119,50 @@ declare global {
   // Tipos auxiliares para Unity
   type CreateUnity = Omit<Unity, 'id' | 'createdAt' | 'updatedAt'>
   type UpdateUnity = Partial<CreateUnity>
+
+  // --- CASH REGISTER TYPES ---
+
+  type DenominationCounts = Record<number, number>
+
+  interface CashRegister {
+    id: number
+    reunionId: number
+    openingValue: number
+    availableValue: number
+    openingCounts: DenominationCounts | null
+    closingValue: number | null
+    closingDifference: number | null
+    closingCounts: DenominationCounts | null
+    status: 'open' | 'closed'
+    createdAt: string
+    updatedAt: string
+  }
+
+  interface CashTicket {
+    id: number
+    cashRegisterId: number
+    reunionId: number
+    volunteerName?: string | null
+    value: number
+    notes?: string | null
+    createdAt: string
+  }
+
+  interface CashExpense {
+    id: number
+    cashRegisterId: number
+    reunionId: number
+    establishmentName: string
+    nfeNumber?: string | null
+    category: 'fuel' | 'food' | 'small_goods' | 'maintenance'
+    value: number
+    notes?: string | null
+    createdAt: string
+  }
+
+  type CreateCashRegister = Omit<CashRegister, 'id' | 'createdAt' | 'updatedAt' | 'closingValue' | 'closingDifference' | 'closingCounts' | 'status'>
+  type CreateCashTicket = Omit<CashTicket, 'id' | 'createdAt'>
+  type CreateCashExpense = Omit<CashExpense, 'id' | 'createdAt'>
 }
 
 export enum ReunionStatus {

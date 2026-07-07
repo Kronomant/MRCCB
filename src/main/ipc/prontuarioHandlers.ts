@@ -1,5 +1,6 @@
 // src/main/ipc/prontuarioHandlers.ts
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 import {
   createProntuario,
   deleteProntuario,
@@ -18,6 +19,7 @@ export function registerProntuarioHandlers() {
     'prontuario:create',
     async (_event, payload: Omit<ProntuarioData, 'id' | 'createdAt' | 'updatedAt'>) => {
       const result = createProntuario(payload)
+      broadcast({ entity: 'prontuario' })
       return result
     }
   )
@@ -48,11 +50,13 @@ export function registerProntuarioHandlers() {
 
   ipcMain.handle('prontuario:update', async (_event, payload: ProntuarioData) => {
     const result = updateProntuario(payload)
+    broadcast({ entity: 'prontuario' })
     return result
   })
 
   ipcMain.handle('prontuario:delete', async (_event, id: number) => {
     deleteProntuario(id)
+    broadcast({ entity: 'prontuario' })
     return true
   })
 }

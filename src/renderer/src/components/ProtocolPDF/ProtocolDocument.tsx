@@ -1,6 +1,6 @@
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import logoPDF from '../../assets/logo-pdf.png'
 
@@ -194,7 +194,7 @@ export const ProtocolDocument: React.FC<ProtocolDocumentProps> = ({
 
   // Format date
   const formattedDate = date
-    ? format(new Date(date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+    ? format(parseISO(date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
     : format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
 
   return (

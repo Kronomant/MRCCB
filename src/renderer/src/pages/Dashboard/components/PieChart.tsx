@@ -30,7 +30,7 @@ export const PieChart = () => {
         stats['Emergência']++
       } else if (a.onlyClothes) {
         stats['Apenas Roupas']++
-      } else if (a.returned) {
+      } else if (a.devolvido) {
         stats['Retorno']++
       } else if (a.repeat) {
         stats['Repetição']++

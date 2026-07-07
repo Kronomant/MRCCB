@@ -12,7 +12,9 @@ import {
   SelectValueText,
   SelectContent,
   SelectItem,
-  SelectItemText
+  SelectItemText,
+  SelectPositioner,
+  Portal
 } from '@chakra-ui/react'
 import { PageHeader, PageContainer, SyncButton } from '../../components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
@@ -110,7 +112,8 @@ export const ProntuarioManager = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [editingProntuario, setEditingProntuario] = useState<Prontuario | null>(null)
-  const [viewingProntuario, setViewingProntuario] = useState<Prontuario | null>(null)
+  const [selectedProntuarioId, setSelectedProntuarioId] = useState<number | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const { startTutorial, hasSeenTutorial } = useTutorialContext()
 
   useEffect(() => {
@@ -139,7 +142,8 @@ export const ProntuarioManager = () => {
   const filteredProntuarios = prontuariosData.filter(
     (prontuario: Prontuario) =>
       prontuario.number.toString().includes(searchTerm) ||
-      prontuario.id.toString().includes(searchTerm)
+      prontuario.id.toString().includes(searchTerm) ||
+      (prontuario.hasPendingDelivery ? 'pendente' : 'em dia').includes(searchTerm.toLowerCase())
   )
 
   const onSubmit = async (data: CreateProntuario) => {
@@ -158,7 +162,8 @@ export const ProntuarioManager = () => {
   }
 
   const handleView = (prontuario: Prontuario) => {
-    setViewingProntuario(prontuario)
+    setSelectedProntuarioId(prontuario.id)
+    setIsDetailOpen(true)
   }
 
   const handleEdit = (prontuario: Prontuario) => {
@@ -170,6 +175,11 @@ export const ProntuarioManager = () => {
       status: prontuario.status
     })
     setIsDrawerOpen(true)
+  }
+
+  const handleEditFromDetail = (prontuario: Prontuario) => {
+    setIsDetailOpen(false)
+    handleEdit(prontuario)
   }
 
   const handleDelete = async (prontuario: Prontuario) => {
@@ -200,6 +210,21 @@ export const ProntuarioManager = () => {
         return (
           <Tag.Root colorPalette={getStatusColor(row)} size="sm">
             {getStatusLabel(row)}
+          </Tag.Root>
+        )
+      }
+    },
+    {
+      header: 'Pendências',
+      accessor: 'hasPendingDelivery',
+      customRender: (row: Prontuario) => {
+        return row.hasPendingDelivery ? (
+          <Tag.Root colorPalette="red" size="sm">
+            Pendente
+          </Tag.Root>
+        ) : (
+          <Tag.Root colorPalette="green" size="sm">
+            Em dia
           </Tag.Root>
         )
       }
@@ -252,19 +277,7 @@ export const ProntuarioManager = () => {
     }
   ]
 
-  // Se estiver visualizando detalhes, renderizar o componente de detalhes
-  if (viewingProntuario) {
-    return (
-      <ProntuarioDetail
-        prontuarioId={viewingProntuario.id}
-        onClose={() => setViewingProntuario(null)}
-        onEdit={(prontuario) => {
-          setViewingProntuario(null)
-          handleEdit(prontuario)
-        }}
-      />
-    )
-  }
+
 
   return (
     <PageContainer>
@@ -355,13 +368,17 @@ export const ProntuarioManager = () => {
                 <SelectTrigger>
                   <SelectValueText placeholder="Selecione a unidade" />
                 </SelectTrigger>
-                <SelectContent>
-                  {(unities || []).map((u) => (
-                    <SelectItem key={u.id} item={String(u.id)}>
-                      <SelectItemText>{u.name}</SelectItemText>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <Portal>
+                  <SelectPositioner>
+                    <SelectContent>
+                      {(unities || []).map((u) => (
+                        <SelectItem key={u.id} item={String(u.id)}>
+                          <SelectItemText>{u.name}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </SelectPositioner>
+                </Portal>
               </SelectRoot>
 
               <Stack gap={3}>
@@ -394,6 +411,16 @@ export const ProntuarioManager = () => {
           </DrawerForm>
         </Flex>
       </Flex>
+
+      <ProntuarioDetail
+        prontuarioId={selectedProntuarioId}
+        open={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false)
+          setSelectedProntuarioId(null)
+        }}
+        onEdit={handleEditFromDetail}
+      />
     </PageContainer>
   )
 }

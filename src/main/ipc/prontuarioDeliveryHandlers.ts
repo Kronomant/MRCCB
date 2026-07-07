@@ -1,5 +1,6 @@
 // src/main/ipc/prontuarioDeliveryHandlers.ts
 import { ipcMain } from 'electron'
+import { broadcast } from '../server/httpServer'
 import * as repository from '../database/prontuarioDeliveryRepository'
 
 export function registerProntuarioDeliveryHandlers(): void {
@@ -36,7 +37,9 @@ export function registerProntuarioDeliveryHandlers(): void {
   // Mark prontuario as delivered
   ipcMain.handle('prontuarioDelivery:markDelivered', async (_, prontuarioId: number, reunionId: number, deliveredBy: string) => {
     try {
-      return repository.markProntuarioAsDelivered(prontuarioId, reunionId, deliveredBy)
+      const result = repository.markProntuarioAsDelivered(prontuarioId, reunionId, deliveredBy)
+      broadcast({ entity: 'delivery' })
+      return result
     } catch (error) {
       console.error('Error marking prontuario as delivered:', error)
       throw error
@@ -46,7 +49,9 @@ export function registerProntuarioDeliveryHandlers(): void {
   // Mark prontuario as returned
   ipcMain.handle('prontuarioDelivery:markReturned', async (_, prontuarioId: number, reunionId: number, returnedBy: string) => {
     try {
-      return repository.markProntuarioAsReturned(prontuarioId, reunionId, returnedBy)
+      const result = repository.markProntuarioAsReturned(prontuarioId, reunionId, returnedBy)
+      broadcast({ entity: 'delivery' })
+      return result
     } catch (error) {
       console.error('Error marking prontuario as returned:', error)
       throw error
@@ -75,7 +80,9 @@ export function registerProntuarioDeliveryHandlers(): void {
          // but let's keep it simple and just update status.
       }
 
-      return repository.upsertProntuarioDelivery(data)
+      const result = repository.upsertProntuarioDelivery(data)
+      broadcast({ entity: 'delivery' })
+      return result
     } catch (error) {
       console.error('Error updating prontuario delivery status:', error)
       throw error
@@ -95,7 +102,9 @@ export function registerProntuarioDeliveryHandlers(): void {
   // Create automatic returns for next month
   ipcMain.handle('prontuarioDelivery:createAutomaticReturns', async (_, reunionId: number, processedBy: string) => {
     try {
-      return repository.createAutomaticReturns(reunionId, processedBy)
+      const result = repository.createAutomaticReturns(reunionId, processedBy)
+      broadcast({ entity: 'delivery' })
+      return result
     } catch (error) {
       console.error('Error creating automatic returns:', error)
       throw error
@@ -108,6 +117,16 @@ export function registerProntuarioDeliveryHandlers(): void {
       return repository.getProntuariosForNextMonthReturn()
     } catch (error) {
       console.error('Error getting prontuarios for next month return:', error)
+      throw error
+    }
+  })
+
+  // Get delivery summaries for multiple reunions (bulk)
+  ipcMain.handle('prontuarioDelivery:getSummariesByReunions', async (_, reunionIds: number[]) => {
+    try {
+      return repository.getDeliverySummariesByReunions(reunionIds)
+    } catch (error) {
+      console.error('Error getting delivery summaries by reunions:', error)
       throw error
     }
   })

@@ -11,6 +11,7 @@ export type TutorialPage =
   | 'prontuarioManager'
   | 'unityManager'
   | 'settings'
+  | 'cashRegister'
 
 // Função para criar instância do driver com configurações padrão
 const createDriver = () => {
@@ -358,6 +359,64 @@ const settingsSteps: DriveStep[] = [
   }
 ]
 
+// Passos do tutorial para CashRegister
+const cashRegisterSteps: DriveStep[] = [
+  {
+    element: '#cash-stepper',
+    popover: {
+      title: 'Controle de Caixa',
+      description: 'O caixa é dividido em 4 etapas: Abertura, Lançamentos, Fechamento e Resumo. Navegue entre elas conforme avança no processo.',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '#cash-step-opening',
+    popover: {
+      title: 'Abertura de Caixa',
+      description: 'Registre o valor em caixa antes da reunião e o valor disponibilizado para uso. Você também pode contar as cédulas e moedas para maior precisão.',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '#cash-step-transactions',
+    popover: {
+      title: 'Lançamentos',
+      description: 'Registre passagens de voluntários e notas de gasto durante a reunião. O saldo estimado é atualizado em tempo real.',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '#cash-step-closing',
+    popover: {
+      title: 'Fechamento',
+      description: 'Conte o dinheiro físico no caixa ao final e confirme o fechamento. O sistema calculará automaticamente a diferença em relação ao esperado.',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '#cash-step-summary',
+    popover: {
+      title: 'Resumo Final',
+      description: 'Veja o relatório completo do caixa e exporte o fechamento em PDF para registro.',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '#cash-register-help-btn',
+    popover: {
+      title: 'Ajuda',
+      description: 'Clique neste ícone a qualquer momento para ver este tutorial novamente.',
+      side: 'left',
+      align: 'center'
+    }
+  }
+]
+
 // Mapa de passos por página
 const tutorialStepsMap: Record<TutorialPage, DriveStep[]> = {
   sidebar: sidebarSteps,
@@ -366,7 +425,8 @@ const tutorialStepsMap: Record<TutorialPage, DriveStep[]> = {
   reunion: reunionSteps,
   prontuarioManager: prontuarioManagerSteps,
   unityManager: unityManagerSteps,
-  settings: settingsSteps
+  settings: settingsSteps,
+  cashRegister: cashRegisterSteps
 }
 
   // Chave para localStorage
