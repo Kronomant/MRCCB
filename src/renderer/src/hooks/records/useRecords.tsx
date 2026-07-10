@@ -8,6 +8,7 @@ export interface RecordType {
   prontuarioId: number
   prontuarioNumber: number
   ministerio: boolean
+  roupas: boolean
   valor: number
   cestas: number
   labels: string[]
@@ -51,12 +52,14 @@ export const useRecords = (reunionId: number) => {
     if (atendimento.onlyClothes) labels.push('Somente roupas')
     if (atendimento.representacao) labels.push('Representação')
     if (atendimento.repeat) labels.push('Repetição')
+    if (atendimento.roupas) labels.push('Roupas')
 
     return {
       id: atendimento.id!,
       prontuarioId: atendimento.prontuarioId,
       prontuarioNumber: atendimento.prontuarioNumber,
       ministerio: Boolean(atendimento.ministerio),
+      roupas: Boolean(atendimento.roupas),
       valor: atendimento.value,
       cestas: atendimento.foodBasketQuantity,
       labels,

@@ -72,6 +72,8 @@ export function initDb(): void {
       representacao INTEGER NOT NULL DEFAULT 0,
       devolvido INTEGER NOT NULL DEFAULT 0,
       repeat INTEGER NOT NULL DEFAULT 0,
+      ministerio INTEGER NOT NULL DEFAULT 0,
+      roupas INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (prontuarioId) REFERENCES prontuarios (id),
@@ -95,6 +97,11 @@ export function initDb(): void {
   const hasMinisterio = columns.some((c) => c.name === 'ministerio')
   if (!hasMinisterio) {
     db.exec('ALTER TABLE atendimentos ADD COLUMN ministerio INTEGER DEFAULT 0')
+  }
+
+  const hasRoupas = columns.some((c) => c.name === 'roupas')
+  if (!hasRoupas) {
+    db.exec('ALTER TABLE atendimentos ADD COLUMN roupas INTEGER DEFAULT 0')
   }
 
   migrateDeliveryStatus()

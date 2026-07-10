@@ -16,6 +16,7 @@ export type AtendimentoData = {
   devolvido: boolean
   repeat: boolean
   ministerio: boolean
+  roupas: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -26,8 +27,8 @@ export function createAtendimento(
   const db = getDb()
   const stmt = db.prepare(`
     INSERT INTO atendimentos (
-      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, representacao, devolvido, repeat, ministerio, createdAt, updatedAt, prontuarioNumber
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+      prontuarioId, reunionId, date, aprovedValue, value, foodBasketQuantity, onlyClothes, emergency, representacao, devolvido, repeat, ministerio, roupas, createdAt, updatedAt, prontuarioNumber
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
   `)
   const result = stmt.run(
     data.prontuarioId,
@@ -42,6 +43,7 @@ export function createAtendimento(
     data.devolvido ? 1 : 0,
     data.repeat ? 1 : 0,
     data.ministerio ? 1 : 0,
+    data.roupas ? 1 : 0,
     data.prontuarioNumber
   )
 
@@ -58,7 +60,8 @@ function mapRow(r: AtendimentoData): AtendimentoData {
     representacao: Boolean(r.representacao),
     devolvido: Boolean(r.devolvido),
     repeat: Boolean(r.repeat),
-    ministerio: Boolean(r.ministerio)
+    ministerio: Boolean(r.ministerio),
+    roupas: Boolean(r.roupas)
   }
 }
 
@@ -98,7 +101,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
     UPDATE atendimentos SET
       prontuarioId = ?, reunionId = ?, date = ?, aprovedValue = ?, value = ?, foodBasketQuantity = ?,
       onlyClothes = ?, emergency = ?, representacao = ?, devolvido = ?, repeat = ?, ministerio = ?,
-      prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
+      roupas = ?, prontuarioNumber = ?, updatedAt = CURRENT_TIMESTAMP
     WHERE id = ?
   `).run(
     data.prontuarioId,
@@ -113,6 +116,7 @@ export function updateAtendimento(data: AtendimentoData): AtendimentoData {
     data.devolvido ? 1 : 0,
     data.repeat ? 1 : 0,
     data.ministerio ? 1 : 0,
+    data.roupas ? 1 : 0,
     data.prontuarioNumber,
     data.id
   )

@@ -1,5 +1,5 @@
 import { Button, Flex, InputGroup, Box, Stack, Text, Checkbox, Tag, Tabs } from '@chakra-ui/react'
-import { PageHeader, DrawerForm, BaseTable, Input, PageContainer } from '../../components'
+import { PageHeader, DrawerForm, BaseTable, Input, PageContainer, ValuesProtocolModal } from '../../components'
 import { Tooltip } from '../../components/ui/tooltip'
 import { FiSearch, FiFilter, FiPlus, FiFileText, FiEye, FiTrash2, FiUsers, FiDollarSign } from 'react-icons/fi'
 import { format, parseISO } from 'date-fns'
@@ -40,6 +40,8 @@ export const Reunion = () => {
     reunionStatus,
     protocolModalOpen,
     setProtocolModalOpen,
+    valuesProtocolModalOpen,
+    setValuesProtocolModalOpen,
     reunion,
     reunionId
   } = useReunionBehavior()
@@ -169,6 +171,11 @@ export const Reunion = () => {
                 <Tooltip content="Gerar protocolo da reunião">
                   <Button colorScheme="green" onClick={() => setProtocolModalOpen(true)}>
                     <FiFileText /> Gerar Protocolo
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Gerar protocolo detalhado com valores">
+                  <Button colorScheme="teal" onClick={() => setValuesProtocolModalOpen(true)}>
+                    <FiFileText /> Resultado da reunião
                   </Button>
                 </Tooltip>
               </Flex>
@@ -369,6 +376,16 @@ export const Reunion = () => {
           unities={unities}
           prontuarios={prontuarios}
           date={summary.data}
+        />
+
+        <ValuesProtocolModal
+          isOpen={valuesProtocolModalOpen}
+          onClose={() => setValuesProtocolModalOpen(false)}
+          records={records}
+          unities={unities}
+          prontuarios={prontuarios}
+          date={summary.data}
+          basketValue={reunion?.basketValue}
         />
       </Stack>
     </PageContainer>

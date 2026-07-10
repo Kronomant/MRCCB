@@ -71,6 +71,7 @@ export interface Atendimento {
   devolvido: number
   repeat: number
   ministerio: number
+  roupas: number
   prontuarioNumber: number
   createdAt: string
   updatedAt: string

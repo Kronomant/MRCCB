@@ -49,6 +49,7 @@ declare global {
     devolvido: boolean
     repeat: boolean
     ministerio: boolean
+    roupas: boolean
     createdAt: string
     updatedAt: string
   }

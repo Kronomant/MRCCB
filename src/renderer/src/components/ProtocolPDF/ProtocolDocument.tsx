@@ -10,6 +10,7 @@ interface RecordType {
   prontuarioId: number
   prontuarioNumber: number
   ministerio: boolean
+  roupas: boolean
   valor: number
   cestas: number
   labels: string[]
@@ -183,9 +184,49 @@ export const ProtocolDocument: React.FC<ProtocolDocumentProps> = ({
     return unities.find((u) => u.id === id)?.name || 'Desconhecida'
   }
 
+  const chunkedColumns = React.useMemo(() => {
+    const columns: Array<{
+      key: string
+      unityId: number
+      unityName: string
+      records: RecordType[]
+    }> = []
+
+    const chunkSize = 7
+
+    Object.entries(groupedRecords).forEach(([unityIdStr, unityRecords]) => {
+      const unityId = Number(unityIdStr)
+      const name = getUnityName(unityId)
+      const totalRecords = unityRecords.length
+
+      if (totalRecords === 0) return
+
+      const chunks: RecordType[][] = []
+      for (let i = 0; i < totalRecords; i += chunkSize) {
+        chunks.push(unityRecords.slice(i, i + chunkSize))
+      }
+
+      chunks.forEach((chunkRecords, chunkIndex) => {
+        let displayName = name
+        if (chunks.length > 1) {
+          displayName = `${name} (${chunkIndex + 1}/${chunks.length})`
+        }
+        columns.push({
+          key: `${unityId}-${chunkIndex}`,
+          unityId,
+          unityName: displayName,
+          records: chunkRecords
+        })
+      })
+    })
+
+    return columns
+  }, [groupedRecords, unities])
+
   const getTags = (record: RecordType) => {
     const tags: string[] = []
     if (record.ministerio) tags.push('A')
+    if (record.roupas) tags.push('R')
     if (record.cestas > 0) tags.push('C')
     if (record.valorTotalAprovado || record.labels.includes('Valor total aprovado')) tags.push('T')
 
@@ -209,16 +250,16 @@ export const ProtocolDocument: React.FC<ProtocolDocumentProps> = ({
             <Text style={styles.legendItem}>C: Cesta</Text>
             <Text style={styles.legendItem}>T: Total Aprovado</Text>
             <Text style={styles.legendItem}>A: Ministério</Text>
+            <Text style={styles.legendItem}>R: Roupas</Text>
           </View>
         </View>
 
         <View style={styles.body}>
-          {Object.entries(groupedRecords).map(([unityIdStr, unityRecords]) => {
-            const unityId = Number(unityIdStr)
+          {chunkedColumns.map((col) => {
             return (
-              <View key={unityId} style={styles.unityColumn} wrap={false}>
-                <Text style={styles.unityHeader}>{getUnityName(unityId)}</Text>
-                {unityRecords.map((record) => (
+              <View key={col.key} style={styles.unityColumn} wrap={false}>
+                <Text style={styles.unityHeader}>{col.unityName}</Text>
+                {col.records.map((record) => (
                   <View key={record.id} style={styles.recordBlock} wrap={false}>
                     <View style={styles.recordInfo}>
                       <Text style={styles.prontuarioText}>{record.prontuarioNumber}</Text>
