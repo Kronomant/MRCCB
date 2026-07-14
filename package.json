@@ -1,6 +1,6 @@
 {
   "name": "gestao-obra-piedade",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Sistema de Gestão de Reuniões da Obra da Piedade - Congregação Cristã no Brasil",
   "main": "./out/main/index.js",
   "author": "example.com",
