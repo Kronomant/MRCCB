@@ -1,53 +1,13 @@
 import React from 'react'
-import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer'
+import { Page, Text, View, Document, Image } from '@react-pdf/renderer'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { RecordType } from '../../hooks/records/useRecords'
 import logoPDF from '../../assets/logo-pdf.png'
+import { styles } from './ValuesProtocolDocument.style'
 
 const formatBRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: 'column',
-    backgroundColor: '#FFFFFF',
-    padding: '16px 24px',
-    fontFamily: 'Helvetica',
-    fontSize: 7,
-  },
-  header: {
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    paddingBottom: 6,
-    alignItems: 'center',
-    flexDirection: 'column',
-    position: 'relative',
-    minHeight: 65,
-  },
-  logo: {
-    width: 85,
-    height: 85,
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    objectFit: 'contain',
-  },
-  institution: { fontSize: 10, fontWeight: 'bold', marginBottom: 2 },
-  title: { fontSize: 12, fontWeight: 'bold', marginBottom: 2 },
-  date: { fontSize: 8, color: '#333' },
-  emptyRow: { fontSize: 7, color: '#999', padding: 4, textAlign: 'center', fontStyle: 'italic' },
-  footer: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    right: 10,
-    textAlign: 'center',
-    fontSize: 7,
-    color: 'grey',
-  },
-})
 
 interface ValuesProtocolDocumentProps {
   records: RecordType[]
@@ -69,6 +29,10 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
   const formattedDate = date
     ? format(parseISO(date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
     : format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+
+  const docTitle = `Protocolo_Valores_${
+    date ? format(parseISO(date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  }`
 
   // Group records by unity
   const unityBreakdown = React.useMemo(() => {
@@ -129,26 +93,26 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
   }, [records, unities, prontuarios, basketValue])
 
   return (
-    <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
+    <Document title={docTitle}>
+      <Page size="A4" orientation="landscape" style={styles.valuesProtocol__page}>
         {/* HEADER */}
-        <View style={styles.header}>
-          <Image src={logoPDF} style={styles.logo} />
-          <Text style={styles.institution}>{institutionName}</Text>
-          <Text style={styles.title}>Fechamento de Caixa – Detalhamento por Casa de Oração</Text>
-          <Text style={styles.date}>{formattedDate}</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 4, gap: 12 }}>
-            <Text style={{ fontSize: 6, color: '#555' }}>Protocolo | Atend. | Cestas</Text>
-            <Text style={{ fontSize: 6, color: '#555' }}>C: possui cesta</Text>
-            <Text style={{ fontSize: 6, color: '#555' }}>A: Ministério</Text>
-            <Text style={{ fontSize: 6, color: '#555' }}>R: Roupas</Text>
+        <View style={styles.valuesProtocol__header}>
+          <Image src={logoPDF} style={styles.valuesProtocol__logo} />
+          <Text style={styles.valuesProtocol__institution}>{institutionName}</Text>
+          <Text style={styles.valuesProtocol__title}>Fechamento de Caixa – Detalhamento por Casa de Oração</Text>
+          <Text style={styles.valuesProtocol__date}>{formattedDate}</Text>
+          <View style={styles.valuesProtocol__legend}>
+            <Text style={styles.valuesProtocol__legendItem}>Protocolo | Atend. | Cestas</Text>
+            <Text style={styles.valuesProtocol__legendItem}>C: possui cesta</Text>
+            <Text style={styles.valuesProtocol__legendItem}>A: Ministério</Text>
+            <Text style={styles.valuesProtocol__legendItem}>R: Roupas</Text>
           </View>
         </View>
 
         {unityBreakdown.length === 0 ? (
-          <Text style={styles.emptyRow}>Nenhum atendimento registrado nesta reunião</Text>
+          <Text style={styles.valuesProtocol__emptyRow}>Nenhum atendimento registrado nesta reunião</Text>
         ) : (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+          <View style={styles.valuesProtocol__body}>
             {unityBreakdown.map((group) => {
               const chunkSize = 10
               const totalRecords = group.items.length
@@ -164,46 +128,19 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
                 <View
                   key={group.unityName}
                   wrap={false}
-                  style={{
-                    width: `${K * 11}%`,
-                    marginBottom: 4,
-                    paddingRight: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    borderWidth: 0.5,
-                    borderColor: '#DDD',
-                    borderRadius: 2,
-                    padding: 3,
-                    backgroundColor: '#FAFBFC',
-                    flexGrow: 1,
-                  }}
+                  style={[styles.valuesProtocol__card, { width: `${K * 13}%` }]}
                 >
                   {/* Unity header */}
-                  <Text
-                    style={{
-                      fontSize: 7,
-                      fontWeight: 'bold',
-                      backgroundColor: '#E8EEF8',
-                      color: '#1a3a6b',
-                      padding: 3,
-                      textAlign: 'center',
-                      marginBottom: 3,
-                    }}
-                  >
+                  <Text style={styles.valuesProtocol__cardHeader}>
                     {group.unityName}
                   </Text>
 
                   {/* Columns side by side */}
-                  <View style={{ flexDirection: 'row', gap: 4, flexGrow: 1 }}>
+                  <View style={styles.valuesProtocol__cardColumns}>
                     {chunks.map((chunk, chunkIndex) => (
                       <View
                         key={chunkIndex}
-                        style={{
-                          width: `${100 / K}%`,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          flexGrow: 1,
-                        }}
+                        style={[styles.valuesProtocol__cardColumn, { width: `${100 / K}%` }]}
                       >
                         {chunk.map((item) => {
                           const hasCesta = item.cestas > 0
@@ -214,32 +151,26 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
                             <View
                               key={item.id}
                               wrap={false}
-                              style={{
-                                marginBottom: 3,
-                                paddingBottom: 2,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#DDD',
-                                borderStyle: 'dashed',
-                              }}
+                              style={styles.valuesProtocol__item}
                             >
                               {/* Prontuário number + tags */}
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{item.prontuarioNumber}</Text>
+                              <View style={styles.valuesProtocol__itemHeader}>
+                                <Text style={styles.valuesProtocol__itemNumber}>{item.prontuarioNumber}</Text>
                                 {tags ? (
-                                  <Text style={{ fontSize: 6, marginLeft: 2, fontWeight: 'bold', color: '#444' }}>
+                                  <Text style={styles.valuesProtocol__itemTags}>
                                     {tags}
                                   </Text>
                                 ) : null}
                               </View>
 
                               {/* Attendance value */}
-                              <Text style={{ fontSize: 7, color: '#222' }}>
+                              <Text style={styles.valuesProtocol__itemValue}>
                                 {formatBRL(item.valor)}
                               </Text>
 
                               {/* Basket info */}
                               {hasCesta ? (
-                                <Text style={{ fontSize: 6, color: '#555' }}>
+                                <Text style={styles.valuesProtocol__itemBasket}>
                                   {item.cestas}x cesta = {formatBRL(item.cestas * basketValue)}
                                 </Text>
                               ) : null}
@@ -251,43 +182,26 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
                   </View>
 
                   {/* Unity subtotal */}
-                  <View
-                    style={{
-                      borderTopWidth: 1,
-                      borderTopColor: '#1a3a6b',
-                      paddingTop: 3,
-                      marginTop: 'auto',
-                      gap: 2,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 5.5, color: '#555' }}>Qtd. Atend.:</Text>
-                      <Text style={{ fontSize: 5.5, color: '#222', fontWeight: 'bold' }}>{group.atendimentosCount}</Text>
+                  <View style={styles.valuesProtocol__subtotal}>
+                    <View style={styles.valuesProtocol__subtotalRow}>
+                      <Text style={styles.valuesProtocol__subtotalLabel}>Qtd. Atend.:</Text>
+                      <Text style={styles.valuesProtocol__subtotalValue}>{group.atendimentosCount}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 5.5, color: '#555' }}>Val. Atend.:</Text>
-                      <Text style={{ fontSize: 5.5, color: '#222', fontWeight: 'bold' }}>{formatBRL(group.atendimentoCost)}</Text>
+                    <View style={styles.valuesProtocol__subtotalRow}>
+                      <Text style={styles.valuesProtocol__subtotalLabel}>Val. Atend.:</Text>
+                      <Text style={styles.valuesProtocol__subtotalValue}>{formatBRL(group.atendimentoCost)}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 5.5, color: '#555' }}>Qtd. Cestas:</Text>
-                      <Text style={{ fontSize: 5.5, color: '#222', fontWeight: 'bold' }}>{group.cestasCount}</Text>
+                    <View style={styles.valuesProtocol__subtotalRow}>
+                      <Text style={styles.valuesProtocol__subtotalLabel}>Qtd. Cestas:</Text>
+                      <Text style={styles.valuesProtocol__subtotalValue}>{group.cestasCount}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 5.5, color: '#555' }}>Val. Cestas:</Text>
-                      <Text style={{ fontSize: 5.5, color: '#222', fontWeight: 'bold' }}>{formatBRL(group.cestasCost)}</Text>
+                    <View style={styles.valuesProtocol__subtotalRow}>
+                      <Text style={styles.valuesProtocol__subtotalLabel}>Val. Cestas:</Text>
+                      <Text style={styles.valuesProtocol__subtotalValue}>{formatBRL(group.cestasCost)}</Text>
                     </View>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        borderTopWidth: 0.5,
-                        borderTopColor: '#DDD',
-                        paddingTop: 2,
-                        marginTop: 1,
-                      }}
-                    >
-                      <Text style={{ fontSize: 6, fontWeight: 'bold', color: '#1a3a6b' }}>Total:</Text>
-                      <Text style={{ fontSize: 6, fontWeight: 'bold', color: '#1a3a6b' }}>{formatBRL(group.totalCost)}</Text>
+                    <View style={styles.valuesProtocol__subtotalTotalRow}>
+                      <Text style={styles.valuesProtocol__subtotalTotalLabel}>Total:</Text>
+                      <Text style={styles.valuesProtocol__subtotalTotalValue}>{formatBRL(group.totalCost)}</Text>
                     </View>
                   </View>
                 </View>
@@ -298,46 +212,30 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
 
         {/* Grand total bar */}
         {unityBreakdown.length > 0 && (
-          <View
-            style={{
-              marginTop: 6,
-              borderTopWidth: 1,
-              borderTopColor: '#333',
-              paddingTop: 4,
-              flexDirection: 'column',
-              gap: 2,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                paddingBottom: 2,
-                marginBottom: 1,
-              }}
-            >
-              <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#1a3a6b' }}>
+          <View style={styles.valuesProtocol__grandTotal}>
+            <View style={styles.valuesProtocol__grandTotalRow}>
+              <Text style={styles.valuesProtocol__grandTotalLabel}>
                 TOTAL GERAL:
               </Text>
-              <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#1a3a6b' }}>
+              <Text style={styles.valuesProtocol__grandTotalValue}>
                 {formatBRL(unityBreakdown.reduce((a, g) => a + g.totalCost, 0))}
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 0.5, borderTopColor: '#DDD', paddingTop: 2 }}>
-              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#555' }}>
+            <View style={styles.valuesProtocol__grandTotalSubrow}>
+              <Text style={styles.valuesProtocol__grandTotalDetailLabel}>
                 Total Atendimentos: {unityBreakdown.reduce((a, g) => a + g.atendimentosCount, 0)} atendimentos
               </Text>
-              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#222' }}>
+              <Text style={styles.valuesProtocol__grandTotalDetailValue}>
                 {formatBRL(unityBreakdown.reduce((a, g) => a + g.atendimentoCost, 0))}
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#555' }}>
+            <View style={styles.valuesProtocol__grandTotalDetailRow}>
+              <Text style={styles.valuesProtocol__grandTotalDetailLabel}>
                 Total Cestas: {unityBreakdown.reduce((a, g) => a + g.cestasCount, 0)} cestas
               </Text>
-              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#222' }}>
+              <Text style={styles.valuesProtocol__grandTotalDetailValue}>
                 {formatBRL(unityBreakdown.reduce((a, g) => a + g.cestasCost, 0))}
               </Text>
             </View>
@@ -345,7 +243,7 @@ export const ValuesProtocolDocument: React.FC<ValuesProtocolDocumentProps> = ({
         )}
 
         <Text
-          style={styles.footer}
+          style={styles.valuesProtocol__footer}
           render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
           fixed
         />

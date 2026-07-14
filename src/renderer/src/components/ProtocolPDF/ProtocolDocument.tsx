@@ -238,8 +238,12 @@ export const ProtocolDocument: React.FC<ProtocolDocumentProps> = ({
     ? format(parseISO(date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
     : format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
 
+  const docTitle = `Protocolo_${
+    date ? format(parseISO(date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  }`
+
   return (
-    <Document>
+    <Document title={docTitle}>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
           <Image src={logoPDF} style={styles.logo} />

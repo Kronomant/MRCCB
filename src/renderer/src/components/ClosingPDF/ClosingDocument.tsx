@@ -219,10 +219,12 @@ export const ClosingDocument: React.FC<ClosingDocumentProps> = ({
   const saldoEsperado = availableValue - totalSaidas
   const diffColor = Math.abs(closingDifference) >= 0.01 ? '#CC0000' : '#006600'
 
-
+  const docTitle = `Fechamento_${
+    date ? format(parseISO(date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  }`
 
   return (
-    <Document>
+    <Document title={docTitle}>
       {/* PAGE 1: CASH REGISTER CLOSURE OVERVIEW */}
       <Page size="A4" style={styles.page}>
         {/* HEADER */}
