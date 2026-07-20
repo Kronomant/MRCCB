@@ -10,3 +10,8 @@ database.sqlite
 .cursor
 .claude
 .agents
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/.cargo/

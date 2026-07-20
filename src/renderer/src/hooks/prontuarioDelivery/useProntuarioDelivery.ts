@@ -1,11 +1,12 @@
 // src/renderer/src/hooks/prontuarioDelivery/useProntuarioDelivery.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { invoke } from '@tauri-apps/api/core'
 
 // Hook para buscar status de entrega de um prontuário específico em uma reunião
 export function useProntuarioDelivery(prontuarioId: number, reunionId: number) {
   return useQuery({
     queryKey: ['prontuarioDelivery', prontuarioId, reunionId],
-    queryFn: () => (window as any).api.prontuarioDelivery.getByIds(prontuarioId, reunionId),
+    queryFn: () => invoke('delivery_get_by_ids', { prontuarioId, reunionId }),
     enabled: !!prontuarioId && !!reunionId
   })
 }
@@ -14,7 +15,7 @@ export function useProntuarioDelivery(prontuarioId: number, reunionId: number) {
 export function useProntuarioDeliveriesByReunion(reunionId: number) {
   return useQuery({
     queryKey: ['prontuarioDeliveries', 'reunion', reunionId],
-    queryFn: () => (window as any).api.prontuarioDelivery.getByReunion(reunionId),
+    queryFn: () => invoke('delivery_get_by_reunion', { reunionId }),
     enabled: !!reunionId
   })
 }
@@ -23,7 +24,7 @@ export function useProntuarioDeliveriesByReunion(reunionId: number) {
 export function useProntuarioDeliveriesByProntuario(prontuarioId: number) {
   return useQuery({
     queryKey: ['prontuarioDeliveries', 'prontuario', prontuarioId],
-    queryFn: () => (window as any).api.prontuarioDelivery.getByProntuario(prontuarioId),
+    queryFn: () => invoke('delivery_get_by_prontuario', { prontuarioId }),
     enabled: !!prontuarioId
   })
 }
@@ -34,9 +35,8 @@ export function useMarkProntuarioAsDelivered() {
   
   return useMutation({
     mutationFn: ({ prontuarioId, reunionId, deliveredBy }: { prontuarioId: number; reunionId: number; deliveredBy: string }) =>
-      (window as any).api.prontuarioDelivery.markDelivered(prontuarioId, reunionId, deliveredBy),
+      invoke('delivery_mark_delivered', { prontuarioId, reunionId, deliveredBy }),
     onSuccess: (_, variables) => {
-      // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['prontuarioDelivery', variables.prontuarioId, variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'reunion', variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'prontuario', variables.prontuarioId] })
@@ -53,9 +53,8 @@ export function useMarkProntuarioAsReturned() {
   
   return useMutation({
     mutationFn: ({ prontuarioId, reunionId, returnedBy }: { prontuarioId: number; reunionId: number; returnedBy: string }) =>
-      (window as any).api.prontuarioDelivery.markReturned(prontuarioId, reunionId, returnedBy),
+      invoke('delivery_mark_returned', { prontuarioId, reunionId, returnedBy }),
     onSuccess: (_, variables) => {
-      // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['prontuarioDelivery', variables.prontuarioId, variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'reunion', variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'prontuario', variables.prontuarioId] })
@@ -70,7 +69,7 @@ export function useMarkProntuarioAsReturned() {
 export function useStatusTransitionLogs(entityType: 'reunion' | 'prontuario_delivery', entityId: number) {
   return useQuery({
     queryKey: ['statusTransitionLogs', entityType, entityId],
-    queryFn: () => (window as any).api.prontuarioDelivery.getStatusLogs(entityType, entityId),
+    queryFn: () => invoke('delivery_get_status_logs', { entityType, entityId }),
     enabled: !!entityId
   })
 }
@@ -81,9 +80,8 @@ export function useCreateAutomaticReturns() {
   
   return useMutation({
     mutationFn: ({ reunionId, processedBy }: { reunionId: number; processedBy: string }) =>
-      (window as any).api.prontuarioDelivery.createAutomaticReturns(reunionId, processedBy),
+      invoke('delivery_create_automatic_returns', { reunionId, processedBy }),
     onSuccess: (_, variables) => {
-      // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['prontuarioDeliveries', 'reunion', variables.reunionId] })
       queryClient.invalidateQueries({ queryKey: ['prontuarios'] })
     }
@@ -94,6 +92,6 @@ export function useCreateAutomaticReturns() {
 export function useProntuariosForNextMonthReturn() {
   return useQuery({
     queryKey: ['prontuariosNextMonthReturn'],
-    queryFn: () => (window as any).api.prontuarioDelivery.getForNextMonthReturn()
+    queryFn: () => invoke('delivery_get_for_next_month_return')
   })
 }
