@@ -1,6 +1,6 @@
 # 🧾 Sistema de Gestão de Reuniões da Obra da Piedade - Congregação Cristã no Brasil
 
-Aplicação desktop criada com **Electron + React + TypeScript**, para facilitar o controle de reuniões, atendimentos e distribuição de cestas básicas.
+Aplicação desktop multiplataforma criada com **Tauri + React + TypeScript**, para facilitar o controle de reuniões, atendimentos e distribuição de cestas básicas.
 
 ---
 
@@ -9,7 +9,7 @@ Aplicação desktop criada com **Electron + React + TypeScript**, para facilitar
 - ⚛️ [React](https://reactjs.org/)
 - 🧠 [TypeScript](https://www.typescriptlang.org/)
 - 💄 [Chakra UI](https://chakra-ui.com/) — UI simples e acessível
-- 📦 [Electron](https://www.electronjs.org/) — Aplicação desktop multiplataforma
+- 🦀 [Tauri](https://tauri.app/) — Aplicação desktop nativa leve, rápida e segura (Rust + Web)
 - 🛣️ [React Router DOM](https://reactrouter.com/) — Navegação entre telas
 - 📁 Dropbox SDK (futuramente) — Integração com armazenamento em nuvem
 - 📊 Exportação de relatórios em XLSX/PDF (em breve)
@@ -19,9 +19,8 @@ Aplicação desktop criada com **Electron + React + TypeScript**, para facilitar
 ## 🧱 Estrutura do Projeto
 
 ```
-src/
-├── main/              # Código principal do Electron (server side)
-├── preload/           # Comunicação segura entre Electron e Renderer
+src-tauri/             # Backend nativo e configurações do Tauri (Rust)
+src/                   # Código fonte principal
 ├── renderer/          # Interface com React (client side)
 │   ├── src/
 │   │   ├── assets/         # Imagens, ícones e recursos visuais
@@ -69,6 +68,26 @@ npm run build
 ```
 
 ---
+
+## 🏷️ Lançamento de Novas Versões
+
+O projeto possui um script automatizado que sincroniza a versão do `package.json` com os arquivos do Tauri (`tauri.conf.json`, `Cargo.toml`, etc).
+
+Para subir uma nova versão, **não altere os arquivos manualmente**. Utilize os comandos abaixo:
+
+```bash
+# Para subir a última casa decimal (Correções - ex: 1.4.0 -> 1.4.1)
+pnpm version patch
+
+# Para subir a casa do meio (Novas funcionalidades - ex: 1.4.1 -> 1.5.0)
+pnpm version minor
+
+# Para subir a primeira casa (Grandes mudanças - ex: 1.5.0 -> 2.0.0)
+pnpm version major
+```
+O script atualizará todos os arquivos necessários (JSON, TOML e Lock) e deixará tudo pronto (git add) para você dar o commit e gerar a Release no GitHub Actions!
+
+-----
 
 ## 🗂️ Modelo de Dados: Atendimento
 

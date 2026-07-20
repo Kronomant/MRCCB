@@ -1,26 +1,28 @@
 // src/renderer/src/services/unityService.ts
+import { invoke } from '@tauri-apps/api/core'
 import { CreateUnity, UpdateUnity } from '../schemas/unitySchema'
 
 export async function getAllUnities(): Promise<Unity[]> {
-  return await window.electron.ipcRenderer.invoke('unity:all')
+  return await invoke<Unity[]>('unity_get_all')
 }
 
 export async function getUnityById(id: number): Promise<Unity | undefined> {
-  return await window.electron.ipcRenderer.invoke('unity:getById', id)
+  return await invoke<Unity | null>('unity_get_by_id', { id }) ?? undefined
 }
 
 export async function createUnity(data: CreateUnity): Promise<Unity> {
-  return await window.electron.ipcRenderer.invoke('unity:create', data)
+  return await invoke<Unity>('unity_create', { data })
 }
 
 export async function createUnitiesBulk(names: string[]): Promise<Unity[]> {
-  return await window.electron.ipcRenderer.invoke('unity:createBulk', names)
+  return await invoke<Unity[]>('unity_create_bulk', { names })
 }
 
 export async function updateUnity(data: UpdateUnity): Promise<Unity> {
-  return await window.electron.ipcRenderer.invoke('unity:update', data)
+  return await invoke<Unity>('unity_update', { data })
 }
 
 export async function deleteUnity(id: number): Promise<{ success: boolean }> {
-  return await window.electron.ipcRenderer.invoke('unity:delete', id)
+  await invoke<boolean>('unity_delete', { id })
+  return { success: true }
 }

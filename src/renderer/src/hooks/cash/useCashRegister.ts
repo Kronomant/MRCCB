@@ -14,8 +14,15 @@ export const useCashRegister = (reunionId: number) => {
 
   const cashRegisterQuery = useQuery({
     queryKey,
-    queryFn: () => getCashRegisterByReunion(reunionId),
-    enabled: !!reunionId
+    queryFn: async () => {
+      const res = await getCashRegisterByReunion(reunionId)
+      return res ?? null
+    },
+    enabled: !!reunionId,
+    staleTime: Infinity,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false
   })
 
   // Mutation para criar registro (abertura de caixa)

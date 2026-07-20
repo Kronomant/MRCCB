@@ -18,6 +18,7 @@ export const atendimentoSchema = z.object({
   devolvido: z.boolean().default(false),
   repeat: z.boolean().default(false),
   ministerio: z.boolean().default(false),
+  roupas: z.boolean().default(false),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional()
 })

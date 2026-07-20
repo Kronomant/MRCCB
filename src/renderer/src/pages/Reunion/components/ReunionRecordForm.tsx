@@ -56,7 +56,9 @@ export const ReunionRecordForm = ({
   onProntuarioSelect,
   onProntuarioSearch,
   onUnityChange
-}: ReunionRecordFormProps) => (
+}: ReunionRecordFormProps) => {
+    
+  return (
   <Stack gap={6}>
     <ComboboxRoot
       collection={collection}
@@ -168,3 +170,5 @@ export const ReunionRecordForm = ({
     </Stack>
   </Stack>
 )
+
+}

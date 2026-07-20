@@ -7,30 +7,45 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.14
           cache: 'pnpm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build Application
-        run: pnpm run build
-
-      - name: Build and Publish Installer
+      - name: Build and Publish Tauri App
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec electron-builder --win --publish always
+        with:
+          tagName: app-v__VERSION__ # O Tauri substituirá o __VERSION__ pela versão do tauri.conf.json
+          releaseName: 'Release v__VERSION__'
+          releaseBody: 'Veja os arquivos anexados para instalar esta versão.'
+          releaseDraft: false
+          prerelease: false

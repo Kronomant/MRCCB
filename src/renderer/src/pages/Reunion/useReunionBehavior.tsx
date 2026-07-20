@@ -15,7 +15,8 @@ export const LABEL_COLORS: Record<string, string> = {
   Emergencial: 'red',
   'Somente roupas': 'blue',
   'Valor total aprovado': 'green',
-  Representação: 'purple'
+  Representação: 'purple',
+  Roupas: 'teal'
 }
 
 const defaultRecord: RecordType = {
@@ -23,6 +24,7 @@ const defaultRecord: RecordType = {
   prontuarioId: 0,
   prontuarioNumber: 0,
   ministerio: false,
+  roupas: false,
   valor: 0,
   cestas: 0,
   labels: [],
@@ -56,6 +58,7 @@ export const useReunionBehavior = () => {
   const [closeModalOpen, setCloseModalOpen] = useState(false)
   const [reopenModalOpen, setReopenModalOpen] = useState(false)
   const [protocolModalOpen, setProtocolModalOpen] = useState(false)
+  const [valuesProtocolModalOpen, setValuesProtocolModalOpen] = useState(false)
   const [formState, setFormState] = useState({
     record: defaultRecord,
     prontuarioSearch: '',
@@ -207,6 +210,7 @@ export const useReunionBehavior = () => {
         devolvido: record.delivered,
         repeat: false,
         ministerio: record.ministerio,
+        roupas: record.labels.includes('Roupas'),
         prontuarioNumber: prontuarioData?.number ?? 0
       }
 
@@ -382,6 +386,8 @@ export const useReunionBehavior = () => {
     setReopenModalOpen,
     protocolModalOpen,
     setProtocolModalOpen,
+    valuesProtocolModalOpen,
+    setValuesProtocolModalOpen,
     reunionStatus: reunions.data?.status,
     handlers: {
       handleAdd,

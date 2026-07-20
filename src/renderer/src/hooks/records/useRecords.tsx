@@ -2,12 +2,14 @@ import { useMemo, useCallback } from 'react'
 import { useReunion } from '../reunion/useReunion'
 import { useAtendimentos } from '../atendimento/useAtendimentos'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { invoke } from '@tauri-apps/api/core'
 
 export interface RecordType {
   id: number
   prontuarioId: number
   prontuarioNumber: number
   ministerio: boolean
+  roupas: boolean
   valor: number
   cestas: number
   labels: string[]
@@ -31,11 +33,7 @@ export const useRecords = (reunionId: number) => {
       atendimentoId: number
       currentStatus: boolean
     }) => {
-      return await window.electron.ipcRenderer.invoke(
-        'atendimento:toggleDelivery',
-        atendimentoId,
-        !currentStatus
-      )
+      return await invoke('atendimento_toggle_delivery', { id: atendimentoId, devolvido: !currentStatus })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atendimentos', reunionId] })
@@ -51,12 +49,14 @@ export const useRecords = (reunionId: number) => {
     if (atendimento.onlyClothes) labels.push('Somente roupas')
     if (atendimento.representacao) labels.push('Representação')
     if (atendimento.repeat) labels.push('Repetição')
+    if (atendimento.roupas) labels.push('Roupas')
 
     return {
       id: atendimento.id!,
       prontuarioId: atendimento.prontuarioId,
       prontuarioNumber: atendimento.prontuarioNumber,
       ministerio: Boolean(atendimento.ministerio),
+      roupas: Boolean(atendimento.roupas),
       valor: atendimento.value,
       cestas: atendimento.foodBasketQuantity,
       labels,

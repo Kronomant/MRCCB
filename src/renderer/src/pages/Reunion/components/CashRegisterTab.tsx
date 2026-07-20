@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Button,
@@ -66,7 +66,7 @@ const STEPS: { key: TabView; label: string }[] = [
 function resolveStepState(
   stepKey: TabView,
   currentView: TabView,
-  cashRegister?: { status: string }
+  cashRegister?: { status: string } | null
 ): StepState {
   if (stepKey === currentView) return 'active'
   switch (stepKey) {
@@ -106,7 +106,7 @@ const CashStatCard: React.FC<{
 
 const CashStepper: React.FC<{
   currentView: TabView
-  cashRegister?: { status: string }
+  cashRegister?: { status: string } | null
   onNavigate: (v: TabView) => void
   onHelpClick: () => void
 }> = ({ currentView, cashRegister, onNavigate, onHelpClick }) => (
@@ -228,6 +228,10 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
   const [closingCounts, setClosingCounts] = useState<Record<number, number>>({})
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false)
 
+  const lastInitializedReunionIdRef = useRef<number | null>(null)
+  const lastCashRegisterStatusRef = useRef<string | null>(null)
+  const lastCashRegisterIdRef = useRef<number | null>(null)
+
   const handleHelpClick = () => startTutorial('cashRegister')
 
   useEffect(() => {
@@ -237,23 +241,51 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
   }, [])
 
   useEffect(() => {
-    if (cashRegister) {
-      if (cashRegister.status === 'closed') {
-        setView('summary')
+    if (isRegLoading) return
+
+    const currentStatus = cashRegister?.status ?? null
+    const currentId = cashRegister?.id ?? null
+
+    const isNewReunion = reunionId !== lastInitializedReunionIdRef.current
+    const isStatusChanged = currentStatus !== lastCashRegisterStatusRef.current
+    const isIdChanged = currentId !== lastCashRegisterIdRef.current
+
+    if (isNewReunion || isStatusChanged || isIdChanged) {
+      lastInitializedReunionIdRef.current = reunionId
+      lastCashRegisterStatusRef.current = currentStatus
+      lastCashRegisterIdRef.current = currentId
+
+      if (cashRegister) {
+        setOpeningValues({
+          openingValue: cashRegister.openingValue,
+          availableValue: cashRegister.availableValue
+        })
+        setOpeningCounts(cashRegister.openingCounts || {})
+        setClosingCounts(cashRegister.closingCounts || {})
+        setClosingPhysicalValue(cashRegister.closingValue ?? 0)
       } else {
-        setView('transactions')
+        setOpeningValues({
+          openingValue: 0,
+          availableValue: 0
+        })
+        setOpeningCounts({})
+        setClosingCounts({})
+        setClosingPhysicalValue(0)
       }
-      setOpeningValues({
-        openingValue: cashRegister.openingValue,
-        availableValue: cashRegister.availableValue
-      })
-      if (cashRegister.openingCounts) setOpeningCounts(cashRegister.openingCounts)
-      if (cashRegister.closingCounts) setClosingCounts(cashRegister.closingCounts)
-      if (cashRegister.closingValue != null) setClosingPhysicalValue(cashRegister.closingValue)
-    } else {
-      setView('opening')
+
+      if (isNewReunion) {
+        if (cashRegister) {
+          if (cashRegister.status === 'closed') {
+            setView('summary')
+          } else {
+            setView('transactions')
+          }
+        } else {
+          setView('opening')
+        }
+      }
     }
-  }, [cashRegister])
+  }, [cashRegister, isRegLoading, reunionId])
 
   const saldoDisponivel = cashRegister?.availableValue || 0
   const totalSaidas = summary.totalGasto + totalTickets + totalExpenses
@@ -267,6 +299,7 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
       availableValue: openingValues.availableValue,
       openingCounts
     })
+    setView('transactions')
   }
 
   const handleUpdateOpening = async () => {
@@ -315,7 +348,7 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
               <CashCountGrid
                 onTotalChange={(total: number) => setOpeningValues(prev => ({ ...prev, openingValue: total }))}
                 onCountsChange={setOpeningCounts}
-                initialCounts={cashRegister?.openingCounts}
+                initialCounts={openingCounts}
               />
             </GridItem>
             <GridItem colSpan={5}>
@@ -489,7 +522,7 @@ export const CashRegisterTab: React.FC<CashRegisterTabProps> = ({
               <CashCountGrid
                 onTotalChange={(total: number) => setClosingPhysicalValue(total)}
                 onCountsChange={setClosingCounts}
-                initialCounts={cashRegister?.closingCounts}
+                initialCounts={closingCounts}
               />
             </GridItem>
             <GridItem colSpan={5}>
