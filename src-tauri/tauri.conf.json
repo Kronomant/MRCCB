@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Gestão Obra da Piedade",
+  "version": "1.4.0",
+  "identifier": "com.ccb.gestao",
+  "build": {
+    "frontendDist": "../src/renderer/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "pnpm run dev:vite",
+    "beforeBuildCommand": "pnpm run build:vite"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Gestão Obra da Piedade",
+        "width": 1300,
+        "height": 800,
+        "minWidth": 1300,
+        "minHeight": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "wix": {},
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "displayLanguageSelector": false,
+        "languages": [
+          "Portuguese"
+        ]
+      }
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  }
+}

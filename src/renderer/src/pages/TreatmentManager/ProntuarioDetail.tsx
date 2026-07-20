@@ -36,6 +36,7 @@ import {
 import { useState, useEffect } from 'react'
 import { useProntuario } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
+import { invoke } from '@tauri-apps/api/core'
 
 interface ProntuarioDetailProps {
   prontuarioId: number | null
@@ -136,16 +137,10 @@ export const ProntuarioDetail: React.FC<ProntuarioDetailProps> = ({
     const fetchAtendimentos = async () => {
       try {
         setLoadingAtendimentos(true)
-        const atendimentosData = (await window.electron.ipcRenderer.invoke(
-          'atendimento:getByProntuarioId',
-          resolvedId
-        )) as Atendimento[]
+        const atendimentosData = await invoke<Atendimento[]>('atendimento_get_by_prontuario', { prontuarioId: resolvedId })
         setAtendimentos(atendimentosData ?? [])
 
-        const deliveryData = (await window.electron.ipcRenderer.invoke(
-          'prontuarioDelivery:getByProntuario',
-          resolvedId
-        )) as ProntuarioDeliveryData[]
+        const deliveryData = await invoke<ProntuarioDeliveryData[]>('delivery_get_by_prontuario', { prontuarioId: resolvedId })
         setDeliveries(deliveryData ?? [])
       } catch (error) {
         console.error('Erro ao buscar dados do prontuário:', error)

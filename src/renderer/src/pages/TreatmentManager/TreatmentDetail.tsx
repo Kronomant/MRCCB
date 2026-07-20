@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fi'
 import { useState, useEffect } from 'react'
 import { useUnities } from '../../hooks/unity'
+import { invoke } from '@tauri-apps/api/core'
 
 // Importar o tipo Treatment do global.d.ts
 type Treatment = globalThis.Treatment
@@ -93,7 +94,7 @@ export const TreatmentDetail: React.FC<TreatmentDetailProps> = ({
   useEffect(() => {
     const fetchTreatment = async () => {
       try {
-        const data = await window.electron.ipcRenderer.invoke('treatment:getById', treatmentId) as Treatment | null
+        const data = await invoke<Treatment | null>('treatment_get_by_id', { id: treatmentId })
         setTreatment(data ?? null)
       } catch (error) {
         console.error('Erro ao buscar prontuário:', error)

@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -26,18 +26,26 @@ jobs:
           node-version: 22.14
           cache: 'pnpm'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
         with:
-          python-version: '3.11'
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build Application
-        run: pnpm run build
-
-      - name: Build and Publish Installer
+      - name: Build and Publish Tauri App
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec electron-builder --win --publish always
+        with:
+          tagName: app-v__VERSION__ # O Tauri substituirá o __VERSION__ pela versão do tauri.conf.json
+          releaseName: 'Release v__VERSION__'
+          releaseBody: 'Veja os arquivos anexados para instalar esta versão.'
+          releaseDraft: false
+          prerelease: false

@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react'
 import { useReunion } from '../reunion/useReunion'
 import { useAtendimentos } from '../atendimento/useAtendimentos'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { invoke } from '@tauri-apps/api/core'
 
 export interface RecordType {
   id: number
@@ -32,11 +33,7 @@ export const useRecords = (reunionId: number) => {
       atendimentoId: number
       currentStatus: boolean
     }) => {
-      return await window.electron.ipcRenderer.invoke(
-        'atendimento:toggleDelivery',
-        atendimentoId,
-        !currentStatus
-      )
+      return await invoke('atendimento_toggle_delivery', { id: atendimentoId, devolvido: !currentStatus })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atendimentos', reunionId] })
