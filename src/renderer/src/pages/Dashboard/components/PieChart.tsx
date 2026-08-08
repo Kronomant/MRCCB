@@ -2,7 +2,7 @@ import { Pie } from 'react-chartjs-2'
 import { Box, Skeleton, Center, Text } from '@chakra-ui/react'
 import { useMemo } from 'react'
 import { useDashboardData } from '../../../hooks/useDashboardData'
-import { useColorModeValue } from '../../../components/ui/color-mode'
+import { useColorModeValue } from '../../../shared/components/ui/color-mode'
 
 const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
 

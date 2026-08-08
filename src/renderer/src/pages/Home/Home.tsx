@@ -3,7 +3,7 @@ import { FiCalendar, FiFileText } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import logoLight from '../../assets/logo.svg'
 import logoDark from '../../assets/white-logo.svg'
-import { useColorModeValue } from '../../components/ui/color-mode'
+import { useColorModeValue } from '../../shared/components/ui/color-mode'
 import wavyLines from '../../assets/wavy-lines.svg'
 
 export const Home = (): JSX.Element => {

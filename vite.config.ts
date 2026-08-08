@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
@@ -38,6 +39,10 @@ export default defineConfig({
     watch: {
       ignored: ['**/src-tauri/**']
     }
+  },
+  test: {
+    setupFiles: ['./src/setupTests.tsx'],
+    globals: true,
   },
   clearScreen: false
 })

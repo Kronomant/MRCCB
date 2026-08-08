@@ -24,9 +24,9 @@ import {
   Portal
 } from '@chakra-ui/react'
 import { createListCollection } from '@ark-ui/react/collection'
-import { CurrencyInput, Input } from '../../../components'
-import { RecordType } from '../../../hooks/records/useRecords'
-import { LABEL_COLORS } from '../useReunionBehavior'
+import { CurrencyInput, Input } from '@shared/components'
+import { RecordType } from '../../hooks/records/useRecords'
+import { REUNION_LABEL_COLORS } from '@reunion/constants'
 
 type CollectionItem = { label: string; value: string }
 
@@ -150,7 +150,7 @@ export const ReunionRecordForm = ({
         <Checkbox.Label>Ministério</Checkbox.Label>
       </Checkbox.Root>
 
-      {Object.keys(LABEL_COLORS).map((flag) => (
+      {Object.keys(REUNION_LABEL_COLORS).map((flag) => (
         <Checkbox.Root
           key={flag}
           checked={record.labels.includes(flag)}

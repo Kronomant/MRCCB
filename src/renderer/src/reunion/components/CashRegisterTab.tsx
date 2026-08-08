@@ -16,12 +16,12 @@ import {
   CashTicketForm,
   CashExpenseForm,
   CashClosingSummary
-} from '../../../components/CashRegister'
-import { useCashRegister } from '../../../hooks/cash/useCashRegister'
-import { useCashTickets } from '../../../hooks/cash/useCashTickets'
-import { useCashExpenses } from '../../../hooks/cash/useCashExpenses'
-import { CurrencyInput } from '../../../components'
-import { ClosingModal } from '../../../components/ClosingPDF'
+} from '../../components/CashRegister'
+import { useCashRegister } from '../../hooks/cash/useCashRegister'
+import { useCashTickets } from '../../hooks/cash/useCashTickets'
+import { useCashExpenses } from '../../hooks/cash/useCashExpenses'
+import { CurrencyInput } from '@shared/components'
+import { ClosingModal } from '../../components/ClosingPDF'
 import {
   FiSave,
   FiLock,
@@ -34,9 +34,9 @@ import {
   FiUnlock,
   FiHelpCircle,
 } from 'react-icons/fi'
-import { useTutorialContext } from '../../../contexts/TutorialContext'
+import { useTutorialContext } from '../../contexts/TutorialContext'
 
-import { RecordType } from '../../../hooks/records/useRecords'
+import { RecordType } from '../../hooks/records/useRecords'
 
 interface CashRegisterTabProps {
   reunionId: number

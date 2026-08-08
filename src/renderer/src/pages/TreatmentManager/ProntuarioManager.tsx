@@ -16,12 +16,12 @@ import {
   SelectPositioner,
   Portal
 } from '@chakra-ui/react'
-import { PageHeader, PageContainer, SyncButton } from '../../components'
+import { PageHeader, PageContainer, SyncButton } from '@shared/components'
 import { FiSearch, FiEye, FiEdit } from 'react-icons/fi'
-import { BaseTable } from '../../components/Table/BaseTable'
-import { DrawerForm } from '../../components/DrawerForm'
+import { BaseTable } from '../../shared/components/Table/BaseTable'
+import { DrawerForm } from '../../shared/components/DrawerForm'
 import { useState, useEffect } from 'react'
-import { Input } from '../../components/Input'
+import { Input } from '../../shared/components/Input'
 import { useProntuarios } from '../../hooks/prontuario'
 import { useUnities } from '../../hooks/unity'
 import { createListCollection } from '@ark-ui/react/collection'

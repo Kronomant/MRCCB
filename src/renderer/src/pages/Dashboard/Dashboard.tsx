@@ -1,9 +1,9 @@
 import { Box, Grid, Heading, SimpleGrid } from '@chakra-ui/react'
-import { PageHeader } from '../../components/PageHeader/Header'
+import { PageHeader } from '../../shared/components/PageHeader/Header'
 import { BarChart, LineChart, PieChart, HeatMap } from './components'
 import './chartConfig' // Register Chart.js components
-import { useColorModeValue } from '../../components/ui/color-mode'
-import { PageContainer } from '../../components'
+import { useColorModeValue } from '../../shared/components/ui/color-mode'
+import { PageContainer } from '@shared/components'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { useEffect } from 'react'
 

@@ -28,6 +28,8 @@
         "./*"
       ],
       "@*": ["./src/*"],
+      "@shared/*": ["./src/renderer/src/shared/*"],
+      "@reunion/*": ["./src/renderer/src/reunion/*"]
     }
   },
   "include": [

@@ -1,6 +1,6 @@
 import { IconButton } from '@chakra-ui/react'
 import { FiRefreshCw } from 'react-icons/fi'
-import { useSyncData } from '../hooks/useSyncData'
+import { useSyncData } from '../../hooks/useSyncData'
 import { toaster } from './ui/toaster'
 
 export const SyncButton = () => {

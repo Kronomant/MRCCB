@@ -9,7 +9,7 @@ import {
   VStack,
   Badge,
 } from '@chakra-ui/react'
-import { Input, CurrencyInput, Select } from '../../components'
+import { Input, CurrencyInput, Select } from '@shared/components'
 import { FiPlus, FiTrash2 } from 'react-icons/fi'
 
 export type ExpenseCategory = 'fuel' | 'food' | 'small_goods' | 'maintenance'

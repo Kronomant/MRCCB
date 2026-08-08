@@ -5,7 +5,7 @@ import {
   Flex,
   Grid,
 } from '@chakra-ui/react'
-import { Input } from '../Input'
+import { Input } from '../../shared/components/Input'
 
 interface Denomination {
   value: number

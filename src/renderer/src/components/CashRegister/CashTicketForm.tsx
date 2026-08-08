@@ -8,7 +8,7 @@ import {
   Heading,
   VStack,
 } from '@chakra-ui/react'
-import { Input, CurrencyInput } from '../../components'
+import { Input, CurrencyInput } from '@shared/components'
 import { FiPlus, FiTrash2 } from 'react-icons/fi'
 
 interface Ticket {

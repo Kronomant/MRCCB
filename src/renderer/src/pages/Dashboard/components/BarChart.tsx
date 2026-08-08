@@ -3,8 +3,8 @@ import { Box, Stack, Text, Skeleton, Flex, Center, Button, Group } from '@chakra
 import { useState, useMemo, useRef } from 'react'
 import { useDashboardData } from '../../../hooks/useDashboardData'
 import { startOfDay, startOfWeek, startOfMonth, isAfter, parseISO, subMonths } from 'date-fns'
-import { useColorModeValue } from '../../../components/ui/color-mode'
-import { Select } from '../../../components/Select'
+import { useColorModeValue } from '../../../shared/components/ui/color-mode'
+import { Select } from '../../../shared/components/Select'
 import { FiDownload } from 'react-icons/fi'
 
 export const BarChart = () => {
