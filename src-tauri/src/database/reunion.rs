@@ -107,20 +107,30 @@ pub fn get_all_reunions(conn: &Connection, filters: Option<ReunionFilters>) -> R
 }
 
 pub fn get_reunion_by_id(conn: &Connection, id: i64) -> Result<Option<Reunion>> {
-    let mut stmt = conn.prepare("SELECT * FROM reunions WHERE id = ?1")?;
+    let mut stmt = conn.prepare("
+        SELECT
+            r.id, r.name, r.value, r.basketValue, r.date, r.status,
+            COALESCE((SELECT COUNT(*) FROM atendimentos a WHERE a.reunionId = r.id), 0) as treatmentQuantity,
+            COALESCE((SELECT SUM(a.foodBasketQuantity) FROM atendimentos a WHERE a.reunionId = r.id), 0) as foodBasketQuantity,
+            COALESCE((SELECT SUM(a.value) FROM atendimentos a WHERE a.reunionId = r.id), 0) as totalAtendimentoValue,
+            COALESCE((SELECT SUM(a.foodBasketQuantity) FROM atendimentos a WHERE a.reunionId = r.id), 0) * r.basketValue as totalBasketValue,
+            COALESCE((SELECT COUNT(*) FROM atendimentos a WHERE a.reunionId = r.id AND a.devolvido = 1), 0) as deliveredQuantity
+        FROM reunions r
+        WHERE r.id = ?1
+    ")?;
     let mut rows = stmt.query_map(params![id], |row| {
         Ok(Reunion {
             id: row.get(0)?,
             name: row.get(1)?,
             value: row.get(2)?,
             basket_value: row.get(3)?,
-            treatment_quantity: row.get(4)?,
-            food_basket_quantity: row.get(5)?,
-            date: row.get(6)?,
-            status: row.get(7)?,
-            total_atendimento_value: None,
-            total_basket_value: None,
-            delivered_quantity: None,
+            date: row.get(4)?,
+            status: row.get(5)?,
+            treatment_quantity: row.get(6)?,
+            food_basket_quantity: row.get(7)?,
+            total_atendimento_value: row.get(8)?,
+            total_basket_value: row.get(9)?,
+            delivered_quantity: row.get(10)?,
         })
     })?;
     Ok(rows.next().transpose()?)
@@ -136,7 +146,7 @@ pub fn update_reunion(conn: &Connection, data: Reunion) -> Result<Reunion> {
             data.date, data.status, id,
         ],
     )?;
-    Ok(data)
+    get_reunion_by_id(conn, id).map(|r| r.unwrap_or(data))
 }
 
 pub fn delete_reunion(conn: &Connection, id: i64) -> Result<()> {

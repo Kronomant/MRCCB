@@ -9,8 +9,8 @@ import {
   Alert,
   Spinner
 } from '@chakra-ui/react'
-import { PageHeader, PageContainer } from '../../components'
-import { useColorModeValue } from '../../components/ui/color-mode'
+import { PageHeader, PageContainer } from '@shared/components'
+import { useColorModeValue } from '../../shared/components/ui/color-mode'
 import { useEffect, useState } from 'react'
 import { useTutorialContext } from '../../contexts/TutorialContext'
 import { invoke } from '@tauri-apps/api/core'

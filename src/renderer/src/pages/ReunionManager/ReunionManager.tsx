@@ -8,7 +8,7 @@ import {
   CurrencyInput,
   PageContainer,
   SyncButton
-} from '../../components'
+} from '@shared/components'
 import { statusMap } from './ReunionManager.helper'
 import { ReunionManagerViewProps, useReunionManager } from './useReunionManager'
 import { ReunionStatus } from '../../types/reunion-status'

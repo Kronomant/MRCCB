@@ -1,6 +1,6 @@
 import { Box, Text, Flex, Skeleton, Center } from '@chakra-ui/react'
-import { Tooltip } from '../../../components/ui/tooltip'
-import { useColorModeValue } from '../../../components/ui/color-mode'
+import { Tooltip } from '../../../shared/components/ui/tooltip'
+import { useColorModeValue } from '../../../shared/components/ui/color-mode'
 import { useMemo } from 'react'
 import { useDashboardData } from '../../../hooks/useDashboardData'
 import { getDay, getHours, parseISO } from 'date-fns'

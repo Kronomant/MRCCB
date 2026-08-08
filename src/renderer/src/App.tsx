@@ -1,5 +1,5 @@
 import { Flex } from '@chakra-ui/react'
-import { Sidebar } from './components'
+import { Sidebar } from '@shared/components'
 import { Outlet } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 

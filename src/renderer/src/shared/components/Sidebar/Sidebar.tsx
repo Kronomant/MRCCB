@@ -3,11 +3,11 @@ import { ReactNode, useState } from 'react'
 import { ColorModeButton, useColorMode } from '../ui/color-mode'
 import { Link } from 'react-router-dom'
 import { menuItems } from './Sidebar.data'
-import logo from '../../assets/logo.svg'
-import whiteLogo from '../../assets/white-logo.svg'
+import logo from '../../../assets/logo.svg'
+import whiteLogo from '../../../assets/white-logo.svg'
 import './Sidebar.style.scss'
 import { FiHelpCircle } from 'react-icons/fi'
-import { useTutorialContext } from '../../contexts/TutorialContext'
+import { useTutorialContext } from '../../../contexts/TutorialContext'
 
 interface NavItemProps {
   id: string

@@ -1,186 +1,99 @@
-import { Button, Flex, InputGroup, Box, Stack, Text, Checkbox, Tag, Tabs } from '@chakra-ui/react'
-import { PageHeader, DrawerForm, BaseTable, Input, PageContainer, ValuesProtocolModal } from '../../components'
-import { Tooltip } from '../../components/ui/tooltip'
-import { FiSearch, FiFilter, FiPlus, FiFileText, FiEye, FiTrash2, FiUsers, FiDollarSign } from 'react-icons/fi'
-import { format, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { useEffect } from 'react'
+import { Box, Stack, Tabs, Flex } from '@chakra-ui/react';
+import { useParams } from 'react-router-dom';
+import { PageContainer } from '@shared/components';
+import { FiUsers, FiDollarSign } from 'react-icons/fi';
+import { useEffect } from 'react';
 
-import { RecordType } from '../../hooks/records/useRecords'
-import { useReunionBehavior, LABEL_COLORS } from './useReunionBehavior'
-import { ReunionStatus } from '../../types/reunion-status'
-import { ProtocolModal } from '../../components/ProtocolPDF/ProtocolModal'
-import { useTutorialContext } from '../../contexts/TutorialContext'
-import { CashRegisterTab } from './components/CashRegisterTab'
+import { useTutorialContext } from '../../contexts/TutorialContext';
+import {
+  CashRegisterTab,
+  ReunionHeader,
+  ReunionModalsContainer,
+  ReunionSummaryCards,
+  ReunionAttendanceToolbar,
+  ReunionAttendanceTable,
+  ReunionAttendanceDrawer,
+} from '@reunion/components';
 
-import { ReunionSummaryCards, ReunionRecordForm, ConfirmationDialog, ReunionCloseDialogBody } from './components'
+import { useReunionData } from '@reunion/hooks';
+import { useReunionModals } from '@reunion/hooks';
+import { useReunionTable } from '@reunion/hooks';
+import { useReunionForm } from '@reunion/hooks';
+import { ReunionStatus } from '../../types/reunion-status';
+import { RecordType } from '../../hooks/records/useRecords';
 
 export const Reunion = () => {
-  const { startTutorial, hasSeenTutorial } = useTutorialContext()
-
-  const {
-    navigate,
-    drawerOpen,
-    setDrawerOpen,
-    search,
-    setSearch,
-    formState,
-    isLoading,
-    summary,
-    filteredRecords,
-    records,
-    filteredProntuarios,
-    prontuarios,
-    unities,
-    handlers,
-    closeModalOpen,
-    setCloseModalOpen,
-    reopenModalOpen,
-    setReopenModalOpen,
-    reunionStatus,
-    protocolModalOpen,
-    setProtocolModalOpen,
-    valuesProtocolModalOpen,
-    setValuesProtocolModalOpen,
-    reunion,
-    reunionId
-  } = useReunionBehavior()
+  const { startTutorial, hasSeenTutorial } = useTutorialContext();
+  const { id } = useParams();
+  const reunionId = Number(id);
 
   useEffect(() => {
     if (!hasSeenTutorial('reunion')) {
-      startTutorial('reunion')
+      startTutorial('reunion');
     }
-  }, [])
+  }, [hasSeenTutorial, startTutorial]);
 
-  const { record, prontuarioSearch, isNewProntuario, selectedUnityId } = formState
-  const isClosed = reunionStatus === ReunionStatus.FINISHED
+  // 1. Data Hook (Global Reunion Data)
+  const data = useReunionData(reunionId);
+  const isClosed =
+    data.reunionStatus === ReunionStatus.FINISHED ||
+    data.reunionStatus?.toLowerCase() === 'finished' ||
+    data.reunionStatus?.toLowerCase() === 'closed';
 
-  const columns = [
-    {
-      header: 'Prontuário',
-      accessor: 'prontuarioNumber',
-      customRender: (row: RecordType) => (
-        <Flex>
-          {row.prontuarioNumber}
-          {row.ministerio === true ? (
-            <Tag.Root colorPalette="blue" ml={2}>
-              A
-            </Tag.Root>
-          ) : null}
-        </Flex>
-      )
-    },
-    {
-      header: 'Valor (R$)',
-      accessor: 'valor',
-      customRender: (row: RecordType) =>
-        row.valor > 0 ? `R$ ${row.valor}` : <Text color="gray.400">R$ 0</Text>
-    },
-    { header: 'Cestas', accessor: 'cestas' },
-    {
-      header: 'Labels',
-      accessor: 'labels',
-      customRender: (row: RecordType) => (
-        <Flex gap={1} wrap="wrap">
-          {row.labels.map((label: string) => (
-            <Tag.Root colorPalette={LABEL_COLORS[label] || 'gray'} key={label}>
-              {label}
-            </Tag.Root>
-          ))}
-        </Flex>
-      )
-    },
-    ...(isClosed
-      ? [
-          {
-            header: 'Devolvido',
-            accessor: 'delivered',
-            customRender: (row: RecordType) => (
-              <Checkbox.Root
-                checked={row.delivered}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handlers.handleToggleDelivery(row.id, row.delivered)
-                }}
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-              </Checkbox.Root>
-            )
-          }
-        ]
-      : []),
-    {
-      header: 'Ações',
-      customRender: (row: RecordType) => (
-        <Flex gap={2}>
-          <Button
-            size="xs"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation()
-              handlers.handleView(row)
-            }}
-          >
-            <FiEye />
-          </Button>
-          <Button
-            size="xs"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation()
-              handlers.handleDelete(row.id)
-            }}
-          >
-            <FiTrash2 />
-          </Button>
-        </Flex>
-      )
-    }
-  ]
+  // 2. Modals Hook (UI State for Modals)
+  const modals = useReunionModals();
 
-  const formattedDate = summary.data
-    ? format(parseISO(summary.data), "d 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(
-        /de ([a-z])/g,
-        (match) => match.replace(match[3], match[3].toUpperCase())
-      )
-    : ''
+  // 3. Table Hook (Search, Filters, Deletion)
+  const table = useReunionTable(reunionId);
+
+  // 4. Form Hook (Drawer state and saving logic)
+  const form = useReunionForm(reunionId);
+
+  // Derived Handlers
+  const handleViewOrEdit = (record: RecordType) => {
+    const prontuario = data.prontuarios.find((p) => p.id === record.prontuarioId);
+    form.setFormState({
+      record,
+      prontuarioSearch: String(record.prontuarioNumber || ''),
+      prontuarioError: null,
+      selectedUnityId: prontuario?.unityId ?? null,
+      isNewProntuario: record.id !== 0 && !record.prontuarioId,
+    });
+    form.setDrawerOpen(true);
+  };
+
+  const handleAdd = () => {
+    form.setFormState({
+      record: {
+        ...form.defaultRecord,
+        valor: 0,
+        cestas: data.reunion?.foodBasketQuantity || 0,
+      },
+      prontuarioSearch: '',
+      prontuarioError: null,
+      selectedUnityId: null,
+      isNewProntuario: false,
+    });
+    form.setDrawerOpen(true);
+  };
+
+  const onToggleDelivery = (atendimentoId: number, currentStatus: boolean) => {
+    table.handleToggleDelivery(atendimentoId, currentStatus, form.updateRecord);
+  };
 
   return (
     <PageContainer isFixed>
       <Stack gap={4} h="100%" flexDirection="column">
         <Box id="reunion-header">
-          <PageHeader title="Reunião" onBack={() => navigate('/reunioes')}>
-            <Text color="fg.muted" fontSize="md" ml={4}>
-              {formattedDate}
-            </Text>
-            {!isClosed && (
-              <Button colorScheme="red" ml={4} onClick={() => setCloseModalOpen(true)}>
-                Encerrar Reunião
-              </Button>
-            )}
-            {isClosed && (
-              <Flex gap={4}>
-                <Button
-                  colorScheme="blue"
-                  variant="outline"
-                  onClick={() => setReopenModalOpen(true)}
-                >
-                  Reabrir Reunião
-                </Button>
-                <Tooltip content="Gerar protocolo da reunião">
-                  <Button colorScheme="green" onClick={() => setProtocolModalOpen(true)}>
-                    <FiFileText /> Gerar Protocolo
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Gerar protocolo detalhado com valores">
-                  <Button colorScheme="teal" onClick={() => setValuesProtocolModalOpen(true)}>
-                    <FiFileText /> Resultado da reunião
-                  </Button>
-                </Tooltip>
-              </Flex>
-            )}
-          </PageHeader>
+          <ReunionHeader
+            dateString={data.summary.data}
+            isClosed={isClosed}
+            onNavigateBack={() => data.navigate('/reunioes')}
+            onOpenCloseModal={() => modals.setCloseModalOpen(true)}
+            onOpenReopenModal={() => modals.setReopenModalOpen(true)}
+            onOpenProtocolModal={() => modals.setProtocolModalOpen(true)}
+            onOpenValuesProtocolModal={() => modals.setValuesProtocolModalOpen(true)}
+          />
         </Box>
 
         <Tabs.Root defaultValue="atendimentos" variant="plain" flex="1" display="flex" flexDirection="column" minH="0">
@@ -204,15 +117,8 @@ export const Reunion = () => {
               display="flex"
               alignItems="center"
               gap={2.5}
-              _selected={{
-                bg: 'bg',
-                color: 'cyan.600',
-                shadow: 'sm',
-              }}
-              _hover={{
-                cursor: 'pointer',
-                color: 'cyan.400',
-              }}
+              _selected={{ bg: 'bg', color: 'cyan.600', shadow: 'sm' }}
+              _hover={{ cursor: 'pointer', color: 'cyan.400' }}
             >
               <FiUsers size={18} />
               Atendimentos
@@ -227,15 +133,8 @@ export const Reunion = () => {
               display="flex"
               alignItems="center"
               gap={2.5}
-              _selected={{
-                bg: 'bg',
-                color: 'pink.600',
-                shadow: 'sm',
-              }}
-              _hover={{
-                cursor: 'pointer',
-                color: 'pink.400',
-              }}
+              _selected={{ bg: 'bg', color: 'pink.600', shadow: 'sm' }}
+              _hover={{ cursor: 'pointer', color: 'pink.400' }}
             >
               <FiDollarSign size={18} />
               Auditoria
@@ -244,80 +143,46 @@ export const Reunion = () => {
 
           <Tabs.Content value="atendimentos" flex="1" display="flex" flexDirection="column" minH="0">
             <Box id="reunion-summary" mb={8}>
-              <ReunionSummaryCards summary={summary} isClosed={isClosed} reunion={reunion} />
+              <ReunionSummaryCards summary={data.summary} isClosed={isClosed} reunion={data.reunion} />
             </Box>
-            <Flex id="reunion-search" mb={4} gap={3} align="center">
-              <InputGroup endElement={<FiSearch />} w="300px">
-                <Input
-                  borderRadius="3xl"
-                  label="Pesquisar"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </InputGroup>
-              <Button variant="outline">
-                <FiFilter />
-                Filtros
-              </Button>
-              {!isClosed && (
-                <Button id="reunion-add-btn" colorScheme="blue" onClick={handlers.handleAdd}>
-                  <FiPlus />
-                  Adicionar
-                </Button>
-              )}
-            </Flex>
+
+            <ReunionAttendanceToolbar
+              search={table.search}
+              setSearch={table.setSearch}
+              isClosed={isClosed}
+              onAddRecord={handleAdd}
+            />
+
             <Flex w="100%" flex="1" minH="0">
               <Flex w="100%" h="100%" position="relative" overflow="hidden">
-                <Box
-                  id="reunion-table"
-                  w={drawerOpen ? 'calc(100% - 400px)' : '100%'}
-                  h="95%"
-                  transition="width 0.4s cubic-bezier(.4,0,.2,1)"
-                >
-                  <BaseTable
-                    drawerOpen={drawerOpen}
-                    data={filteredRecords}
-                    columns={columns as Column<RecordType>[]}
-                    isLoading={isLoading}
-                  />
-                </Box>
+                <ReunionAttendanceTable
+                  filteredRecords={table.filteredRecords}
+                  isLoading={data.isLoading}
+                  isClosed={isClosed}
+                  drawerOpen={form.drawerOpen}
+                  onViewRecord={handleViewOrEdit}
+                  onDeleteRecord={table.handleDelete}
+                  onToggleDelivery={onToggleDelivery}
+                />
 
-                <DrawerForm
-                  isOpen={drawerOpen}
-                  onClose={() => setDrawerOpen(false)}
-                  title={record.id === 0 ? 'Novo Atendimento' : 'Editar Atendimento'}
-                  primaryLabel="Salvar"
-                  secondaryLabel="Cancelar"
-                  onPrimaryAction={handlers.handleSave}
-                  headerActions={
-                    isClosed &&
-                    record.id !== 0 && (
-                      <Button
-                        size="sm"
-                        colorPalette={record.delivered ? 'gray' : 'orange'}
-                        onClick={() =>
-                          handlers.handleToggleDelivery(record.id, record.delivered)
-                        }
-                      >
-                        {record.delivered ? 'DEVOLVIDO' : 'DEVOLVER'}
-                      </Button>
-                    )
-                  }
-                >
-                  <ReunionRecordForm
-                    record={record}
-                    prontuarioSearch={prontuarioSearch}
-                    isNewProntuario={isNewProntuario}
-                    selectedUnityId={selectedUnityId}
-                    filteredProntuarios={filteredProntuarios}
-                    collection={handlers.collection}
-                    unities={unities}
-                    onRecordChange={handlers.updateRecord}
-                    onProntuarioSelect={handlers.handleProntuarioSelect}
-                    onProntuarioSearch={handlers.updateProntuarioSearch}
-                    onUnityChange={handlers.updateUnityId}
-                  />
-                </DrawerForm>
+                <ReunionAttendanceDrawer
+                  drawerOpen={form.drawerOpen}
+                  setDrawerOpen={form.setDrawerOpen}
+                  record={form.formState.record}
+                  isClosed={isClosed}
+                  prontuarioSearch={form.formState.prontuarioSearch}
+                  isNewProntuario={form.formState.isNewProntuario}
+                  selectedUnityId={form.formState.selectedUnityId}
+                  filteredProntuarios={form.filteredProntuarios}
+                  collection={form.collection}
+                  unities={data.unities}
+                  onSaveRecord={form.handleSave}
+                  onRecordChange={form.updateRecord}
+                  onProntuarioSelect={form.handleProntuarioSelect}
+                  onProntuarioSearch={form.updateProntuarioSearch}
+                  onUnityChange={form.updateUnityId}
+                  onToggleDelivery={onToggleDelivery}
+                />
               </Flex>
             </Flex>
           </Tabs.Content>
@@ -325,69 +190,41 @@ export const Reunion = () => {
           <Tabs.Content value="auditoria" flex="1" display="flex" flexDirection="column" minH="0" overflow="hidden">
             <CashRegisterTab
               reunionId={reunionId}
-              reunionStatus={reunionStatus}
+              reunionStatus={data.reunionStatus}
               summary={{
-                totalGasto: summary.totalGasto,
-                cestas: summary.cestas,
-                atendimentos: summary.atendimentos
+                totalGasto: data.summary.totalGasto,
+                cestas: data.summary.cestas,
+                atendimentos: data.summary.atendimentos
               }}
-              reunionDate={reunion?.date}
-              records={records}
-              unities={unities}
-              prontuarios={prontuarios}
-              basketValue={reunion?.basketValue}
+              reunionDate={data.reunion?.date}
+              records={data.records}
+              unities={data.unities}
+              prontuarios={data.prontuarios}
+              basketValue={data.reunion?.basketValue}
             />
           </Tabs.Content>
         </Tabs.Root>
 
-        <ConfirmationDialog
-          open={reopenModalOpen}
-          onClose={() => setReopenModalOpen(false)}
-          title="Confirmar Reabertura"
-          onConfirm={handlers.handleReopenReunion}
-          confirmLabel="Confirmar Reabertura"
-          confirmColorPalette="blue"
-        >
-          <Stack gap={4}>
-            <Text fontSize="md">
-              Você está prestes a reabrir esta reunião. Deseja continuar?
-            </Text>
-            <Text fontSize="sm" color="fg.muted">
-              Ao reabrir, você poderá adicionar novos atendimentos e editar os existentes.
-            </Text>
-          </Stack>
-        </ConfirmationDialog>
-
-        <ConfirmationDialog
-          open={closeModalOpen}
-          onClose={() => setCloseModalOpen(false)}
-          title="Confirmar Encerramento"
-          onConfirm={handlers.handleCloseReunion}
-          confirmLabel="Confirmar Encerramento"
-          confirmColorPalette="red"
-        >
-          <ReunionCloseDialogBody summary={summary} reunion={reunion} />
-        </ConfirmationDialog>
-
-        <ProtocolModal
-          isOpen={protocolModalOpen}
-          onClose={() => setProtocolModalOpen(false)}
-          records={records}
-          unities={unities}
-          prontuarios={prontuarios}
-          date={summary.data}
-        />
-
-        <ValuesProtocolModal
-          isOpen={valuesProtocolModalOpen}
-          onClose={() => setValuesProtocolModalOpen(false)}
-          records={records}
-          unities={unities}
-          prontuarios={prontuarios}
-          date={summary.data}
-          basketValue={reunion?.basketValue}
+        <ReunionModalsContainer
+          reopenModalOpen={modals.reopenModalOpen}
+          setReopenModalOpen={modals.setReopenModalOpen}
+          closeModalOpen={modals.closeModalOpen}
+          setCloseModalOpen={modals.setCloseModalOpen}
+          protocolModalOpen={modals.protocolModalOpen}
+          setProtocolModalOpen={modals.setProtocolModalOpen}
+          valuesProtocolModalOpen={modals.valuesProtocolModalOpen}
+          setValuesProtocolModalOpen={modals.setValuesProtocolModalOpen}
+          
+          onConfirmReopen={data.handleReopenReunion}
+          onConfirmClose={data.handleCloseReunion}
+          
+          summary={data.summary}
+          reunion={data.reunion}
+          records={data.records}
+          unities={data.unities}
+          prontuarios={data.prontuarios}
         />
       </Stack>
     </PageContainer>
-  )
-}
+  );
+};

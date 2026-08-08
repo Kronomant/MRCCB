@@ -12,7 +12,7 @@ import {
   endOfDay
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { useColorModeValue } from '../../../components/ui/color-mode'
+import { useColorModeValue } from '../../../shared/components/ui/color-mode'
 
 const COLORS = [
   '#FF6384',
