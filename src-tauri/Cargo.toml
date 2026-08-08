@@ -1,6 +1,6 @@
 [package]
 name = "gestao-obra-piedade"
-version = "1.4.0"
+version = "1.4.1"
 description = "Sistema de Gestão de Reuniões da Obra da Piedade - Congregação Cristã no Brasil"
 authors = ["Kronomant"]
 license = ""
